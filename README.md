@@ -1,4 +1,31 @@
-# Readme temp for masterchef
+# COEN 341 Group Project - Team MasterChef
+
+## Team Members
+- Ammar Sathar
+- Charrat Mohamed Taha
+- Haoyang Ni
+- Joey Chan
+- Navnit Chittoo
+- Paulina Aguayo Dupin
+
+## Objective
+The objective of this project is to develop a web app that allows students to plan meals, track groceries, and propose recipes.
+
+## Project
+The web app will have 5 key features:
+- **Feature 1:** User account management
+- **Feature 2:** Recipe management
+- **Feature 3:** Weekly meal planner
+- **Feature 4:** TBA
+- **Feature 5:** TBA
+
+The web app will be completed in 4 sprints:
+- **Sprint 1:** Setup Github; prepare sprint plan, prepare user stories with task breakdown, and implement code for **Feature 1**
+- **Sprint 2:** Setup continuous integration pipepline in repository; create 2 acceptance tests for user stories in **Sprint 1**; prepare user stories with task breakdown, and implement code for **Feature 2**
+- **Sprint 3:** Create unit tests for **Feature 1** and **Feature 2**; prepare user stories with task breakdown, and implement code for **Feature 3**; determine **Feature 4** and prepare user stories with task breakdown and implement code
+- **Sprint 4:** Create unit tests for **Feature 3**; TBA
+
+---
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
