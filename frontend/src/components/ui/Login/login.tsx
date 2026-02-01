@@ -9,7 +9,7 @@ export default function Login() {
         <>
             <div className="login-root absolute h-full w-full flex items-center justify-center">
                 <button>
-                    
+                    <a href="/auth/discord" className="btn btn-primary">
                 </button>
             </div>
         </>
