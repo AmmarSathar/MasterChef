@@ -27,39 +27,134 @@ The web app will be completed in 4 sprints:
 
 ---
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Tech Stack
+
+- **Frontend**: React 19 + TypeScript
+- **Build Tool**: Vite 6
+- **Styling**: Tailwind CSS 4
+- **Testing**: Vitest + React Testing Library
+- **Routing**: React Router DOM 7
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Installation
+
+From the project root:
+
+```bash
+npm install
+```
+
+This installs dependencies for all workspaces (frontend, backend, shared).
+
+### Development
+
+Start both frontend and backend:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Or run individually:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev:frontend   # Frontend only (port 3000)
+npm run dev:backend    # Backend only (port 4000)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend: [http://localhost:4000](http://localhost:4000)
 
-## Learn More
+### Testing
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test              # Run frontend tests
+npm run test:frontend # Same as above
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Production Build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build         # Build all workspaces
+npm run build:frontend
+npm run build:backend
+```
 
-## Deploy on Vercel
+### Linting
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint          # Lint frontend and backend
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+### Frontend
+
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   └── ui/
+│   │       └── Navbar/
+│   │           ├── Navbar.tsx
+│   │           ├── Navbar.test.tsx
+│   │           └── styles.css
+│   ├── pages/
+│   │   └── Home/
+│   │       ├── Home.tsx
+│   │       └── Home.test.tsx
+│   ├── lib/
+│   │   ├── utils.ts
+│   │   └── icons/
+│   ├── test/
+│   │   └── setup.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── index.html
+├── vite.config.ts
+├── vitest.config.ts
+└── package.json
+```
+
+### Backend
+
+```
+backend/
+├── src/
+│   ├── index.ts          # Server entry point
+│   ├── app.ts            # Express app configuration
+│   ├── config/
+│   │   └── index.ts      # Environment variables, constants
+│   ├── routes/
+│   │   └── index.ts      # Route aggregator
+│   ├── controllers/      # Request handlers
+│   ├── services/         # Business logic layer
+│   ├── middleware/
+│   │   └── error-handler.ts  # Global error handling
+│   ├── models/           # Database models
+│   ├── types/
+│   │   └── index.ts      # Shared TypeScript types
+│   └── utils/            # Helper functions
+└── package.json
+```
+
+## Scripts
+
+Run all commands from the project root:
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start frontend and backend together |
+| `npm run dev:frontend` | Start frontend only (port 3000) |
+| `npm run dev:backend` | Start backend only (port 4000) |
+| `npm run build` | Build all workspaces |
+| `npm run build:frontend` | Build frontend only |
+| `npm run build:backend` | Build backend only |
+| `npm test` | Run frontend tests |
+| `npm run lint` | Lint frontend and backend |

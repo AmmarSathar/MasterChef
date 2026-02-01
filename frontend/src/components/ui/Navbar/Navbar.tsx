@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 
 import "./styles.css";
@@ -10,7 +9,6 @@ export default function Navbar() {
     document.documentElement.classList.toggle("dark");
   };
 
-  // Example: 4 icons in the middle, 1 theme button at the bottom
   return (
     <nav className="h-full w-33 flex absolute items-center justify-center p-5 m-0 bg-background text-foreground border-b border-border">
       <div className="w-full h-full max-w-7xl flex flex-col items-center p-3 m-0 rounded-2xl">
