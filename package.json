@@ -1,7 +1,11 @@
 {
   "name": "masterchef",
   "private": true,
-  "workspaces": ["frontend", "backend", "shared"],
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
   "scripts": {
     "dev": "npm run dev -w frontend & npm run dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
@@ -13,5 +17,26 @@
     "test:frontend": "npm run test -w frontend",
     "lint": "npm run lint -w frontend && npm run lint -w backend",
     "install:all": "npm install"
+  },
+  "version": "1.0.0",
+  "description": "- Ammar Sathar\r - Charrat Mohamed Taha\r - Haoyang Ni\r - Joey Chan\r - Navnit Chittoo\r - Paulina Aguayo Dupin",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmmarSathar/MasterChef.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AmmarSathar/MasterChef/issues"
+  },
+  "homepage": "https://github.com/AmmarSathar/MasterChef#readme",
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
