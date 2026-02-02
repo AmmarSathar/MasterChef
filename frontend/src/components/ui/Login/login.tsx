@@ -32,7 +32,7 @@ export default function Login() {
           backgroundAttachment: "fixed",
         }}
       >
-        <div className="login-container bg-card/80 backdrop-blur-sm relative h-200 w-130 flex flex-col gap-10 items-center justify-center rounded-2xl shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-0 m-0">
+        <div className="login-container bg-card/80 backdrop-blur-sm relative h-210 w-130 flex flex-col gap-10 items-center justify-center rounded-2xl shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-0 m-0">
           <div className="login-header w-full h-auto p-5 m-0 relative flex flex-col items-center justify-center gap-3">
             <Badge className="login-badge flex px-2 py-1 bg-primary/30 border border-primary shadow-sm shadow-background font-bold tracking-wide text-accent/90">
               Start your Cook Journey
@@ -108,6 +108,11 @@ export default function Login() {
                   GitHub
                 </span>
               </button>
+            </div>
+
+            <div className="login-no-account w-full flex items-center justify-center gap-1 py-5">
+              <span className="font-bold text-sm text-accent/70">Already have an account?</span>
+              <a href="/login#create-account" className="text-sm font-extrabold text-destructive/60 hover:text-destructive/80 transition-all underline">Log-In</a>
             </div>
           </div>
         </div>

@@ -105,7 +105,7 @@
     --muted-foreground-hex: #a1a1a1; /* Muted gray for labels */
     --accent-hex: #ffdab9; /* Peach/Light-Orange tag & highlights */
     --accent-foreground-hex: #0e0e0e;
-    --destructive-hex: #b91c1c;
+    --destructive-hex: #ef4444;
     --destructive-foreground-hex: #f1eee8;
     --border-hex: #333333; /* Subtle card/input borders */
     --input-hex: #1f1f1f;
