@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { User } from "@masterchef/shared/types/user";
 
@@ -8,16 +8,55 @@ import { Label } from "@components/ui/label";
 
 import Google from "@/lib/icons/google.svg";
 import Github from "@/lib/icons/github.svg";
+import Customize from "./Customize";
+import "./login.css";
 
 export default function Login() {
-  const [tempUser, setTempUser] = useState<User>();
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [isCustomizeReady, setIsCustomizeReady] = useState(false);
+
+  const loginContainerRef = useRef<HTMLDivElement>(null);
+  const customizeContainerRef = useRef<HTMLDivElement>(null);
+
+  const createAccount = async () => {
+    // Placeholder function - returns true for now
+    return true;
+  };
+
+  const handleCreateAccount = async () => {
+    const success = await createAccount();
+    if (success) {
+      if (loginContainerRef.current) {
+        loginContainerRef.current.classList.add("login-fadeout");
+      }
+
+      setTimeout(() => {
+        setShowCustomize(true);
+      }, 800);
+
+      setTimeout(() => {
+        if (customizeContainerRef.current) {
+          customizeContainerRef.current.classList.add("customize-slide");
+        }
+      }, 1000);
+
+      setTimeout(() => {
+        if (customizeContainerRef.current) {
+          customizeContainerRef.current.classList.add("customize-expand");
+        }
+      }, 1800);
+
+      setTimeout(() => {
+        setIsCustomizeReady(true);
+      }, 2200);
+    }
+  };
 
   return (
-    <>
-      <div
-        className="login-root absolute h-full w-full flex items-center justify-center"
-        style={{
-          background: `
+    <div
+      className="login-root absolute h-full w-full flex items-center justify-center"
+      style={{
+        background: `
         linear-gradient(135deg, 
           oklch(var(--background-oklch)) 0%, 
           oklch(var(--card-oklch)) 25%, 
@@ -28,11 +67,24 @@ export default function Login() {
         radial-gradient(ellipse at 20% 30%, oklch(var(--primary-oklch)) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 70%, oklch(var(--accent-oklch)) 0%, transparent 50%)
           `,
-          backgroundBlendMode: "soft-light, normal, normal",
-          backgroundAttachment: "fixed",
-        }}
-      >
-        <div className="login-container bg-card/80 backdrop-blur-sm relative h-210 w-130 flex flex-col gap-10 items-center justify-center rounded-2xl shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-0 m-0">
+        backgroundBlendMode: "soft-light, normal, normal",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      {showCustomize && (
+        <div
+          ref={customizeContainerRef}
+          className="login-customize-container bg-card/80 backdrop-blur-sm relative flex items-center justify-center rounded-2xl shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-20 customize-show"
+        >
+          <Customize ready={isCustomizeReady} />
+        </div>
+      )}
+
+      {!showCustomize && (
+        <div
+          ref={loginContainerRef}
+          className="login-container bg-card/80 backdrop-blur-sm relative h-210 w-130 flex flex-col gap-10 items-center justify-center rounded-2xl shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-0 m-0"
+        >
           <div className="login-header w-full h-auto p-5 m-0 relative flex flex-col items-center justify-center gap-3">
             <Badge className="login-badge flex px-2 py-1 bg-primary/30 border border-primary shadow-sm shadow-background font-bold tracking-wide text-accent/90">
               Start your Cook Journey
@@ -80,7 +132,10 @@ export default function Login() {
               </div>
             ))}
 
-            <button className="w-full h-13 bg-primary/90 text-accent font-bold rounded-full shadow-sm shadow-primary/50 hover:shadow-primary/90 hover:opacity-90 cursor-pointer transition-all duration-200">
+            <button
+              className="w-full h-13 bg-primary/90 text-accent font-bold rounded-full shadow-sm shadow-primary/50 hover:shadow-primary/90 hover:opacity-90 cursor-pointer transition-all duration-200"
+              onClick={handleCreateAccount}
+            >
               Create Account
             </button>
           </div>
@@ -98,25 +153,32 @@ export default function Login() {
             <div className="login-icons w-full h-auto flex items-center justify-center gap-4">
               <button className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
                 <img src={Google} alt="google-icon" className="w-4 h-4" />
-                <span className="font-bold text-sm text-accent">
-                  Google
-                </span>
+                <span className="font-bold text-sm text-accent">Google</span>
               </button>
               <button className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
-                <img src={Github} alt="github-icon" className="w-4 h-4 invert-(--filter-invert-d-l)" />
-                <span className="font-bold text-sm text-accent ">
-                  GitHub
-                </span>
+                <img
+                  src={Github}
+                  alt="github-icon"
+                  className="w-4 h-4 invert-(--filter-invert-d-l)"
+                />
+                <span className="font-bold text-sm text-accent ">GitHub</span>
               </button>
             </div>
 
             <div className="login-no-account w-full flex items-center justify-center gap-1 py-5">
-              <span className="font-bold text-sm text-accent/70">Already have an account?</span>
-              <a href="/login#create-account" className="text-sm font-extrabold text-destructive/60 hover:text-destructive/80 transition-all underline">Log-In</a>
+              <span className="font-bold text-sm text-accent/70">
+                Already have an account?
+              </span>
+              <a
+                href="/login#create-account"
+                className="text-sm font-extrabold text-destructive/60 hover:text-destructive/80 transition-all underline"
+              >
+                Log-In
+              </a>
             </div>
           </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 }
