@@ -1,5 +1,7 @@
 import React from "react";
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 import "./styles.css";
 
 export default function Navbar() {
@@ -27,15 +29,8 @@ export default function Navbar() {
         </div>
 
         <div className="navbar-bottom navIconParent">
-          <button
-            onClick={() => {
-              toggleTheme();
-              setSelectedBtn(4);
-            }}
-            className={`cursor-pointer ${selectedBtn === 4 ? "selected" : ""}`}
-          >
-            🌙
-          </button>
+          <ThemeToggle />
+
           <i className="nvIcon"></i>
         </div>
       </div>

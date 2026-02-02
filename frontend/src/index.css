@@ -1,81 +1,223 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Outfit:wght@300;400;500;600;700;800&amp;display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap");
 @import "tailwindcss";
-
-@theme {
-  --color-background: oklch(var(--background));
-  --color-foreground: oklch(var(--foreground));
-  --color-card: oklch(var(--card));
-  --color-card-foreground: oklch(var(--card-foreground));
-  --color-popover: oklch(var(--popover));
-  --color-popover-foreground: oklch(var(--popover-foreground));
-  --color-primary: oklch(var(--primary));
-  --color-primary-foreground: oklch(var(--primary-foreground));
-  --color-secondary: oklch(var(--secondary));
-  --color-secondary-foreground: oklch(var(--secondary-foreground));
-  --color-muted: oklch(var(--muted));
-  --color-muted-foreground: oklch(var(--muted-foreground));
-  --color-accent: oklch(var(--accent));
-  --color-accent-foreground: oklch(var(--accent-foreground));
-  --color-destructive: oklch(var(--destructive));
-  --color-destructive-foreground: oklch(var(--destructive-foreground));
-  --color-border: oklch(var(--border));
-  --color-input: oklch(var(--input));
-  --color-ring: oklch(var(--ring));
-  --radius: var(--radius);
-}
+/**
+ * MasterChef Color Palette
+ * 
+ * Compatible with shadcn/ui themes - uses CSS variables that automatically switch between light/dark modes
+ * 
+ * Structure:
+ * - Base color values in :root (light mode) and .dark (dark mode)
+ * - Both hex and OKLCH formats available
+ * - @theme references these base values for Tailwind
+ * 
+ * USAGE:
+ * - Tailwind: <div className="bg-brand-primary text-white" />
+ * - CSS Hex: background-color: var(--brand-primary-hex);
+ * - CSS OKLCH: background-color: oklch(var(--brand-primary-oklch));
+ * 
+ * SHADCN COMPATIBILITY:
+ * To use shadcn themes, simply copy their CSS variable values into :root and .dark sections
+ */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-  }
-
+    /* ===== Semantic UI Colors - Hex (Light Mode Base) ===== */ /* Based on your original requested palette: #f1eee8 (beige), #f2f5e8 (off-green), #d7c7e7 (violet) */
+    --background-hex: #f1eee8;
+    --foreground-hex: #1a1a1a;
+    --card-hex: #f2f5e8;
+    --card-foreground-hex: #1a1a1a;
+    --popover-hex: #f1eee8;
+    --popover-foreground-hex: #1a1a1a;
+    --primary-hex: #d7c7e7;
+    --primary-foreground-hex: #1a1a1a;
+    --secondary-hex: #e2e8d4;
+    --secondary-foreground-hex: #1a1a1a;
+    --muted-hex: #e5e2db;
+    --muted-foreground-hex: #6b6b6b;
+    --accent-hex: #191919; /* Darker sage green accent */
+    --accent-foreground-hex: #1a1a1a;
+    --destructive-hex: #ef4444;
+    --destructive-foreground-hex: #f1eee8;
+    --border-hex: #e2e1da;
+    --input-hex: #e2e1da;
+    --ring-hex: #d7c7e7; /* ===== Semantic UI Colors - OKLCH (L C H) ===== */
+    --background-oklch: 94.5% 0.01 85;
+    --foreground-oklch: 15% 0 0;
+    --card-oklch: 96% 0.02 110;
+    --card-foreground-oklch: 15% 0 0;
+    --popover-oklch: 94.5% 0.01 85;
+    --popover-foreground-oklch: 15% 0 0;
+    --primary-oklch: 85% 0.06 300;
+    --primary-foreground-oklch: 15% 0 0;
+    --secondary-oklch: 92% 0.03 110;
+    --secondary-foreground-oklch: 15% 0 0;
+    --muted-oklch: 90% 0.01 85;
+    --muted-foreground-oklch: 45% 0 0;
+    --accent-oklch: 90% 0.05 65;
+    --accent-foreground-oklch: 15% 0 0;
+    --destructive-oklch: 60.2% 0.184 25;
+    --destructive-foreground-oklch: 94.5% 0.01 85;
+    --border-oklch: 89% 0.01 85;
+    --input-oklch: 89% 0.01 85;
+    --ring-oklch: 85% 0.06 300; /* ===== Brand Colors - Hex ===== */
+    --brand-primary-hex: #d7c7e7; /* Soft Violet */
+    --brand-secondary-hex: #ffdab9; /* Light Orange */
+    --brand-accent-hex: #f2f5e8; /* Off-Green */ /* ===== Brand Colors - OKLCH ===== */
+    --brand-primary-oklch: 85% 0.06 300;
+    --brand-secondary-oklch: 90% 0.05 65;
+    --brand-accent-oklch: 96% 0.02 110; /* ===== Status Colors - Hex ===== */
+    --success-hex: #10b981;
+    --success-foreground-hex: #f1eee8;
+    --warning-hex: #f59e0b;
+    --warning-foreground-hex: #1a1a1a;
+    --error-hex: #ef4444;
+    --error-foreground-hex: #f1eee8;
+    --info-hex: #3b82f6;
+    --info-foreground-hex: #f1eee8; /* ===== Status Colors - OKLCH ===== */
+    --success-oklch: 70% 0.15 150;
+    --success-foreground-oklch: 94.5% 0.01 85;
+    --warning-oklch: 75% 0.15 70;
+    --warning-foreground-oklch: 15% 0 0;
+    --error-oklch: 60.2% 0.184 25;
+    --error-foreground-oklch: 94.5% 0.01 85;
+    --info-oklch: 60% 0.17 250;
+    --info-foreground-oklch: 94.5% 0.01 85; /* ===== Spacing & Effects ===== */
+    --radius: 1rem;
+    --filter-invert-d-l: 0;
+    --shadow-green-3d:
+      0 10px 25px -5px rgba(110, 142, 108, 0.3),
+      0 8px 10px -6px rgba(110, 142, 108, 0.3);
+  } /* Dark Mode - Color Overrides */
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    /* ===== Semantic UI Colors - Hex (Directly from the Dark Design) ===== */
+    --background-hex: #0e0e0e; /* Deep obsidian/charcoal */
+    --foreground-hex: #f1eee8; /* Creamy off-white for text */
+    --card-hex: #181818; /* Elevated card surface */
+    --card-foreground-hex: #f1eee8;
+    --popover-hex: #1a1a1a;
+    --popover-foreground-hex: #f1eee8;
+    --primary-hex: #934b43; /* Muted terracotta (Button color) */
+    --primary-foreground-hex: #f1eee8;
+    --secondary-hex: #2a2a2a; /* Input backgrounds/Sidebar */
+    --secondary-foreground-hex: #f1eee8;
+    --muted-hex: #2a2a2a;
+    --muted-foreground-hex: #a1a1a1; /* Muted gray for labels */
+    --accent-hex: #ffdab9; /* Peach/Light-Orange tag & highlights */
+    --accent-foreground-hex: #0e0e0e;
+    --destructive-hex: #ef4444;
+    --destructive-foreground-hex: #f1eee8;
+    --border-hex: #333333; /* Subtle card/input borders */
+    --input-hex: #1f1f1f;
+    --ring-hex: #934b43; /* ===== Semantic UI Colors - OKLCH (L C H) ===== */
+    --background-oklch: 10% 0.005 30;
+    --foreground-oklch: 94% 0.01 80;
+    --card-oklch: 14% 0.005 30;
+    --card-foreground-oklch: 94% 0.01 80;
+    --popover-oklch: 15% 0.005 30;
+    --popover-foreground-oklch: 94% 0.01 80;
+    --primary-oklch: 45% 0.12 35; /* Terracotta LCH */
+    --primary-foreground-oklch: 94% 0.01 80;
+    --secondary-oklch: 22% 0 0;
+    --secondary-foreground-oklch: 94% 0.01 80;
+    --muted-oklch: 22% 0 0;
+    --muted-foreground-oklch: 68% 0 0;
+    --accent-oklch: 90% 0.05 65; /* Peach LCH */
+    --accent-foreground-oklch: 10% 0.005 30;
+    --destructive-oklch: 40% 0.18 25;
+    --destructive-foreground-oklch: 94% 0.01 80;
+    --border-oklch: 25% 0 0;
+    --input-oklch: 18% 0 0;
+    --ring-oklch: 45% 0.12 35; /* ===== Brand Colors - Hex ===== */
+    --brand-primary-hex: #934b43; /* Terracotta */
+    --brand-secondary-hex: #ffdab9; /* Peach Orange */
+    --brand-accent-hex: #1a2e1a; /* The deep greenish shadow tint */ /* ===== Brand Colors - OKLCH ===== */
+    --brand-primary-oklch: 45% 0.12 35;
+    --brand-secondary-oklch: 90% 0.05 65;
+    --brand-accent-oklch: 20% 0.03 140; /* ===== Dark Mode Specific Shadows & Gradients ===== */
+    --filter-invert-d-l: 100;
+    --shadow-3d-glow:
+      0 10px 30px -5px rgba(147, 75, 67, 0.15),
+      0 0 15px -3px rgba(110, 142, 108, 0.1);
+    --radius: 1.25rem;
   }
 }
 
+/* Tailwind Theme - References base variables (auto-switches with .dark) */
+@theme {
+  /* ===== Semantic UI Colors ===== */
+  --color-background: var(--background-hex);
+  --color-foreground: var(--foreground-hex);
+  --color-card: var(--card-hex);
+  --color-card-foreground: var(--card-foreground-hex);
+  --color-popover: var(--popover-hex);
+  --color-popover-foreground: var(--popover-foreground-hex);
+  --color-primary: var(--primary-hex);
+  --color-primary-foreground: var(--primary-foreground-hex);
+  --color-secondary: var(--secondary-hex);
+  --color-secondary-foreground: var(--secondary-foreground-hex);
+  --color-muted: var(--muted-hex);
+  --color-muted-foreground: var(--muted-foreground-hex);
+  --color-accent: var(--accent-hex);
+  --color-accent-foreground: var(--accent-foreground-hex);
+  --color-destructive: var(--destructive-hex);
+  --color-destructive-foreground: var(--destructive-foreground-hex);
+  --color-border: var(--border-hex);
+  --color-input: var(--input-hex);
+  --color-ring: var(--ring-hex);
+
+  /* ===== Brand Colors ===== */
+  --color-brand-primary: var(--brand-primary-hex);
+  --color-brand-secondary: var(--brand-secondary-hex);
+  --color-brand-accent: var(--brand-accent-hex);
+
+  /* ===== Status Colors ===== */
+  --color-success: var(--success-hex);
+  --color-success-foreground: var(--success-foreground-hex);
+  --color-warning: var(--warning-hex);
+  --color-warning-foreground: var(--warning-foreground-hex);
+  --color-error: var(--error-hex);
+  --color-error-foreground: var(--error-foreground-hex);
+  --color-info: var(--info-hex);
+  --color-info-foreground: var(--info-foreground-hex);
+
+  /* ===== Typography ===== */
+  --font-family-display: "Outfit", sans-serif;
+  --font-family-body: "Plus Jakarta Sans", sans-serif;
+
+  /* ===== Spacing ===== */
+  --radius: var(--radius);
+  --radius-sm: 0.375rem;
+  --radius-lg: 0.75rem;
+}
+
+/* Base Styles */
 @layer base {
   * {
-    border-color: oklch(var(--border));
+    @apply border-border;
   }
+
   body {
-    background-color: oklch(var(--background));
-    color: oklch(var(--foreground));
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
+}
+
+* {
+  font-family: var(--font-family-body);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-in-out;
 }

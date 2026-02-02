@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@/assets': fileURLToPath(new URL('./src/assets', import.meta.url)),
+      '@/lib': fileURLToPath(new URL('./src/lib', import.meta.url)),
       '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
       '@masterchef/shared': fileURLToPath(new URL('../shared/index.ts', import.meta.url)),
     },
