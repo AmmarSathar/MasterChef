@@ -9,3 +9,24 @@ export type AsyncHandler = (
   res: Response,
   next: NextFunction
 ) => Promise<void>;
+
+// User types
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  passwordHash: string;
+  createdAt: Date;
+}
+
+export interface CreateUserInput {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+}
