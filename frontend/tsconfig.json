@@ -15,7 +15,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@/lib/*": ["./src/lib/*"],
+      "@/assets/*": ["./src/assets/*"],
       "@components/*": ["./src/components/*"],
       "@masterchef/shared": ["../shared/index.ts"],
       "@masterchef/shared/*": ["../shared/*"]
