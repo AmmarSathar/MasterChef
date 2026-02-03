@@ -36,9 +36,8 @@ const userSchema = new Schema<IUser>(
 // Prevent password hash from being returned in queries by default
 userSchema.set("toJSON", {
   transform: (_doc, ret) => {
-    delete ret.passwordHash;
-    delete ret.__v;
-    return ret;
+    const { passwordHash, __v, ...rest } = ret;
+    return rest;
   },
 });
 
