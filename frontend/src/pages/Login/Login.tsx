@@ -1,6 +1,6 @@
 import React, { useState } from 'react'                                         // Import React library, 'useState' hook to allow function to store/update local state between renders
-import showIcon from '@/components/lib/icons/show.svg'
-import hideIcon from '@/components/lib/icons/hide.svg'
+import showIcon from '@/lib/icons/show.svg'
+import hideIcon from '@/lib/icons/hide.svg'
 
 export default function Login() {                                               // Define Login functional component; 'export default' to allow other files to import this component
   const [email, setEmail] = useState('')                                        // State var 'email'; Format: [current value, function to update, initial val == empty string]
