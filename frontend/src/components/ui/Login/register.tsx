@@ -11,7 +11,7 @@ import Github from "@/lib/icons/github.svg";
 import Customize from "./Customize";
 import "./login.css";
 
-export default function Login() {
+export default function Register() {
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
 
