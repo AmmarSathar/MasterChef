@@ -1,14 +1,8 @@
 import bcrypt from "bcrypt";
-import { CreateUserInput, User, UserResponse, ApiError } from "../types/index.js";
+import { CreateUserInput, UserResponse, ApiError } from "../types/index.js";
+import { User } from "../models/user.model.js";
 
 const SALT_ROUNDS = 10;
-
-// TODO: Replace with actual database implementation
-const users: Map<string, User> = new Map();
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,32 +32,25 @@ export async function registerUser(input: CreateUserInput): Promise<UserResponse
   }
 
   // Check for duplicate email
-  // TODO: Replace with database query
-  for (const user of users.values()) {
-    if (user.email === email) {
-      const error: ApiError = new Error("Email already registered");
-      error.statusCode = 409;
-      throw error;
-    }
+  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  if (existingUser) {
+    const error: ApiError = new Error("Email already registered");
+    error.statusCode = 409;
+    throw error;
   }
 
   // Hash password
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  // Create user
-  const user: User = {
-    id: generateId(),
+  // Create user in database
+  const user = await User.create({
     email,
     name,
     passwordHash,
-    createdAt: new Date(),
-  };
-
-  // TODO: Save to database
-  users.set(user.id, user);
+  });
 
   return {
-    id: user.id,
+    id: user._id.toString(),
     email: user.email,
     name: user.name,
   };
