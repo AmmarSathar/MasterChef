@@ -180,9 +180,9 @@ export default function Login() {
 
   const handleCreateAccount = async (formData: FormData) => {
     const success = await completeRegistration(formData);
-    console.log("passed 1");
+    // console.log("passed 1");
     if (success) {
-      console.log("passed");
+      // console.log("passed");
       if (loginContainerRef.current) {
         loginContainerRef.current.classList.add("login-fadeout");
       }

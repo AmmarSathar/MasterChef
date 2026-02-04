@@ -17,5 +17,8 @@
     "test:frontend": "npm run test -w frontend",
     "lint": "npm run lint -w frontend && npm run lint -w backend",
     "install:all": "npm install"
+  },
+  "dependencies": {
+    "mongodb": "^7.0.0"
   }
 }

@@ -11,14 +11,6 @@ export type AsyncHandler = (
 ) => Promise<void>;
 
 // User types
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  passwordHash: string;
-  createdAt: Date;
-}
-
 export interface CreateUserInput {
   email: string;
   password: string;
