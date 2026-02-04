@@ -77,8 +77,8 @@ export default function CustomizeStep1({
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (formData: FormData) => {
+    // console.log(selectedDietary, allergies, skillLevel, selectedCuisines);
     onNext({
       dietaryRestrictions: selectedDietary,
       allergies,
@@ -89,7 +89,10 @@ export default function CustomizeStep1({
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(new FormData(e.currentTarget));
+      }}
       className={`transition-all duration-700 ease-out w-full flex flex-col gap-8 max-md:no-scrollbar ${
         headerTransitioned
           ? "opacity-100 translate-y-0"

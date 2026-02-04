@@ -53,8 +53,15 @@ export default function CustomizeStep2({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (formData: FormData) => {
+    // console.log(
+    //   Number(age),
+    //   dateOfBirth,
+    //   Number(weight),
+    //   Number(height),
+    //   profilePicture,
+    //   bio,
+    // );
     onNext({
       age: Number(age),
       dateOfBirth,
@@ -67,7 +74,10 @@ export default function CustomizeStep2({
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(new FormData(e.currentTarget));
+      }}
       className={`transition-all duration-700 ease-out w-full flex flex-col gap-10 max-md:no-scrollbar ${
         headerTransitioned
           ? "opacity-100 translate-y-0"
