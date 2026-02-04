@@ -14,6 +14,10 @@ export default function Login2() {                                  // Define Lo
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {   // Define function to handle form submission; 'e' is the event object
     e.preventDefault()                                              // Prevent browser default behavior e.g. page reload upon form submission
+    if (!email || !password) {
+      alert('Please fill out all fields')
+      return
+    }    
     // TODO: Wire up authentication
     console.log({ email, password, remember })                      // Log email, password, remember values to browser console (for testing purposes)
   }
@@ -49,8 +53,7 @@ export default function Login2() {                                  // Define Lo
           </span>
         </div>
 
-        { /* Form element with onSubmit handler; calls handleSubmit when user clicks 'Sign In' or presses Enter */ }
-        <form onSubmit={handleSubmit}
+        <form onSubmit={handleSubmit}                               // Calls handleSubmit when user clicks 'Sign In' or presses Enter
             className="login-form w-full h-auto flex flex-col items-center justify-center gap-7 px-15">
           <div className="grid w-full items-center gap-3">          { /* Container for Email input field */ }
             <Label htmlFor="email" className="font-bold text-accent/85">
@@ -94,7 +97,7 @@ export default function Login2() {                                  // Define Lo
             </div>
           </div>
 
-          <div className="flex items-center justify-between w-full px-15">
+          <div className="flex items-center justify-between w-full px-6.5 -mt-4">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
