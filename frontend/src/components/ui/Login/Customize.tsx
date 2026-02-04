@@ -17,6 +17,8 @@ import {
 
 import { EggFriedIcon, CitrusIcon } from "lucide-react";
 
+import { User } from "@masterchef/shared/types/user";
+
 interface CustomizeProps {
   ready: boolean;
 }
@@ -54,12 +56,20 @@ export default function Customize({ ready }: CustomizeProps) {
   const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
   const [skillLevel, setSkillLevel] = useState("");
   const [allergies, setAllergies] = useState("");
+  const [partialUser, setPartialUser] = useState<User>({} as User);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setPartialUser(JSON.parse(storedUser));
+    }
+  }, [partialUser]);
 
   useEffect(() => {
     if (ready) {
       setTimeout(() => {
         setHeaderTransitioned(true);
-      }, 100);
+      }, 600);
     }
   }, [ready]);
 
@@ -79,22 +89,26 @@ export default function Customize({ ready }: CustomizeProps) {
     );
   };
 
-  const handleComplete = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleFormComplete = async (formData: FormData) => {
     if (selectedCuisines.length === 0) {
       toast.error("Please select at least one favorite cuisine");
       return;
     }
 
     const loadingToast = toast.loading("Setting up your profile...");
+    setPartialUser((prev) => ({
+      ...prev,
+      dietaryRestrictions: selectedDietary,
+      allergies: allergies.split(",").map((a) => a.trim()),
+      skillLevel,
+      favoriteCuisines: selectedCuisines,
+    }));
 
-    // Timeout used to simulate server response time. Please remove when integrating actual logic.
     setTimeout(() => {
       toast.dismiss(loadingToast);
       toast.success("Profile customization complete!\nLet's start cooking!");
       // navigate to main app later
-    }, 2000);
+    }, 1000);
   };
 
   return (
@@ -110,30 +124,37 @@ export default function Customize({ ready }: CustomizeProps) {
       <div
         className={`customize-stepper max-md:w-full max-md:h-20 max-md:p-5 relative flex items-center justify-center transition-all duration-500 delay-500 ease-out mb-5 ${headerTransitioned ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}
       >
-        <Stepper defaultValue={2} className="">
+        <Stepper defaultValue={0} className="">
           <StepperNav>
-            {[0, 1, 2].map((step) => (
-              <StepperItem key={step} step={step}>
-                <StepperTrigger>
-                  <StepperIndicator>{step}</StepperIndicator>
-                </StepperTrigger>
-                {[0, 1, 2].length > step && (
-                  <StepperSeparator className="group-data-[state=completed]/step:bg-primary" />
-                )}
-              </StepperItem>
-            ))}
+            {["Culinary Preferences", "Profile Customization", "Friends"].map(
+              (step, index) => (
+                <StepperItem key={step} step={index + 1}>
+                  <StepperTrigger>
+                    <StepperIndicator>{index}</StepperIndicator>
+                  </StepperTrigger>
+                  {index <
+                    ["Culinary Preferences", "Profile Customization", "Friends"]
+                      .length -
+                      1 && (
+                    <StepperSeparator className="group-data-[state=completed]/step:bg-primary" />
+                  )}
+                </StepperItem>
+              ),
+            )}
           </StepperNav>
 
           <StepperPanel className="text-sm">
-            {[0, 1, 2].map((step) => (
-              <StepperContent
-                key={step}
-                value={step}
-                className="flex items-center justify-center"
-              >
-                Step {step} content
-              </StepperContent>
-            ))}
+            {["Culinary Preferences", "Profile Customization", "Friends"].map(
+              (step, index) => (
+                <StepperContent
+                  key={step}
+                  value={index}
+                  className="flex items-center justify-center"
+                >
+                  {step}
+                </StepperContent>
+              ),
+            )}
           </StepperPanel>
         </Stepper>
       </div>
@@ -145,21 +166,26 @@ export default function Customize({ ready }: CustomizeProps) {
             : "text-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         }`}
       >
-        <h1 className="text-4xl font-bold text-foreground mb-4 transition-all duration-200 relative">
-          Customize Your Culinary Experience
+        <div className="typewriter mb-4 w-full transition-all duration-500 relative">
+          <h1 className={`${headerTransitioned ? "hideBar" : ""} text-4xl font-bold text-foreground w-full transition-all duration-500`}>
+            Customize Your Culinary Experience
+          </h1>
           <EggFriedIcon
             size={70}
             className={`absolute -right-10 -bottom-25 max-md:opacity-10 max-md:z-100 opacity-0 -translate-y-5 transition-all duration-500 delay-700 ease-out ${headerTransitioned ? "opacity-70 translate-y-0" : ""}`}
             color="#FDB813"
           />
-        </h1>
-        <p className="text-muted-foreground">
+        </div>
+        <p className={`text-muted-foreground transition-all duration-400 ${ready ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}>
           Personalize your cooking journey
         </p>
       </div>
 
       <form
-        onSubmit={handleComplete}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleFormComplete(e);
+        }}
         className={`transition-all duration-700 ease-out w-full flex flex-col gap-8 max-md:no-scrollbar ${
           headerTransitioned
             ? "opacity-100 translate-y-0"
@@ -202,6 +228,7 @@ export default function Customize({ ready }: CustomizeProps) {
           </p>
           <Input
             id="allergies"
+            name="allergies"
             placeholder="e.g. Peanuts, Shellfish, Eggs"
             value={allergies}
             onChange={(e) => setAllergies(e.target.value)}

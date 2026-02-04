@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+import axios, { Axios, AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
-import { Eye, EyeOff } from "lucide-react";
 
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
@@ -13,6 +13,7 @@ import { Checkbox } from "@components/ui/checkbox";
 
 import Google from "@/lib/icons/google.svg";
 import Github from "@/lib/icons/github.svg";
+import { Eye, EyeOff } from "lucide-react";
 import "./login.css";
 
 const passRequirements = [
@@ -62,6 +63,8 @@ export default function Login() {
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
 
+  const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+
   useEffect(() => {
     const queryParameters = new URLSearchParams(window.location.search);
     const queryRegister = queryParameters.get("register");
@@ -92,7 +95,7 @@ export default function Login() {
     }, 1000);
   };
 
-  const completeRegistration = async () => {
+  const completeRegistration = async (formData: FormData) => {
     if (partialPasswordReq.some((req) => !req.complete)) {
       console.log(partialPasswordReq.filter((req) => !req.complete));
       toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
@@ -119,21 +122,64 @@ export default function Login() {
       console.log("Sign Up");
       // Handle registration logic here
 
-      // Timeout used to simulate server response time. Please remove when integrating actual logic.
-      return await new Promise((res, _) =>
-        setTimeout(() => {
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      const name = formData.get("name") as string;
+
+      let response: AxiosResponse<User> | undefined;
+
+      console.log("Passed logon for: ", email, name)
+
+      try {
+        response = await axios.post<User>(`${BASE_API_URL}/auth/register`, {
+          email: email,
+          password: password,
+          name: name,
+        });
+
+        const user = response.data;
+        //save user in localstorage for autoconnect
+        localStorage.setItem("user", JSON.stringify(user));
+
+        toast.dismiss(registrationToast);
+        toast.success(
+          `Account created successfully!\nWelcome aboard ${name}!`,
+        );
+        return true;
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err) && err.response) {
+          const status = err.response.status;
+
+          if (status === 400) {
+            toast.dismiss(registrationToast);
+            toast.error("Invalid registration data.");
+            console.error("Validation error:", err);
+          } else if (status === 409) {
+            toast.dismiss(registrationToast);
+            toast.error("Email is already taken.");
+            console.error("Email already taken:", err);
+          }
+        } else {
           toast.dismiss(registrationToast);
-          toast.success(
-            "Account created successfully!\nWelcome aboard {name}!",
-          );
-          res(true);
-        }, 2000),
-      );
+          toast.error(`An unexpected error occurred. Please try again.`);
+          console.error("Request failed:", err);
+        }
+      }
+
+      // return await new Promise((res, _) =>
+      //   setTimeout(() => {
+      //     toast.dismiss(registrationToast);
+      //     toast.success(
+      //       "Account created successfully!\nWelcome aboard {name}!",
+      //     );
+      //     res(true);
+      //   }, 2000),
+      // );
     }
   };
 
-  const handleCreateAccount = async () => {
-    const success = await completeRegistration();
+  const handleCreateAccount = async (formData: FormData) => {
+    const success = await completeRegistration(formData);
     console.log("passed 1");
     if (success) {
       console.log("passed");
@@ -218,7 +264,8 @@ export default function Login() {
             className="login-form w-full h-auto flex flex-col items-center justify-center gap-7 px-15 max-md:px-5 relative"
             onSubmit={(e) => {
               e.preventDefault();
-              handleCreateAccount();
+              console.log(e.target);
+              handleCreateAccount(new FormData(e.currentTarget));
             }}
           >
             {!isLogin && (
@@ -228,6 +275,7 @@ export default function Login() {
                 </Label>
                 <Input
                   id="name"
+                  name="name"
                   placeholder="e.g. John Doe"
                   type="text"
                   autoComplete="name"
@@ -243,6 +291,7 @@ export default function Login() {
               </Label>
               <Input
                 id="email"
+                name="email"
                 placeholder="best.cook@example.com"
                 type="email"
                 autoComplete="email"
@@ -258,6 +307,7 @@ export default function Login() {
               <div className="relative w-full">
                 <Input
                   id="password"
+                  name="password"
                   placeholder={isLogin ? "BestCook123" : "Make it strong"}
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
@@ -305,7 +355,9 @@ export default function Login() {
               <div className="flex items-center justify-start w-full -mt-3">
                 <Checkbox
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setRememberMe(checked as boolean)
+                  }
                   id="remember-me"
                   className="w-5 h-5 ml-1/2 rounded-full border-2 border-accent/60 bg-accent text-primary transition-all duration-150 focus:ring-2 focus:ring-border/50 cursor-pointer"
                 />
