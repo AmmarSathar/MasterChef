@@ -10,6 +10,8 @@ export async function register(
   try {
     const { email, password, name } = req.body as CreateUserInput;
 
+    console.log("request for data: ", email, name)
+
     const user = await registerUser({ email, password, name });
 
     res.status(201).json({

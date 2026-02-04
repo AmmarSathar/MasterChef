@@ -236,3 +236,37 @@
 .animate-fade-in {
   animation: fade-in 0.5s ease-in-out;
 }
+
+.typewriter h1 {
+  overflow: hidden; /* Ensures the content is not revealed until the animation */
+  border-right: 0.15em solid orange; /* The typwriter cursor */
+  white-space: nowrap; /* Keeps the content on a single line */
+  animation:
+    typing 1.5s steps(50, end),
+    blink-caret 0.6s step-end infinite;
+}
+
+.typewriter h1.hideBar {
+  border-right: none; /* Hide the cursor */
+}
+
+/* The typing effect */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* The typewriter cursor effect */
+@keyframes blink-caret {
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: orange;
+  }
+}
