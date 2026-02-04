@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 
-import { Input } from "@components/ui/input";
-import { Label } from "@components/ui/label";
-import { Badge } from "@components/ui/badge";
 import {
   Stepper,
   StepperContent,
@@ -15,55 +12,42 @@ import {
   StepperTrigger,
 } from "@/components/ui/stepper";
 
-import { EggFriedIcon, CitrusIcon } from "lucide-react";
+import { EggFriedIcon } from "lucide-react";
 
 import { User } from "@masterchef/shared/types/user";
+import CustomizeStep1 from "./CustomizeStep1";
+import CustomizeStep2 from "./CustomizeStep2";
 
 interface CustomizeProps {
   ready: boolean;
 }
 
-const dietaryOptions = [
-  "Vegetarian",
-  "Vegan",
-  "Pescatarian",
-  "Gluten-Free",
-  "Dairy-Free",
-  "Keto",
-  "Paleo",
-  "Halal",
-  "Kosher",
-];
-
-const cuisineOptions = [
-  "Italian",
-  "Mexican",
-  "Chinese",
-  "Japanese",
-  "Indian",
-  "Thai",
-  "French",
-  "Mediterranean",
-  "American",
-  "Korean",
-];
-
-const skillLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
-
 export default function Customize({ ready }: CustomizeProps) {
   const [headerTransitioned, setHeaderTransitioned] = useState(false);
-  const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
-  const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
-  const [skillLevel, setSkillLevel] = useState("");
-  const [allergies, setAllergies] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [partialUser, setPartialUser] = useState<User>({} as User);
+  const [step1Data, setStep1Data] = useState({
+    dietaryRestrictions: [] as string[],
+    allergies: "",
+    skillLevel: "",
+    favoriteCuisines: [] as string[],
+  });
+  const [step2Data, setStep2Data] = useState({
+    age: 0,
+    dateOfBirth: "",
+    weight: 0,
+    height: 0,
+    profilePicture: null as string | null,
+    bio: "",
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setPartialUser(JSON.parse(storedUser));
     }
-  }, [partialUser]);
+  }, []);
 
   useEffect(() => {
     if (ready) {
@@ -73,35 +57,39 @@ export default function Customize({ ready }: CustomizeProps) {
     }
   }, [ready]);
 
-  const toggleDietary = (option: string) => {
-    setSelectedDietary((prev) =>
-      prev.includes(option)
-        ? prev.filter((item) => item !== option)
-        : [...prev, option],
-    );
-  };
-
-  const toggleCuisine = (option: string) => {
-    setSelectedCuisines((prev) =>
-      prev.includes(option)
-        ? prev.filter((item) => item !== option)
-        : [...prev, option],
-    );
-  };
-
-  const handleFormComplete = async (formData: FormData) => {
-    if (selectedCuisines.length === 0) {
+  const handleStep1Next = (data: typeof step1Data) => {
+    if (data.favoriteCuisines.length === 0) {
       toast.error("Please select at least one favorite cuisine");
       return;
     }
 
+    setStep1Data(data);
+    setIsTransitioning(true);
+    
+    setTimeout(() => {
+      setCurrentStep(1);
+      setIsTransitioning(false);
+    }, 400);
+  };
+
+  const handleStep2Back = () => {
+    setIsTransitioning(true);
+    
+    setTimeout(() => {
+      setCurrentStep(0);
+      setIsTransitioning(false);
+    }, 400);
+  };
+
+  const handleStep2Complete = (data: typeof step2Data) => {
     const loadingToast = toast.loading("Setting up your profile...");
+    setStep2Data(data);
+    
     setPartialUser((prev) => ({
       ...prev,
-      dietaryRestrictions: selectedDietary,
-      allergies: allergies.split(",").map((a) => a.trim()),
-      skillLevel,
-      favoriteCuisines: selectedCuisines,
+      ...step1Data,
+      ...data,
+      allergies: step1Data.allergies.split(",").map((a) => a.trim()),
     }));
 
     setTimeout(() => {
@@ -124,18 +112,16 @@ export default function Customize({ ready }: CustomizeProps) {
       <div
         className={`customize-stepper max-md:w-full max-md:h-20 max-md:p-5 relative flex items-center justify-center transition-all duration-500 delay-500 ease-out mb-5 ${headerTransitioned ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}
       >
-        <Stepper defaultValue={0} className="">
+        <Stepper defaultValue={currentStep} className="">
           <StepperNav>
-            {["Culinary Preferences", "Profile Customization", "Friends"].map(
+            {["Culinary Preferences", "Personal Details"].map(
               (step, index) => (
                 <StepperItem key={step} step={index + 1}>
                   <StepperTrigger>
-                    <StepperIndicator>{index}</StepperIndicator>
+                    <StepperIndicator>{index + 1}</StepperIndicator>
                   </StepperTrigger>
                   {index <
-                    ["Culinary Preferences", "Profile Customization", "Friends"]
-                      .length -
-                      1 && (
+                    ["Culinary Preferences", "Personal Details"].length - 1 && (
                     <StepperSeparator className="group-data-[state=completed]/step:bg-primary" />
                   )}
                 </StepperItem>
@@ -144,7 +130,7 @@ export default function Customize({ ready }: CustomizeProps) {
           </StepperNav>
 
           <StepperPanel className="text-sm">
-            {["Culinary Preferences", "Profile Customization", "Friends"].map(
+            {["Culinary Preferences", "Personal Details"].map(
               (step, index) => (
                 <StepperContent
                   key={step}
@@ -166,9 +152,11 @@ export default function Customize({ ready }: CustomizeProps) {
             : "text-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         }`}
       >
-        <div className="typewriter mb-4 w-full transition-all duration-500 relative">
-          <h1 className={`${headerTransitioned ? "hideBar" : ""} text-4xl font-bold text-foreground w-full transition-all duration-500`}>
-            Customize Your Culinary Experience
+        <div className="md:typewriter max-md:whitespace-normal mb-4 w-full transition-all duration-500 relative">
+          <h1 className={`${headerTransitioned ? "md:hideBar" : ""} text-4xl max-md:text-center font-bold text-foreground w-full transition-all duration-500`}>
+            {currentStep === 0
+              ? "Customize Your Culinary Experience"
+              : "Tell Us About Yourself"}
           </h1>
           <EggFriedIcon
             size={70}
@@ -176,124 +164,36 @@ export default function Customize({ ready }: CustomizeProps) {
             color="#FDB813"
           />
         </div>
-        <p className={`text-muted-foreground transition-all duration-400 ${ready ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}>
-          Personalize your cooking journey
+        <p className={`text-muted-foreground transition-all duration-400 max-md:text-center ${ready ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}>
+          {currentStep === 0
+            ? "Personalize your cooking journey"
+            : "Complete your profile setup"}
         </p>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleFormComplete(e);
-        }}
-        className={`transition-all duration-700 ease-out w-full flex flex-col gap-8 max-md:no-scrollbar ${
-          headerTransitioned
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-10"
+      <div
+        className={`transition-all duration-400 ease-out ${
+          isTransitioning
+            ? "opacity-0 -translate-y-10"
+            : "opacity-100 translate-y-0"
         }`}
       >
-        <div className="w-full">
-          <Label className="text-lg font-bold text-foreground mb-4 block">
-            Dietary Restrictions & Preferences
-          </Label>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select any that apply to you (optional)
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {dietaryOptions.map((option) => (
-              <Badge
-                key={option}
-                onClick={() => toggleDietary(option)}
-                className={`cursor-pointer px-4 py-2 transition-all ${
-                  selectedDietary.includes(option)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary"
-                }`}
-              >
-                {option}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full">
-          <Label
-            htmlFor="allergies"
-            className="text-lg font-bold text-foreground mb-4 block"
-          >
-            Allergies
-          </Label>
-          <p className="text-sm text-muted-foreground mb-4">
-            List any food allergies (comma-separated)
-          </p>
-          <Input
-            id="allergies"
-            name="allergies"
-            placeholder="e.g. Peanuts, Shellfish, Eggs"
-            value={allergies}
-            onChange={(e) => setAllergies(e.target.value)}
-            className="w-full h-13 rounded-full bg-input/80 border-border/60 shadow-sm shadow-border/80 px-5"
+        {currentStep === 0 && (
+          <CustomizeStep1
+            onNext={handleStep1Next}
+            initialData={step1Data}
+            headerTransitioned={headerTransitioned}
           />
-        </div>
-
-        <div className="w-full">
-          <Label className="text-lg font-bold text-foreground mb-4 block">
-            Cooking Skill Level
-          </Label>
-
-          <div className="flex gap-3 w-full relative">
-            {skillLevels.map((level) => (
-              <Badge
-                key={level}
-                onClick={() => setSkillLevel(level)}
-                className={`cursor-pointer px-4 py-2 flex-1 text-center transition-all ${
-                  skillLevel === level
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary"
-                }`}
-              >
-                {level}
-              </Badge>
-            ))}
-            <CitrusIcon
-              size={70}
-              className={`absolute -right-10 -bottom-25 max-md:opacity-10 max-md:z-100 opacity-0 -translate-y-5 transition-all duration-500 delay-1000 ease-out ${headerTransitioned ? "opacity-70 translate-y-0" : ""}`}
-              color="#9ACD32"
-            />
-          </div>
-        </div>
-
-        <div className="w-full">
-          <Label className="text-lg font-bold text-foreground mb-4 block">
-            Favorite Cuisines <span className="text-destructive">*</span>
-          </Label>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select at least one cuisine you enjoy
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {cuisineOptions.map((cuisine) => (
-              <Badge
-                key={cuisine}
-                onClick={() => toggleCuisine(cuisine)}
-                className={`cursor-pointer px-4 py-2 transition-all ${
-                  selectedCuisines.includes(cuisine)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary"
-                }`}
-              >
-                {cuisine}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full h-13 bg-primary/90 text-accent font-bold rounded-full shadow-sm shadow-primary/50 hover:shadow-primary/90 hover:opacity-90 cursor-pointer transition-all duration-200 mt-4"
-        >
-          Complete Setup
-        </button>
-      </form>
+        )}
+        {currentStep === 1 && (
+          <CustomizeStep2
+            onNext={handleStep2Complete}
+            onBack={handleStep2Back}
+            initialData={step2Data}
+            headerTransitioned={headerTransitioned}
+          />
+        )}
+      </div>
     </div>
   );
 }
