@@ -139,17 +139,17 @@ export default function Customize({ ready }: CustomizeProps) {
       </div>
 
       <div
-        className={`transition-all duration-700 ease-out relative ${
+        className={`transition-all duration-700 ease-out ${
           headerTransitioned
             ? "text-left mb-8"
             : "text-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         }`}
       >
-        <h1 className="text-4xl font-bold text-foreground mb-4 md:whitespace-nowrap relative md:w-min">
+        <h1 className="text-4xl font-bold text-foreground mb-4 transition-all duration-200 relative">
           Customize Your Culinary Experience
           <EggFriedIcon
             size={70}
-            className="absolute -right-10 -bottom-25 opacity-70 max-md:opacity-10 max-md:z-100"
+            className={`absolute -right-10 -bottom-25 max-md:opacity-10 max-md:z-100 opacity-0 -translate-y-5 transition-all duration-500 delay-700 ease-out ${headerTransitioned ? "opacity-70 translate-y-0" : ""}`}
             color="#FDB813"
           />
         </h1>
@@ -230,7 +230,7 @@ export default function Customize({ ready }: CustomizeProps) {
             ))}
             <CitrusIcon
               size={70}
-              className="absolute -right-10 -bottom-25 opacity-70 max-md:opacity-10 max-md:z-100"
+              className={`absolute -right-10 -bottom-25 max-md:opacity-10 max-md:z-100 opacity-0 -translate-y-5 transition-all duration-500 delay-1000 ease-out ${headerTransitioned ? "opacity-70 translate-y-0" : ""}`}
               color="#9ACD32"
             />
           </div>
