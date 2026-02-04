@@ -7,4 +7,5 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || "development",
   isDev: process.env.NODE_ENV !== "production",
   isProd: process.env.NODE_ENV === "production",
+  mongodbUri: process.env.MONGODB_URI,
 } as const;
