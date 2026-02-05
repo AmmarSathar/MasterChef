@@ -14,8 +14,15 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@components/*": ["./src/components/*"],
+      "@masterchef/shared": ["../shared/index.ts"],
+      "@masterchef/shared/*": ["../shared/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    { "path": "../shared" }
+  ]
 }
