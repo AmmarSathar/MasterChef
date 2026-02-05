@@ -6,6 +6,8 @@ export interface IUser extends Document {
   passwordHash: string;
   createdAt: Date;
   updatedAt: Date;
+  dietaryPreferences?: string[];  // optional property, string array for multiple preferences
+  allergies?: string[];           // optional property, string array for multiple allergies
 }
 
 const userSchema = new Schema<IUser>(
@@ -26,6 +28,14 @@ const userSchema = new Schema<IUser>(
     passwordHash: {
       type: String,
       required: [true, "Password hash is required"],
+    },
+    dietaryPreferences: {
+      type: [String],
+      default: [],              // default to empty array because property is optional
+    },
+    allergies: {
+      type: [String],
+      default: [],              // default to empty array because property is optional
     },
   },
   {

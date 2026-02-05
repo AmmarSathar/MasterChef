@@ -8,8 +8,8 @@ export interface User {
   weight?: number;
   height?: number;
   bio?: string;
-  dietary_restric?: string[];
-  allergies?: string[];
+  dietaryPreferences?: string[];  // optional property, string array for multiple preferences
+  allergies?: string[];           // optional property, string array for multiple preferences
   skill_level?: "beginner" | "intermediate" | "advanced" | "expert";
   cuisines_pref: string[]; //ex: indian, mexican, ect
   createdAt?: Date;

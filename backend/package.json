@@ -7,7 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "migrate:add-user-fields": "tsx src/scripts/migrate-add-user-fields.ts"
   },
   "dependencies": {
     "@masterchef/shared": "file:../shared",
