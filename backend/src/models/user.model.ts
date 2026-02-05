@@ -1,9 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { DietaryRestriction, DietaryPreferences, VALID_DIETARY_RESTRICTIONS } from "../types/index.js";
 
 export interface IUser extends Document {
   email: string;
   name: string;
   passwordHash: string;
+  dietaryPreferences: DietaryPreferences;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +28,17 @@ const userSchema = new Schema<IUser>(
     passwordHash: {
       type: String,
       required: [true, "Password hash is required"],
+    },
+    dietaryPreferences: {
+      restrictions: {
+        type: [String],
+        enum: VALID_DIETARY_RESTRICTIONS,
+        default: [],
+      },
+      allergies: {
+        type: [String],
+        default: [],
+      },
     },
   },
   {

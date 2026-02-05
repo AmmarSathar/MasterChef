@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run dev:backend:*)",
       "Bash(timeout /t 2 /nobreak)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
