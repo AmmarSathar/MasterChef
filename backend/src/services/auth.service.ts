@@ -52,7 +52,7 @@ export async function registerUser(input: CreateUserInput): Promise<AuthResponse
 
   // Create user in database
   const user = await User.create({
-    email,
+    email: email.toLowerCase(),
     name,
     passwordHash,
   });
