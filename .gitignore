@@ -12,9 +12,7 @@
 !.yarn/releases
 !.yarn/versions
 
-/package-lock.json
-/frontend/package-lock.json
-/backend/package-lock.json
+# package-lock.json
 /yarn.lock
 
 # testing
@@ -49,3 +47,8 @@ next-env.d.ts
 
 /.claude
 /.github
+!.github/
+!.github/workflows/
+!.github/workflows/**
+# Playwright artifacts
+test-results/
