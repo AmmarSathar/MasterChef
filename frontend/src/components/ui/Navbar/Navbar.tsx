@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Utensils,
   LayoutGrid,
@@ -24,10 +25,11 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
   const [selectedBtn, setSelectedBtn] = React.useState<number>(1);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    window.location.href = "/login";
+    navigate("/");
   };
 
   return (
@@ -64,7 +66,7 @@ export default function Navbar() {
           <div className="flex flex-col items-center gap-3 z-20">
             <button
               onClick={() => setSelectedBtn(6)}
-              className={`flex w-12 h-12 items-center justify-center rounded-xl transition-all duration-300 ${
+              className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === 6
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
@@ -77,6 +79,13 @@ export default function Navbar() {
             <div className="flex w-12 h-12 items-center justify-center">
               <ThemeToggle />
             </div>
+            <button
+              onClick={handleLogout}
+              className="flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5 text-muted-foreground pointer-events-none" />
+            </button>
           </div>
         </div>
       </nav>

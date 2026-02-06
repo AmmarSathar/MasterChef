@@ -116,9 +116,7 @@ export default function Customize({ ready }: CustomizeProps) {
     setTimeout(() => {
       toast.dismiss(loadingToast);
       toast.success("Profile customization complete!\nLet's start cooking!");
-
-      // Send API User update call
-      // then navigate to main app later
+      window.location.href = "/dashboard";
     }, 1000);
   };
 

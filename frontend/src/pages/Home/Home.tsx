@@ -16,6 +16,8 @@ export default function Home() {
   });
 
   useEffect(() => {
+    localStorage.setItem("lastPage", "/");
+
     setColors({
       base: cssVar("--grain-color-1", "#d7c7e7"),
       active: cssVar("--grain-color-2", "#ffdab9"),
