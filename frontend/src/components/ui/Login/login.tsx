@@ -11,6 +11,7 @@ import { Badge } from "@components/ui/badge";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { Checkbox } from "@components/ui/checkbox";
+import Footer from "@components/ui/footer";
 
 import Google from "@/lib/icons/google.svg";
 import Github from "@/lib/icons/github.svg";
@@ -445,44 +446,7 @@ export default function Login() {
           </div>
         </div>
       )}
-      <footer className="w-full h-10 flex items-center justify-between pointer-events-auto p-2 px-20 mt-4 pl-45 z-100">
-        <div className="footer-left flex items-center justify-baseline gap-5">
-          <button className="bg-transparent opacity-60 hover:opacity-100 transition-all duration-300 delay-50 border-none p-2 cursor-pointer">
-            <a
-              href="#"
-              className="text-sm text-accent tracking-wide pointer-events-auto cursor-pointer"
-            >
-              Terms
-            </a>
-          </button>
-          <button className="bg-transparent opacity-60 hover:opacity-100 transition-all duration-300 delay-100 border-none p-2 cursor-pointer">
-            <a
-              href="#"
-              className="text-sm text-accent tracking-wide pointer-events-auto cursor-pointer"
-            >
-              Privacy
-            </a>
-          </button>
-          <button className="bg-transparent opacity-60 hover:opacity-100 transition-all duration-300 delay-100 border-none p-2 cursor-pointer">
-            <a
-              href="#"
-              className="text-sm text-accent tracking-wide pointer-events-auto cursor-pointer"
-            >
-              Support
-            </a>
-          </button>
-        </div>
-        <div className="footer-right flex items-center justify-end">
-          <button className="bg-transparent opacity-60 hover:opacity-100 transition-all duration-300 delay-100 border-none p-2 cursor-pointer">
-            <a
-              href="#"
-              className="text-sm text-accent tracking-wide pointer-events-auto cursor-pointer"
-            >
-              @ 2026 MasterChef - CookWise
-            </a>
-          </button>
-        </div>
-      </footer>
+      <Footer className="fixed bottom-10"/>
     </div>
   );
 }
