@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Request, Response, NextFunction } from "express";
-import { register, login } from "../auth.controller.js";
-import { registerUser, loginUser } from "../../services/auth.service.js";
+import { register, login } from "../src/controllers/auth.controller.js";
+import { registerUser, loginUser } from "../src/services/auth.service.js";
 
-vi.mock("../../services/auth.service.js", () => ({
+vi.mock("../src/services/auth.service.js", () => ({
   registerUser: vi.fn(),
   loginUser: vi.fn(),
 }));

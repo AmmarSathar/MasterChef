@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import Login from "./login";
+import Login from "@/components/ui/Login/login";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 

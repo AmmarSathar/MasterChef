@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import bcrypt from "bcrypt";
-import { registerUser, loginUser } from "../auth.service.js";
-import { User } from "../../models/user.model.js";
+import { registerUser, loginUser } from "../src/services/auth.service.js";
+import { User } from "../src/models/user.model.js";
 
 vi.mock("bcrypt", () => ({
   default: {
@@ -10,7 +10,7 @@ vi.mock("bcrypt", () => ({
   },
 }));
 
-vi.mock("../../models/user.model.js", () => ({
+vi.mock("../src/models/user.model.js", () => ({
   User: {
     findOne: vi.fn(),
     create: vi.fn(),
@@ -29,13 +29,13 @@ describe("registerUser", () => {
 
   it("throws 400 when required fields are missing", async () => {
     await expect(
-      loginUser({ email: "", password: "Password1!" })
+      registerUser({ email: "", password: "Password1!", name: "" })
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
   it("throws 400 for invalid email", async () => {
     await expect(
-      loginUser({ email: "not-an-email", password: "Password1!" })
+      registerUser({ email: "not-an-email", password: "Password1!", name: "A" })
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
@@ -89,13 +89,13 @@ describe("loginUser", () => {
 
   it("throws 400 when required fields are missing", async () => {
     await expect(
-      registerUser({ email: "", password: "Password1!", name: "" })
+      loginUser({ email: "", password: "Password1!" })
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
   it("throws 400 for invalid email", async () => {
     await expect(
-      registerUser({ email: "not-an-email", password: "Password1!", name: "A" })
+      loginUser({ email: "not-an-email", password: "Password1!" })
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 

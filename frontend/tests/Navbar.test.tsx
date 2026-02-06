@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import Navbar from "./Navbar";
+import Navbar from "@/components/ui/Navbar/Navbar";
 
 describe("Navbar", () => {
   it("renders navigation", () => {

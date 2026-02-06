@@ -50,3 +50,5 @@ next-env.d.ts
 !.github/
 !.github/workflows/
 !.github/workflows/**
+# Playwright artifacts
+test-results/
