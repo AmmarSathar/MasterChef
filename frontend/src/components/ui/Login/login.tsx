@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import axios, { Axios, AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 
 import { User } from "@masterchef/shared/types/user";
@@ -130,16 +130,42 @@ export default function Login() {
 
     if (isLogin) {
       console.log("Login");
-      // Handle login logic here
+      let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
 
-      // Timeout used to simulate server response time. Please remove when integrating actual logic.
-      return await new Promise((res, _) =>
-        setTimeout(() => {
+      try {
+        response = await axios.post<{ success: boolean; user: User }>(
+          `${BASE_API_URL}/auth/login`,
+          {
+            email: formData.get("email"),
+            password: formData.get("password"),
+          },
+        );
+
+        const user = response.data.user;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        toast.dismiss(registrationToast);
+        toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
+        return true;
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err) && err.response) {
+          const status = err.response.status;
+
+          if (status === 400) {
+            toast.dismiss(registrationToast);
+            toast.error("Invalid login data.");
+            console.error("Validation error:", err);
+          } else if (status === 401) {
+            toast.dismiss(registrationToast);
+            toast.error("Invalid email or password.");
+            console.error("Invalid credentials:", err);
+          }
+        } else {
           toast.dismiss(registrationToast);
-          toast.success("Logged in successfully!\nWelcome back {name}!");
-          res(true);
-        }, 2000),
-      );
+          toast.error(`An unexpected error occurred. Please try again.`);
+          console.error("Request failed:", err);
+        }
+      }
     } else {
       console.log("Sign Up");
 
@@ -147,18 +173,21 @@ export default function Login() {
       const password = formData.get("password") as string;
       const name = formData.get("name") as string;
 
-      let response: AxiosResponse<User> | undefined;
+      let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
 
       console.log("Passed logon for: ", email, name);
 
       try {
-        response = await axios.post<User>(`${BASE_API_URL}/auth/register`, {
-          email: email,
-          password: password,
-          name: name,
-        });
+        response = await axios.post<{ success: boolean; user: User }>(
+          `${BASE_API_URL}/auth/register`,
+          {
+            email: email,
+            password: password,
+            name: name,
+          },
+        );
 
-        const user = response.data;
+        const user = response.data.user;
         //save user in localstorage for autoconnect
         localStorage.setItem("user", JSON.stringify(user));
 

@@ -17,6 +17,11 @@ export interface CreateUserInput {
   name: string;
 }
 
+export interface LoginUserInput {
+  email: string;
+  password: string;
+}
+
 export interface UserResponse {
   id: string;
   email: string;
