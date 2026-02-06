@@ -16,10 +16,14 @@
     "test": "npm run test -w frontend && npm run test -w backend",
     "test:frontend": "npm run test -w frontend",
     "test:backend": "npm run test -w backend",
+    "e2e": "playwright test",
     "lint": "npm run lint -w frontend && npm run lint -w backend",
     "install:all": "npm install"
   },
   "dependencies": {
     "mongodb": "^7.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
   }
 }
