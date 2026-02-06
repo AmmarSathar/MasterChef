@@ -1,4 +1,4 @@
-# COEN 341 Group Project - Team MasterChef
+# COEN 341 Group Project - Team CookWise
 
 ## Team Members
 - Ammar Sathar
