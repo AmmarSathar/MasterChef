@@ -12,9 +12,7 @@
 !.yarn/releases
 !.yarn/versions
 
-/package-lock.json
-/frontend/package-lock.json
-/backend/package-lock.json
+# package-lock.json
 /yarn.lock
 
 # testing
