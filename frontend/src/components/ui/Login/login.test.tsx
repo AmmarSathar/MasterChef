@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Login from "./login";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -48,7 +48,7 @@ describe("Login/Register UI", () => {
   it("submits registration and stores user on success", async () => {
     setUrl("/login?register=true");
     axiosMock.post.mockResolvedValue({
-      data: { id: "u1", email: "a@b.com", name: "Alice" },
+      data: { success: true, user: { id: "u1", email: "a@b.com", name: "Alice" } },
     });
 
     render(<Login />);
@@ -109,7 +109,9 @@ describe("Login/Register UI", () => {
 
   it("simulates login flow and shows success", async () => {
     setUrl("/login?register=false");
-    vi.useFakeTimers();
+    axiosMock.post.mockResolvedValue({
+      data: { success: true, user: { id: "u1", email: "a@b.com", name: "Alice" } },
+    });
 
     render(<Login />);
 
@@ -120,16 +122,23 @@ describe("Login/Register UI", () => {
       target: { value: "Password1!" },
     });
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Log In" }));
-      await vi.advanceTimersByTimeAsync(6000);
+    fireEvent.click(screen.getByRole("button", { name: "Log In" }));
+
+    await waitFor(() => {
+      expect(axiosMock.post).toHaveBeenCalledWith(
+        "http://localhost:4000/api/auth/login",
+        {
+          email: "a@b.com",
+          password: "Password1!",
+        }
+      );
     });
 
-    expect(toast.loading).toHaveBeenCalledWith("Logging in...");
-    expect(toast.success).toHaveBeenCalledWith(
-      "Logged in successfully!\nWelcome back {name}!"
+    expect(localStorage.getItem("user")).toEqual(
+      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" })
     );
-
-    vi.useRealTimers();
+    expect(toast.success).toHaveBeenCalledWith(
+      "Logged in successfully!\nWelcome back Alice!"
+    );
   });
 });
