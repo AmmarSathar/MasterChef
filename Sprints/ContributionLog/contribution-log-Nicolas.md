@@ -1,6 +1,6 @@
-# Contribution Log - Haoyang
+# Contribution Log - Nicolas
 
-## Sprint 1
+## Sprint 2
 
 | Date | Task | Description | Time Spent |
 |------|------|-------------|------------|

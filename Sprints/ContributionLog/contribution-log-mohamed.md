@@ -11,3 +11,12 @@
 | 2026-02-04 | Multi-Step Customization Form | Refactored customization into two-step form with fade transitions, added profile picture upload, and enhanced mobile-responsive design | 4.5h |
 
 **Total Time:** 16h
+
+## Sprint 2
+
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+| 2026-01-30 | Example of Task | description of task | time spent |
+| 2026-01-30 | Example of Task | description of task | time spent |
+| 2026-01-30 | | | |
+| 2026-01-30 | | | |
