@@ -177,15 +177,15 @@ export default function Customize({ ready }: CustomizeProps) {
       </div>
 
       <div
-        className={`transition-all duration-700 ease-out ${
+        className={`transition-all duration-700 ease-out-cubic ${
           headerTransitioned
-            ? "text-left mb-8"
+            ? "text-left mb-8 max-md:mb-12"
             : "text-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         }`}
       >
         <div className="md:typewriter max-md:whitespace-normal mb-4 w-full transition-all duration-500 relative">
           <h1
-            className={`${headerTransitioned ? "md:hideBar" : ""} text-4xl max-md:text-center font-bold text-foreground w-full transition-all duration-500`}
+            className={`${headerTransitioned ? "md:hideBar" : ""} text-4xl max-md:text-3xl max-md:text-center font-bold text-foreground w-full transition-all duration-500`}
           >
             {currentStep === 0
               ? "Customize Your Culinary Experience"

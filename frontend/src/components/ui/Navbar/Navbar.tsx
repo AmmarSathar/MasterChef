@@ -27,10 +27,10 @@ export default function Navbar() {
 
   return (
     <div className="navbar-parent-container w-screen h-screen flex items-center justify-baseline pointer-events-none absolute top-0 left-0">
-      <nav className="md:h-full w-30 max-md:w-screen max-md:hidden max-md:h-10 flex relative max-md:left-0 max-md:my-10 max-md:mx-0 items-center pointer-events-auto justify-center p-3 m-0 bg-background text-foreground z-50">
-        <div className="w-full h-full py-8 p-4 bg-card rounded-3xl flex flex-col items-center justify-between gap-3 relative shadow-xl border border-border">
+      <nav className="md:h-full w-30 max-md:w-screen max-md:hidden max-md:h-10 flex relative max-md:left-0 max-md:my-10 max-md:mx-0 items-center pointer-events-auto justify-center p-3 m-0 text-foreground z-50">
+        <div className="w-full h-full py-8 p-4 pointer-events-auto transition-all duration-400 delay-100 ease-out bg-card/70 hover:bg-card rounded-3xl flex flex-col items-center justify-between gap-3 relative shadow-xl border border-border">
           <div className="flex flex-col items-center gap-3 z-20">
-            <div className="flex w-12 h-12 bg-secondary items-center justify-center rounded-xl">
+            <div className="flex w-13 h-13 bg-secondary items-center justify-center rounded-full shadow-lg shadow-secondary/30">
               <Utensils className="w-6 h-6 text-muted-foreground" />
             </div>
           </div>
@@ -49,7 +49,7 @@ export default function Navbar() {
                   }`}
                 >
                   <Icon
-                    className={`w-6 h-6 transition-all duration-300 delay-100 ${selectedBtn === item.id ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === item.id ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
                   />
                 </button>
               );
@@ -66,12 +66,12 @@ export default function Navbar() {
               }`}
             >
               <Settings
-                className={`w-6 h-6 ${selectedBtn === 6 ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`w-6 h-6 pointer-events-none ${selectedBtn === 6 ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
             </button>
-            <button className="flex w-12 h-12 bg-secondary hover:bg-muted items-center justify-center rounded-xl transition-all duration-300">
+            <div className="flex w-12 h-12 items-center justify-center">
               <ThemeToggle />
-            </button>
+            </div>
           </div>
         </div>
       </nav>
