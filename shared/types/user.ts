@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  pfp?: string[]; //either url format or b64
+  pfp?: string; //either url format or b64
   age: number;
   birth?: string | number; //idk yet..
   weight?: number;

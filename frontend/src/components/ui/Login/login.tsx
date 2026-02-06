@@ -90,8 +90,8 @@ export default function Login() {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      window.location.href = "/dashboard";
-      return;
+      // window.location.href = "/dashboard";
+      // return;
     }
 
     const queryParameters = new URLSearchParams(window.location.search);
@@ -481,7 +481,7 @@ export default function Login() {
           </div>
         </div>
       )}
-      <Footer className={`fixed bottom-10 opacity-100 transition-all duration-300 ${showCustomize ? "opacity-0 transform-y-100" : "opacity-0"}`}/>
+      <Footer className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}/>
     </div>
   );
 }

@@ -72,9 +72,9 @@ export default function Dashboard() {
               />
             </button>
             <button className="header-account w-13 h-13 rounded-full bg-foreground/10 dark:bg-white/10 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-foreground/20 dark:hover:bg-white/20 hover:border-border/60 transition-all duration-300 cursor-pointer overflow-hidden">
-              {user?.profilePicture ? (
+              {user?.pfp ? (
                 <img
-                  src={user.profilePicture}
+                  src={user.pfp}
                   alt="Profile"
                   className="w-full h-full object-cover pointer-events-none"
                 />

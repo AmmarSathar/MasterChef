@@ -107,7 +107,7 @@ export default function Home() {
           </div>
         </div>
 
-        <Footer className="absolute bottom-10"/>
+        <Footer className="absolute bottom-10 max-md:hidden max-md:opacity-0"/>
       </div>
     </div>
   );
