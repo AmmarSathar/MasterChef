@@ -9,3 +9,12 @@
 | 2026-02-03 | Backend Development | Implemented MongoDB integration for user registration API with schema design and testing | 2h |
 
 **Total Time:** 7h
+
+## Sprint 2
+
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+| 2026-01-30 | Example of Task | description of task | time spent |
+| 2026-01-30 | Example of Task | description of task | time spent |
+| 2026-01-30 | | | |
+| 2026-01-30 | | | |
