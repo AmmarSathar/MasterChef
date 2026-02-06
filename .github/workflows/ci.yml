@@ -20,3 +20,7 @@ jobs:
         run: npm ci
       - name: Test
         run: npm test
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: E2E
+        run: npm run e2e
