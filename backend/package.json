@@ -7,7 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@masterchef/shared": "file:../shared",
@@ -23,6 +25,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^25.1.0",
     "eslint": "^9.39.2",
+    "vitest": "^3.2.4",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   }
