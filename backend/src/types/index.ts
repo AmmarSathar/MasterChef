@@ -15,10 +15,14 @@ export interface CreateUserInput {
   email: string;
   password: string;
   name: string;
+  dietaryPreferences?: string[];    // optional property
+  allergies?: string[];             // optional property
 }
 
 export interface UserResponse {
   id: string;
   email: string;
   name: string;
+  dietaryPreferences?: string[];    // optional property
+  allergies?: string[];             // optional property
 }
