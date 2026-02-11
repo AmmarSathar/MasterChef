@@ -72,7 +72,7 @@ export default function Customize({ ready }: CustomizeProps) {
       return;
     }
 
-    const step1DataPartial = data
+    const step1DataPartial = data;
 
     setStep1Data(step1DataPartial);
     setIsTransitioning(true);
@@ -117,7 +117,10 @@ export default function Customize({ ready }: CustomizeProps) {
 
     try {
       const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
-      const res = await axios.put(`${BASE_API_URL}/auth/profile`, profilePayload);
+      const res = await axios.put(
+        `${BASE_API_URL}/auth/profile`,
+        profilePayload,
+      );
       const updatedUser = res.data.user;
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -128,7 +131,9 @@ export default function Customize({ ready }: CustomizeProps) {
       window.location.href = "/dashboard";
     } catch (err: any) {
       toast.dismiss(loadingToast);
-      const message = err?.response?.data?.message || "Failed to save profile. Please try again.";
+      const message =
+        err?.response?.data?.message ||
+        "Failed to save profile. Please try again.";
       toast.error(message);
     }
   };
@@ -147,7 +152,10 @@ export default function Customize({ ready }: CustomizeProps) {
       <div
         className={`customize-stepper max-md:w-full max-md:h-20 max-md:p-5 relative flex items-center justify-center transition-all duration-500 delay-500 ease-out mb-5 ${headerTransitioned ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}
       >
-        <Stepper defaultValue={currentStep} className="pointer-events-none transition-all duration-1000">
+        <Stepper
+          defaultValue={currentStep}
+          className="pointer-events-none transition-all duration-1000"
+        >
           <StepperNav className="transition-all duration-1000">
             {["Culinary Preferences", "Personal Details"].map((step, index) => (
               <StepperItem
@@ -194,9 +202,11 @@ export default function Customize({ ready }: CustomizeProps) {
             : "text-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         }`}
       >
-        <div className="md:typewriter max-md:whitespace-normal mb-4 w-full transition-all duration-500 relative">
+        <div
+          className={`typewriter typewriter-no-animate ${headerTransitioned ? "typewriter-hide-cursor" : ""} max-md:whitespace-normal mb-4 w-full transition-all duration-500 relative`}
+        >
           <h1
-            className={`${headerTransitioned ? "md:hideBar" : ""} text-4xl max-md:text-3xl max-md:text-center font-bold text-foreground w-full transition-all duration-500`}
+            className={`text-4xl max-md:text-3xl max-md:text-center font-bold text-foreground w-full transition-all duration-500`}
           >
             {currentStep === 0
               ? "Customize Your Culinary Experience"

@@ -68,24 +68,6 @@ export default function Login() {
   const customizeContainerRef = useRef<HTMLDivElement>(null);
 
   // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
-  const cssVar = (name: string, fallback: string) =>
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
-    fallback;
-
-  const [, setDark] = useState(
-    document.documentElement.classList.contains("dark"),
-  );
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-    const obs = new MutationObserver(() =>
-      setDark(document.documentElement.classList.contains("dark")),
-    );
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -258,9 +240,9 @@ export default function Login() {
       <div className="absolute inset-0 z-0">
         {/* React-Bits theme that follows mutated tailwindcss theme palette.. */}
         <Grainient
-          color1={cssVar("--grain-color-1", "#d7c7e7")}
-          color2={cssVar("--grain-color-2", "#ffdab9")}
-          color3={cssVar("--grain-color-3", "#f1eee8")}
+          color1={'var(--grain-color-1)'}
+          color2={'var(--grain-color-2)'}
+          color3={'var(--grain-color-3)'}
           timeSpeed={0.25}
           colorBalance={0}
           warpStrength={1}
