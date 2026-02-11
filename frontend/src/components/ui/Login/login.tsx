@@ -5,11 +5,13 @@ import { toast } from "react-hot-toast";
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
 import PasswordRequirements from "./PasswordRequirements";
+import Grainient from "@/components/Grainient";
 
 import { Badge } from "@components/ui/badge";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { Checkbox } from "@components/ui/checkbox";
+import Footer from "@components/ui/footer";
 
 import Google from "@/lib/icons/google.svg";
 import Github from "@/lib/icons/github.svg";
@@ -49,6 +51,8 @@ const passRequirements = [
   },
 ];
 
+const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+
 export default function Login() {
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
@@ -63,9 +67,33 @@ export default function Login() {
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
 
-  const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+  // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
+  const cssVar = (name: string, fallback: string) =>
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
+    fallback;
+
+  const [, setDark] = useState(
+    document.documentElement.classList.contains("dark"),
+  );
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+    const obs = new MutationObserver(() =>
+      setDark(document.documentElement.classList.contains("dark")),
+    );
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
     const queryParameters = new URLSearchParams(window.location.search);
     const queryRegister = queryParameters.get("register");
 
@@ -146,7 +174,6 @@ export default function Login() {
       }
     } else {
       console.log("Sign Up");
-      // Handle registration logic here
 
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
@@ -154,7 +181,7 @@ export default function Login() {
 
       let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
 
-      console.log("Passed logon for: ", email, name)
+      console.log("Passed logon for: ", email, name);
 
       try {
         response = await axios.post<{ success: boolean; user: User }>(
@@ -192,16 +219,6 @@ export default function Login() {
           console.error("Request failed:", err);
         }
       }
-
-      // return await new Promise((res, _) =>
-      //   setTimeout(() => {
-      //     toast.dismiss(registrationToast);
-      //     toast.success(
-      //       "Account created successfully!\nWelcome aboard {name}!",
-      //     );
-      //     res(true);
-      //   }, 2000),
-      // );
     }
   };
 
@@ -237,24 +254,35 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="login-root absolute h-full w-full flex items-center justify-center max-md:z-100 overflow-hidden"
-      style={{
-        background: `
-        linear-gradient(135deg, 
-          oklch(var(--background-oklch)) 0%, 
-          oklch(var(--card-oklch)) 25%, 
-          oklch(var(--primary-oklch)) 50%, 
-          oklch(var(--accent-oklch)) 75%, 
-          oklch(var(--brand-secondary-oklch)) 100%
-        ),
-        radial-gradient(ellipse at 20% 30%, oklch(var(--primary-oklch)) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 70%, oklch(var(--accent-oklch)) 0%, transparent 50%)
-          `,
-        backgroundBlendMode: "soft-light, normal, normal",
-        backgroundAttachment: "fixed",
-      }}
-    >
+    <div className="login-root absolute h-full w-full flex flex-col items-center justify-center max-md:z-100 overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        {/* React-Bits theme that follows mutated tailwindcss theme palette.. */}
+        <Grainient
+          color1={cssVar("--grain-color-1", "#d7c7e7")}
+          color2={cssVar("--grain-color-2", "#ffdab9")}
+          color3={cssVar("--grain-color-3", "#f1eee8")}
+          timeSpeed={0.25}
+          colorBalance={0}
+          warpStrength={1}
+          warpFrequency={5}
+          warpSpeed={2}
+          warpAmplitude={50}
+          blendAngle={0}
+          blendSoftness={0.05}
+          rotationAmount={500}
+          noiseScale={2}
+          grainAmount={0.1}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={1.5}
+          gamma={1}
+          saturation={1}
+          centerX={0}
+          centerY={0}
+          zoom={0.9}
+          className="opacity-60"
+        />
+      </div>
       {showCustomize && (
         <div
           ref={customizeContainerRef}
@@ -267,7 +295,7 @@ export default function Login() {
       {!showCustomize && (
         <div
           ref={loginContainerRef}
-          className={`login-container bg-card/80 backdrop-blur-sm relative w-130 max-md:w-full flex flex-col gap-10 items-center justify-center rounded-2xl shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-0 m-0 transition-all ease-out duration-300 ${isLogin ? "h-180" : "h-210"} max-md:h-full`}
+          className={`login-container bg-card/80 backdrop-blur-sm relative w-130 max-md:w-full flex flex-col gap-10 items-center justify-center rounded-2xl max-md:rounded-none shadow-sm shadow-border border border-border/80 bg-linear-to-br from-card/50 to-background/50 p-0 m-0 transition-all ease-out duration-300 ${isLogin ? "h-180" : "h-210"} max-md:h-full`}
         >
           <div
             className={`login-header w-full h-auto p-5 m-0 relative flex flex-col items-center justify-center gap-3 max-md:pb-0`}
@@ -417,16 +445,24 @@ export default function Login() {
             </div>
             <div className="login-icons w-full h-auto flex items-center justify-center gap-4">
               <button className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
-                <img src={Google} alt="google-icon" className="w-4 h-4" />
-                <span className="font-bold text-sm text-accent">Google</span>
+                <img
+                  src={Google}
+                  alt="google-icon"
+                  className="w-4 h-4 pointer-events-none"
+                />
+                <span className="font-bold text-sm text-accent pointer-events-none">
+                  Google
+                </span>
               </button>
               <button className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
                 <img
                   src={Github}
                   alt="github-icon"
-                  className="w-4 h-4 invert-(--filter-invert-d-l)"
+                  className="w-4 h-4 invert-(--filter-invert-d-l) pointer-events-none"
                 />
-                <span className="font-bold text-sm text-accent ">GitHub</span>
+                <span className="font-bold text-sm text-accent pointer-events-none">
+                  GitHub
+                </span>
               </button>
             </div>
 
@@ -435,6 +471,7 @@ export default function Login() {
                 {isLogin ? "Don't " : "Already "} have an account?
               </span>
               <button
+                type="button"
                 className="all-[unset] text-sm font-extrabold text-destructive/60 hover:text-destructive/80 transition-all underline cursor-pointer"
                 disabled={isChangingState}
                 onClick={changeRegisterState}
@@ -445,6 +482,7 @@ export default function Login() {
           </div>
         </div>
       )}
+      <Footer className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}/>
     </div>
   );
 }
