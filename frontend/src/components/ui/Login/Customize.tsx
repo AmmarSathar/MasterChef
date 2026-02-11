@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { toast } from "react-hot-toast";
 
 import {
@@ -94,30 +95,47 @@ export default function Customize({ ready }: CustomizeProps) {
     }, 400);
   };
 
-  const handleStep2Complete = (data: typeof step2Data) => {
+  const handleStep2Complete = async (data: typeof step2Data) => {
     const loadingToast = toast.loading("Setting up your profile...");
     scrollFormToTop();
 
-    const step2DataPartial = data
-    setStep2Data(step2DataPartial);
-    // console.log("new set step 2 obj: ", data)
+    setStep2Data(data);
 
-    const updatedUser = {
-      ...partialUser,
-      ...step1Data,
-      ...data,
-      allergies: step1Data.allergies.split(",").map((a) => a.trim()),
+    const profilePayload = {
+      userId: partialUser.id,
+      dietary_restric: step1Data.dietaryRestrictions,
+      allergies: step1Data.allergies
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean),
+      skill_level: step1Data.skillLevel
+        ? (step1Data.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced" | "expert")
+        : undefined,
+      cuisines_pref: step1Data.favoriteCuisines,
+      pfp: data.profilePicture ?? undefined,
+      age: data.age,
+      birth: data.dateOfBirth || undefined,
+      weight: data.weight || undefined,
+      height: data.height || undefined,
+      bio: data.bio || undefined,
     };
 
-    setPartialUser(updatedUser);
+    try {
+      const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+      const res = await axios.put(`${BASE_API_URL}/auth/profile`, profilePayload);
+      const updatedUser = res.data.user;
 
-    console.log("Final User: ", updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setPartialUser(updatedUser);
 
-    setTimeout(() => {
       toast.dismiss(loadingToast);
       toast.success("Profile customization complete!\nLet's start cooking!");
       window.location.href = "/dashboard";
-    }, 1000);
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      const message = err?.response?.data?.message || "Failed to save profile. Please try again.";
+      toast.error(message);
+    }
   };
 
   return (

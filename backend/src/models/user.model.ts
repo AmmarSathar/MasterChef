@@ -4,6 +4,16 @@ export interface IUser extends Document {
   email: string;
   name: string;
   passwordHash: string;
+  pfp?: string;
+  age?: number;
+  birth?: string;
+  weight?: number;
+  height?: number;
+  bio?: string;
+  dietary_restric?: string[];
+  allergies?: string[];
+  skill_level?: "beginner" | "intermediate" | "advanced" | "expert";
+  cuisines_pref?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +37,19 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: [true, "Password hash is required"],
     },
+    pfp: { type: String },
+    age: { type: Number },
+    birth: { type: String },
+    weight: { type: Number },
+    height: { type: Number },
+    bio: { type: String, maxlength: 500 },
+    dietary_restric: { type: [String], default: [] },
+    allergies: { type: [String], default: [] },
+    skill_level: {
+      type: String,
+      enum: ["beginner", "intermediate", "advanced", "expert"],
+    },
+    cuisines_pref: { type: [String], default: [] },
   },
   {
     timestamps: true,
