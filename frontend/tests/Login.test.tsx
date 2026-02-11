@@ -32,6 +32,19 @@ function setUrl(url: string) {
   window.history.replaceState({}, "", url);
 }
 
+// Mock canvas getContext for ogl/Grainient
+beforeAll(() => {
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+    value: vi.fn(() => ({
+      // mock minimal context if needed
+      getExtension: vi.fn(),
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      putImageData: vi.fn(),
+    })),
+  });
+});
+
 describe("Login/Register UI", () => {
   beforeEach(() => {
     localStorage.clear();
