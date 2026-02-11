@@ -106,7 +106,7 @@ export default function Login() {
   };
 
   const completeRegistration = async (formData: FormData) => {
-    if (partialPasswordReq.some((req) => !req.complete)) {
+    if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
       console.log(partialPasswordReq.filter((req) => !req.complete));
       toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
       return false;
