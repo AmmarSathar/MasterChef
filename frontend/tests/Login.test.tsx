@@ -13,7 +13,7 @@ vi.mock("axios", () => ({
 
 vi.mock("react-hot-toast", () => ({
   toast: {
-    loading: vi.fn(),
+    loading: vi.fn(() => "toast-id"),
     dismiss: vi.fn(),
     success: vi.fn(),
     error: vi.fn(),
