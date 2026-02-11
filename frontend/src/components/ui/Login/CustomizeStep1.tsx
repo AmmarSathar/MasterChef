@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { Input } from "@components/ui/input";
+import { useState, useRef, useEffect } from "react";
 import { Label } from "@components/ui/label";
 import { Badge } from "@components/ui/badge";
-import { EggFriedIcon, CitrusIcon } from "lucide-react";
+import { EggFriedIcon, CitrusIcon, ChevronDown, Check, Search } from "lucide-react";
 
 const dietaryOptions = [
   "Vegetarian",
@@ -29,18 +28,117 @@ const cuisineOptions = [
   "Korean",
 ];
 
+const allergyOptions = [
+  // Common major allergens
+  "Peanuts",
+  "Tree Nuts",
+  "Almonds",
+  "Cashews",
+  "Walnuts",
+  "Pecans",
+  "Pistachios",
+  "Hazelnuts",
+  "Macadamia Nuts",
+  "Brazil Nuts",
+  "Milk",
+  "Eggs",
+  "Wheat",
+  "Soy",
+  "Fish",
+  "Shellfish",
+  "Shrimp",
+  "Crab",
+  "Lobster",
+  "Sesame",
+  "Gluten",
+  // Fruits
+  "Pineapple",
+  "Kiwi",
+  "Banana",
+  "Strawberry",
+  "Mango",
+  "Papaya",
+  "Avocado",
+  "Peach",
+  "Cherry",
+  "Apple",
+  "Pear",
+  "Plum",
+  "Grape",
+  "Coconut",
+  "Lemon",
+  "Lime",
+  "Orange",
+  "Grapefruit",
+  "Watermelon",
+  "Cantaloupe",
+  "Tomato",
+  // Vegetables & legumes
+  "Celery",
+  "Carrot",
+  "Bell Pepper",
+  "Onion",
+  "Garlic",
+  "Corn",
+  "Potato",
+  "Eggplant",
+  "Spinach",
+  "Lentils",
+  "Chickpeas",
+  "Green Peas",
+  "Lupin",
+  // Grains & seeds
+  "Barley",
+  "Rye",
+  "Oats",
+  "Rice",
+  "Buckwheat",
+  "Sunflower Seeds",
+  "Poppy Seeds",
+  "Flaxseed",
+  "Mustard",
+  // Dairy & animal products
+  "Casein",
+  "Whey",
+  "Lactose",
+  "Gelatin",
+  "Honey",
+  // Spices & condiments
+  "Cinnamon",
+  "Ginger",
+  "Nutmeg",
+  "Clove",
+  "Cumin",
+  "Coriander",
+  "Black Pepper",
+  "Chili Pepper",
+  "Paprika",
+  "Turmeric",
+  "Vanilla",
+  // Other
+  "Chocolate",
+  "Cocoa",
+  "Coffee",
+  "Alcohol",
+  "Yeast",
+  "MSG",
+  "Sulfites",
+  "Nitrates",
+  "Red Food Dye",
+];
+
 const skillLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
 interface CustomizeStep1Props {
   onNext: (data: {
     dietaryRestrictions: string[];
-    allergies: string;
+    allergies: string[];
     skillLevel: string;
     favoriteCuisines: string[];
   }) => void;
   initialData?: {
     dietaryRestrictions: string[];
-    allergies: string;
+    allergies: string[];
     skillLevel: string;
     favoriteCuisines: string[];
   };
@@ -59,10 +157,38 @@ export default function CustomizeStep1({
     initialData?.favoriteCuisines || [],
   );
   const [skillLevel, setSkillLevel] = useState(initialData?.skillLevel || "");
-  const [allergies, setAllergies] = useState(initialData?.allergies || "");
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>(
+    initialData?.allergies || [],
+  );
+  const [allergyDropdownOpen, setAllergyDropdownOpen] = useState(false);
+  const [allergySearch, setAllergySearch] = useState("");
+  const allergyDropdownRef = useRef<HTMLDivElement>(null);
+  const allergySearchRef = useRef<HTMLInputElement>(null);
+
+  const filteredAllergyOptions = allergyOptions.filter((option) =>
+    option.toLowerCase().includes(allergySearch.toLowerCase()),
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (allergyDropdownRef.current && !allergyDropdownRef.current.contains(e.target as Node)) {
+        setAllergyDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const toggleDietary = (option: string) => {
     setSelectedDietary((prev) =>
+      prev.includes(option)
+        ? prev.filter((item) => item !== option)
+        : [...prev, option],
+    );
+  };
+
+  const toggleAllergy = (option: string) => {
+    setSelectedAllergies((prev) =>
       prev.includes(option)
         ? prev.filter((item) => item !== option)
         : [...prev, option],
@@ -81,7 +207,7 @@ export default function CustomizeStep1({
     // console.log(selectedDietary, allergies, skillLevel, selectedCuisines);
     onNext({
       dietaryRestrictions: selectedDietary,
-      allergies,
+      allergies: selectedAllergies,
       skillLevel,
       favoriteCuisines: selectedCuisines,
     });
@@ -123,24 +249,82 @@ export default function CustomizeStep1({
         </div>
       </div>
 
-      <div className="w-full">
-        <Label
-          htmlFor="allergies"
-          className="text-lg font-bold text-foreground mb-4 block"
-        >
+      <div className="w-full" ref={allergyDropdownRef}>
+        <Label className="text-lg font-bold text-foreground mb-4 block">
           Allergies
         </Label>
         <p className="text-sm text-muted-foreground mb-4">
-          List any food allergies (comma-separated)
+          Select any food allergies that apply (optional)
         </p>
-        <Input
-          id="allergies"
-          name="allergies"
-          placeholder="e.g. Peanuts, Shellfish, Eggs"
-          value={allergies}
-          onChange={(e) => setAllergies(e.target.value)}
-          className="w-full h-13 rounded-full bg-input/80 border-border/60 shadow-sm shadow-border/80 px-5"
-        />
+        <div className="relative">
+          <div
+            onClick={() => {
+              setAllergyDropdownOpen(true);
+              setTimeout(() => allergySearchRef.current?.focus(), 0);
+            }}
+            className="w-full h-13 rounded-full bg-input/80 border border-border/60 shadow-sm shadow-border/80 px-5 flex items-center gap-3 cursor-text hover:border-primary/50 transition-all"
+          >
+            <Search size={16} className="text-muted-foreground shrink-0" />
+            <input
+              ref={allergySearchRef}
+              type="text"
+              placeholder={selectedAllergies.length === 0 ? "Search allergies..." : `${selectedAllergies.length} selected — search more...`}
+              value={allergySearch}
+              onChange={(e) => {
+                setAllergySearch(e.target.value);
+                setAllergyDropdownOpen(true);
+              }}
+              onFocus={() => setAllergyDropdownOpen(true)}
+              className="w-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+            />
+            <ChevronDown
+              size={18}
+              className={`text-muted-foreground shrink-0 transition-transform duration-200 ${allergyDropdownOpen ? "rotate-180" : ""}`}
+            />
+          </div>
+          {allergyDropdownOpen && (
+            <div className="absolute z-50 mt-2 w-full rounded-2xl bg-popover border border-border shadow-lg py-2 max-h-60 overflow-y-auto">
+              {filteredAllergyOptions.length === 0 ? (
+                <p className="px-4 py-2.5 text-sm text-muted-foreground">No allergies match your search</p>
+              ) : (
+                filteredAllergyOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => toggleAllergy(option)}
+                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors cursor-pointer"
+                  >
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                        selectedAllergies.includes(option)
+                          ? "bg-primary border-primary"
+                          : "border-border"
+                      }`}
+                    >
+                      {selectedAllergies.includes(option) && (
+                        <Check size={12} className="text-primary-foreground" />
+                      )}
+                    </div>
+                    <span className="text-sm text-foreground">{option}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+        {selectedAllergies.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {selectedAllergies.map((allergy) => (
+              <Badge
+                key={allergy}
+                onClick={() => toggleAllergy(allergy)}
+                className="cursor-pointer px-3 py-1 bg-primary text-primary-foreground border-primary hover:opacity-80 transition-all"
+              >
+                {allergy} ×
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="w-full">
