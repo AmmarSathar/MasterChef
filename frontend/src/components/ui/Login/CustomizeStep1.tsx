@@ -2,132 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Label } from "@components/ui/label";
 import { Badge } from "@components/ui/badge";
 import { EggFriedIcon, CitrusIcon, ChevronDown, Check, Search } from "lucide-react";
-
-const dietaryOptions = [
-  "Vegetarian",
-  "Vegan",
-  "Pescatarian",
-  "Gluten-Free",
-  "Dairy-Free",
-  "Keto",
-  "Paleo",
-  "Halal",
-  "Kosher",
-];
-
-const cuisineOptions = [
-  "Italian",
-  "Mexican",
-  "Chinese",
-  "Japanese",
-  "Indian",
-  "Thai",
-  "French",
-  "Mediterranean",
-  "American",
-  "Korean",
-];
-
-const allergyOptions = [
-  // Common major allergens
-  "Peanuts",
-  "Tree Nuts",
-  "Almonds",
-  "Cashews",
-  "Walnuts",
-  "Pecans",
-  "Pistachios",
-  "Hazelnuts",
-  "Macadamia Nuts",
-  "Brazil Nuts",
-  "Milk",
-  "Eggs",
-  "Wheat",
-  "Soy",
-  "Fish",
-  "Shellfish",
-  "Shrimp",
-  "Crab",
-  "Lobster",
-  "Sesame",
-  "Gluten",
-  // Fruits
-  "Pineapple",
-  "Kiwi",
-  "Banana",
-  "Strawberry",
-  "Mango",
-  "Papaya",
-  "Avocado",
-  "Peach",
-  "Cherry",
-  "Apple",
-  "Pear",
-  "Plum",
-  "Grape",
-  "Coconut",
-  "Lemon",
-  "Lime",
-  "Orange",
-  "Grapefruit",
-  "Watermelon",
-  "Cantaloupe",
-  "Tomato",
-  // Vegetables & legumes
-  "Celery",
-  "Carrot",
-  "Bell Pepper",
-  "Onion",
-  "Garlic",
-  "Corn",
-  "Potato",
-  "Eggplant",
-  "Spinach",
-  "Lentils",
-  "Chickpeas",
-  "Green Peas",
-  "Lupin",
-  // Grains & seeds
-  "Barley",
-  "Rye",
-  "Oats",
-  "Rice",
-  "Buckwheat",
-  "Sunflower Seeds",
-  "Poppy Seeds",
-  "Flaxseed",
-  "Mustard",
-  // Dairy & animal products
-  "Casein",
-  "Whey",
-  "Lactose",
-  "Gelatin",
-  "Honey",
-  // Spices & condiments
-  "Cinnamon",
-  "Ginger",
-  "Nutmeg",
-  "Clove",
-  "Cumin",
-  "Coriander",
-  "Black Pepper",
-  "Chili Pepper",
-  "Paprika",
-  "Turmeric",
-  "Vanilla",
-  // Other
-  "Chocolate",
-  "Cocoa",
-  "Coffee",
-  "Alcohol",
-  "Yeast",
-  "MSG",
-  "Sulfites",
-  "Nitrates",
-  "Red Food Dye",
-];
-
-const skillLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
+import {
+  allergenOptions,
+  dietaryOptions,
+  cuisineOptions,
+  SKILL_LEVELS,
+} from "@masterchef/shared/constants";
 
 interface CustomizeStep1Props {
   onNext: (data: {
@@ -165,7 +45,7 @@ export default function CustomizeStep1({
   const allergyDropdownRef = useRef<HTMLDivElement>(null);
   const allergySearchRef = useRef<HTMLInputElement>(null);
 
-  const filteredAllergyOptions = allergyOptions.filter((option) =>
+  const filteredAllergyOptions = allergenOptions.filter((option) =>
     option.toLowerCase().includes(allergySearch.toLowerCase()),
   );
 
@@ -333,17 +213,17 @@ export default function CustomizeStep1({
         </Label>
 
         <div className="flex gap-3 w-full relative">
-          {skillLevels.map((level) => (
+          {SKILL_LEVELS.map(({ label, value }) => (
             <Badge
-              key={level}
-              onClick={() => setSkillLevel(level)}
+              key={value}
+              onClick={() => setSkillLevel(value)}
               className={`cursor-pointer px-4 py-2 flex-1 text-center transition-all ${
-                skillLevel === level
+                skillLevel === value
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-secondary/50 text-secondary-foreground border-border hover:bg-secondary"
               }`}
             >
-              {level}
+              {label}
             </Badge>
           ))}
           <CitrusIcon
