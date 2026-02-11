@@ -354,16 +354,13 @@ export default function Login() {
                   onBlur={() => setIsPasswordFocused(false)}
                   onChange={(event) => {
                     const partialPassword = event.target.value;
-                    console.log(partialPassword);
-                    partialPasswordReq.forEach((requirement) => {
-                      requirement.complete =
-                        requirement.validate(partialPassword);
-                      if (requirement.complete) {
-                        console.log(`Requirement met: ${requirement.label}`);
-                      }
-                    });
-                    setPartialPasswordReq([...partialPasswordReq]);
-                    console.log(partialPasswordReq);
+                    const updatedRequirements = passRequirements.map(
+                      (requirement) => ({
+                        ...requirement,
+                        complete: requirement.validate(partialPassword),
+                      }),
+                    );
+                    setPartialPasswordReq(updatedRequirements);
                   }}
                   className="w-full h-13 rounded-full bg-input/80 border-border/60 shadow-sm shadow-border/80 not-focus:bg-input/80 px-5 pr-12"
                   required
