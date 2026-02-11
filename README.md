@@ -5,7 +5,7 @@
 - Charrat Mohamed Taha
 - Haoyang Ni
 - Joey Chan
-- Navnit Chittoo
+- Nicolas Lopez Callupe
 - Paulina Aguayo Dupin
 
 ## Objective
