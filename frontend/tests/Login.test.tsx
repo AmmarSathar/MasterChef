@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Login from "@/components/ui/Login/login";
 import axios from "axios";
@@ -34,7 +34,7 @@ function setUrl(url: string) {
 
 // Mock canvas getContext for ogl/Grainient
 beforeAll(() => {
-  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
     value: vi.fn(() => ({
       // mock minimal context if needed
       getExtension: vi.fn(),
@@ -61,7 +61,10 @@ describe("Login/Register UI", () => {
   it("submits registration and stores user on success", async () => {
     setUrl("/login?register=true");
     axiosMock.post.mockResolvedValue({
-      data: { success: true, user: { id: "u1", email: "a@b.com", name: "Alice" } },
+      data: {
+        success: true,
+        user: { id: "u1", email: "a@b.com", name: "Alice" },
+      },
     });
 
     render(<Login />);
@@ -85,12 +88,12 @@ describe("Login/Register UI", () => {
           email: "a@b.com",
           password: "Abcdef1!",
           name: "Alice",
-        }
+        },
       );
     });
 
     expect(localStorage.getItem("user")).toEqual(
-      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" })
+      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
     );
     expect(toast.success).toHaveBeenCalled();
   });
@@ -123,7 +126,10 @@ describe("Login/Register UI", () => {
   it("simulates login flow and shows success", async () => {
     setUrl("/login?register=false");
     axiosMock.post.mockResolvedValue({
-      data: { success: true, user: { id: "u1", email: "a@b.com", name: "Alice" } },
+      data: {
+        success: true,
+        user: { id: "u1", email: "a@b.com", name: "Alice" },
+      },
     });
 
     render(<Login />);
@@ -143,15 +149,15 @@ describe("Login/Register UI", () => {
         {
           email: "a@b.com",
           password: "Password1!",
-        }
+        },
       );
     });
 
     expect(localStorage.getItem("user")).toEqual(
-      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" })
+      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
     );
     expect(toast.success).toHaveBeenCalledWith(
-      "Logged in successfully!\nWelcome back Alice!"
+      "Logged in successfully!\nWelcome back Alice!",
     );
   });
 });
