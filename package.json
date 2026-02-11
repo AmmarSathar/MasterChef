@@ -21,7 +21,8 @@
     "install:all": "npm install"
   },
   "dependencies": {
-    "mongodb": "^7.0.0"
+    "mongodb": "^7.0.0",
+    "vitest": "^4.0.18"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0"

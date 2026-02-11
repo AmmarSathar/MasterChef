@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import {
   Utensils,
   LayoutGrid,
@@ -73,14 +72,17 @@ export default function Navbar() {
             <div className="flex w-12 h-12 items-center justify-center">
               <ThemeToggle />
             </div>
-            <Link
-              to="/"
-              onClick={() => localStorage.removeItem("user")}
+            <button
+              onClick={() => {
+                localStorage.removeItem("user");
+                window.location.href = "/login";
+              }}
               className="flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted"
+              aria-label="Logout"
               title="Logout"
             >
               <LogOut className="w-5 h-5 text-muted-foreground pointer-events-none" />
-            </Link>
+            </button>
           </div>
         </div>
       </nav>

@@ -5,7 +5,8 @@ test("user can register and reaches preferences flow", async ({ page }) => {
   await page.getByRole("link", { name: "Get Started" }).click();
   await expect(page).toHaveURL(/\/login/);
 
-  await page.getByRole("button", { name: "Sign-Up" }).click();
+  // Already in register mode after clicking "Get Started"
+  // Just fill in the form directly without clicking the toggle
 
   await expect(page.getByLabel("Full Name")).toBeVisible();
 

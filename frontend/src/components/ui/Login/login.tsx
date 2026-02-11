@@ -471,6 +471,7 @@ export default function Login() {
                 {isLogin ? "Don't " : "Already "} have an account?
               </span>
               <button
+                type="button"
                 className="all-[unset] text-sm font-extrabold text-destructive/60 hover:text-destructive/80 transition-all underline cursor-pointer"
                 disabled={isChangingState}
                 onClick={changeRegisterState}
