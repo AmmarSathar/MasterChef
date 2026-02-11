@@ -105,7 +105,7 @@ export default function Login() {
     }, 1000);
   };
 
-  const completeRegistration = async (formData: FormData) => {
+  const completeRegistration = async (formData: FormData): Promise<boolean> => {
     if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
       console.log(partialPasswordReq.filter((req) => !req.complete));
       toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
@@ -153,6 +153,8 @@ export default function Login() {
           toast.error(`An unexpected error occurred. Please try again.`);
           console.error("Request failed:", err);
         }
+
+        return false;
       }
     } else {
       console.log("Sign Up");
@@ -200,6 +202,8 @@ export default function Login() {
           toast.error(`An unexpected error occurred. Please try again.`);
           console.error("Request failed:", err);
         }
+
+        return false;
       }
     }
   };
@@ -240,9 +244,9 @@ export default function Login() {
       <div className="absolute inset-0 z-0">
         {/* React-Bits theme that follows mutated tailwindcss theme palette.. */}
         <Grainient
-          color1={'var(--grain-color-1)'}
-          color2={'var(--grain-color-2)'}
-          color3={'var(--grain-color-3)'}
+          color1={"var(--grain-color-1)"}
+          color2={"var(--grain-color-2)"}
+          color3={"var(--grain-color-3)"}
           timeSpeed={0.25}
           colorBalance={0}
           warpStrength={1}
@@ -461,7 +465,9 @@ export default function Login() {
           </div>
         </div>
       )}
-      <Footer className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}/>
+      <Footer
+        className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}
+      />
     </div>
   );
 }
