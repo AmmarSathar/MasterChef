@@ -90,8 +90,8 @@ export default function Login() {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      // window.location.href = "/dashboard";
-      // return;
+      window.location.href = "/dashboard";
+      return;
     }
 
     const queryParameters = new URLSearchParams(window.location.search);

@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Utensils,
   LayoutGrid,
@@ -25,12 +25,6 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
   const [selectedBtn, setSelectedBtn] = React.useState<number>(1);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/");
-  };
 
   return (
     <div className="navbar-parent-container w-screen h-screen flex items-center justify-baseline pointer-events-none absolute top-0 left-0">
@@ -79,13 +73,14 @@ export default function Navbar() {
             <div className="flex w-12 h-12 items-center justify-center">
               <ThemeToggle />
             </div>
-            <button
-              onClick={handleLogout}
+            <Link
+              to="/"
+              onClick={() => localStorage.removeItem("user")}
               className="flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted"
               title="Logout"
             >
               <LogOut className="w-5 h-5 text-muted-foreground pointer-events-none" />
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
