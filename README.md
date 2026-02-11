@@ -3,7 +3,7 @@
 ## Team Members
 - Ammar Sathar
 - Charrat Mohamed Taha
-- Haoyang Ni
+- Navnit Chittoo
 - Joey Chan
 - Nicolas Lopez Callupe
 - Paulina Aguayo Dupin
