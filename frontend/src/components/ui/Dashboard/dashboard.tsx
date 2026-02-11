@@ -19,13 +19,17 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    // For now, I plan to fetch {name, email, pfp} from local. idk if it's a good idea tho
+    const storedUser = localStorage.getItem("user"); 
+    // After further research, this is a VERY BAD IDEA, as it b64 text will easily bloat the LS
+    // I'll implement IndexDB later to store the local user
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     } else {
       window.location.href = "/login";
       return;
     }
+
     const storedLastPage = localStorage.getItem("lastPage");
     if (storedLastPage) {
       setLastPage(storedLastPage);
@@ -60,18 +64,12 @@ export default function Dashboard() {
               />
             </div>
             <button className="header-add w-12 h-12 rounded-full bg-input/80 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-input hover:border-border/60 transition-all duration-300 cursor-pointer">
-              <Plus
-                size={20}
-                className="text-accent/60 pointer-events-none"
-              />
+              <Plus size={20} className="text-accent/60 pointer-events-none" />
             </button>
             <button className="header-notifications w-12 h-12 rounded-full bg-input/80 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-input hover:border-border/60 transition-all duration-300 cursor-pointer">
-              <Bell
-                size={20}
-                className="text-accent/60 pointer-events-none"
-              />
+              <Bell size={20} className="text-accent/60 pointer-events-none" />
             </button>
-            <button className="header-account w-13 h-13 rounded-full bg-foreground/10 dark:bg-white/10 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-foreground/20 dark:hover:bg-white/20 hover:border-border/60 transition-all duration-300 cursor-pointer overflow-hidden">
+            <button className="header-account w-13 h-13 rounded-full bg-foreground/10 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-foreground/20 hover:border-border/60 transition-all duration-300 cursor-pointer overflow-hidden">
               {user?.pfp ? (
                 <img
                   src={user.pfp}
@@ -81,10 +79,14 @@ export default function Dashboard() {
               ) : (
                 <UserIcon
                   size={20}
-                  className="text-foreground/60 dark:text-white/60 pointer-events-none"
+                  className="text-foreground/60 pointer-events-none"
                 />
               )}
             </button>
+          </div>
+
+          <div className="user-context-parent absolute top-full right-0 w-50 h-100 bg-card/70 backdrop-blur-sm rounded-xl shadow-lg shadow-border/50 p-3 border-border/50 transition-all duration-300">
+
           </div>
         </div>
         <div className="dashboard-content w-full h-full flex items-center justify-center pb-4 gap-4">

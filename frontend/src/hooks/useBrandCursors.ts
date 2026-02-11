@@ -22,9 +22,18 @@ function cssVar(name: string, fallback: string): string {
 
 function darkenHex(hex: string, percent: number): string {
   const n = hex.replace("#", "");
-  const r = Math.max(0, Math.round(parseInt(n.substring(0, 2), 16) * (1 - percent / 100)));
-  const g = Math.max(0, Math.round(parseInt(n.substring(2, 4), 16) * (1 - percent / 100)));
-  const b = Math.max(0, Math.round(parseInt(n.substring(4, 6), 16) * (1 - percent / 100)));
+  const r = Math.max(
+    0,
+    Math.round(parseInt(n.substring(0, 2), 16) * (1 - percent / 100)),
+  );
+  const g = Math.max(
+    0,
+    Math.round(parseInt(n.substring(2, 4), 16) * (1 - percent / 100)),
+  );
+  const b = Math.max(
+    0,
+    Math.round(parseInt(n.substring(4, 6), 16) * (1 - percent / 100)),
+  );
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
@@ -46,28 +55,15 @@ function resolvePalette(): CurrentTheme {
 }
 
 function buildIdleCursor(palette: CurrentTheme): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-  <defs>
-    <filter id="idle-glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="1.5" result="blur"/>
-      <feFlood flood-color="${palette.primary}" flood-opacity="0.6"/>
-      <feComposite in2="blur" operator="in"/>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-  <path d="M5.5 3.21V20.8L10.3 16.05L13.5 22.8L16.4 21.43L13.2 14.68H20.22L5.5 3.21Z" 
-        fill="${palette.idleBase}" 
-        stroke="${palette.idleStroke}" 
-        stroke-width="1"
-        filter="url(#idle-glow)"/>
-</svg>`;
+  return `
+    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0.0340775 1.73474C-0.22533 0.559201 1.04379 -0.372665 2.19543 0.147741L17.6498 7.1313C18.8936 7.69336 18.822 9.38174 17.536 9.81359L10.9061 12.04C10.598 12.1435 10.3343 12.3375 10.1536 12.5938L6.31292 18.0407C5.55783 19.1116 3.79335 18.7703 3.51285 17.4992L0.0340775 1.73474Z" fill="${palette.idleBase}"/>
+    </svg>
+`;
 }
 
 function buildPointerCursor(palette: CurrentTheme): string {
-  return `<svg width="23" height="21" viewBox="0 0 23 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="20" height="21" viewBox="0 0 23 21" fill="none" xmlns="http://www.w3.org/2000/svg">
 <mask id="path-1-inside-1_16_22" fill="white">
 <path d="M7.92578 0C8.35113 -0.000899178 8.73144 0.148188 9.0332 0.448242C9.33478 0.748305 9.48585 1.12781 9.48438 1.55273V9.5H10.6006V5.7627C10.6007 5.33764 10.7506 4.95776 11.0527 4.6582C11.3538 4.35972 11.7334 4.21193 12.1572 4.21094C12.5829 4.20997 12.9637 4.3588 13.2656 4.65918C13.567 4.95909 13.7172 5.33807 13.7158 5.7627V9.5H14.832V6.81543C14.8321 6.39033 14.983 6.01052 15.2852 5.71094C15.5861 5.41269 15.9651 5.26373 16.3887 5.2627C16.8144 5.2617 17.1951 5.4115 17.4971 5.71191C17.7985 6.01186 17.9496 6.39072 17.9482 6.81543V9.5H19.0635V8.9209C19.0635 8.49572 19.2144 8.11604 19.5166 7.81641C19.8176 7.51806 20.1965 7.36926 20.6201 7.36816C21.0458 7.36717 21.4266 7.51697 21.7285 7.81738C22.03 8.11738 22.1811 8.49608 22.1797 8.9209V16.2891C22.1797 17.5814 21.711 18.6998 20.7891 19.6172C19.8672 20.5344 18.7447 20.9999 17.4482 21H9.98926C9.43991 21 8.91386 20.8825 8.41602 20.6494C7.97902 20.4448 7.59797 20.1657 7.27637 19.8135L7.14258 19.6582L0.291992 11.2637L0 10.9053L0.333984 10.5859L1.02148 9.92773C1.43278 9.52137 1.93118 9.27928 2.50098 9.21387C3.07759 9.14778 3.61372 9.28212 4.08496 9.61523L6.36816 11.2002V1.55273C6.36816 1.12751 6.51909 0.747905 6.82129 0.448242C7.12238 0.149701 7.50191 0.000994682 7.92578 0Z"/>
 </mask>
@@ -78,30 +74,11 @@ function buildPointerCursor(palette: CurrentTheme): string {
 }
 
 function buildTextCursor(palette: CurrentTheme): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="28" viewBox="0 0 24 32">
-  <defs>
-    <filter id="tg" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="0.6" result="b"/>
-      <feFlood flood-color="${palette.primary}" flood-opacity="0.45" result="c"/>
-      <feComposite in="c" in2="b" operator="in" result="gc"/>
-      <feMerge><feMergeNode in="gc"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-  </defs>
-  <g filter="url(#tg)">
-    <!-- Top serif bar -->
-    <line x1="6" y1="4" x2="18" y2="4" stroke="${palette.idleBase}" stroke-width="2.2" stroke-linecap="round"/>
-    <!-- Top serif ends -->
-    <line x1="6" y1="2.5" x2="6" y2="6" stroke="${palette.idleBase}" stroke-width="1.6" stroke-linecap="round"/>
-    <line x1="18" y1="2.5" x2="18" y2="6" stroke="${palette.idleBase}" stroke-width="1.6" stroke-linecap="round"/>
-    <!-- Main beam -->
-    <line x1="12" y1="4" x2="12" y2="28" stroke="${palette.idleBase}" stroke-width="2.4" stroke-linecap="round"/>
-    <!-- Bottom serif bar -->
-    <line x1="6" y1="28" x2="18" y2="28" stroke="${palette.idleBase}" stroke-width="2.2" stroke-linecap="round"/>
-    <!-- Bottom serif ends -->
-    <line x1="6" y1="26" x2="6" y2="29.5" stroke="${palette.idleBase}" stroke-width="1.6" stroke-linecap="round"/>
-    <line x1="18" y1="26" x2="18" y2="29.5" stroke="${palette.idleBase}" stroke-width="1.6" stroke-linecap="round"/>
-  </g>
-</svg>`;
+  return `
+    <svg width="11" height="22" viewBox="0 0 11 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4.78571 13.1316H2.64286C2.24837 13.1316 1.92857 12.8488 1.92857 12.5C1.92857 12.1512 2.24837 11.8684 2.64286 11.8684H4.78571V3.65789C4.78571 2.61146 3.82632 1.76316 2.64286 1.76316H1.21429C0.819797 1.76316 0.5 1.48039 0.5 1.13158C0.5 0.782768 0.819797 0.5 1.21429 0.5H2.64286C3.81114 0.5 4.84841 0.996006 5.5 1.76285C6.15159 0.996006 7.18886 0.5 8.35714 0.5H9.78571C10.1802 0.5 10.5 0.782768 10.5 1.13158C10.5 1.48039 10.1802 1.76316 9.78571 1.76316H8.35714C7.17368 1.76316 6.21429 2.61146 6.21429 3.65789V11.8684H8.35714C8.75163 11.8684 9.07143 12.1512 9.07143 12.5C9.07143 12.8488 8.75163 13.1316 8.35714 13.1316H6.21429V21.3421C6.21429 22.3885 7.17368 23.2368 8.35714 23.2368H9.78571C10.1802 23.2368 10.5 23.5196 10.5 23.8684C10.5 24.2172 10.1802 24.5 9.78571 24.5H8.35714C7.18886 24.5 6.15159 24.004 5.5 23.2372C4.84841 24.004 3.81114 24.5 2.64286 24.5H1.21429C0.819797 24.5 0.5 24.2172 0.5 23.8684C0.5 23.5196 0.819797 23.2368 1.21429 23.2368H2.64286C3.82632 23.2368 4.78571 22.3885 4.78571 21.3421V13.1316Z" fill="${palette.idleBase}" stroke="${palette.idleBase}"/>
+    </svg>
+`;
 }
 
 function buildLoadingCursor(palette: CurrentTheme): string {
@@ -220,7 +197,6 @@ textarea, [contenteditable="true"],
 }
 `;
 }
-
 
 const STYLE_ID = "brand-cursors";
 

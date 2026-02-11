@@ -56,7 +56,7 @@ export default function Home() {
               CookWise
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground mb-5">
+          <p className="text-sm text-muted-foreground mb-5 font-bold">
             Cook with inspiration and follow your goal and become a MasterChef
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
