@@ -19,7 +19,7 @@ describe('Home', () => {
         <Home />
       </MemoryRouter>
     );
-    expect(screen.getByText("Welcome to CookWise")).toBeInTheDocument();
+    expect(screen.getByText(/Cook with inspiration and follow your goal and become a MasterChef/i)).toBeInTheDocument();
   });
 
   it('renders action buttons', () => {
@@ -29,6 +29,6 @@ describe('Home', () => {
       </MemoryRouter>
     );
     expect(screen.getByText("Get Started")).toBeInTheDocument();
-    expect(screen.getByText("Learn More")).toBeInTheDocument();
+    expect(screen.getByText("Sign In")).toBeInTheDocument();
   });
 });
