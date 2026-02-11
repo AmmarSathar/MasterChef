@@ -1,0 +1,69 @@
+/* ===== Tailwind Custom Cursors ===== */
+:root {
+  --cursor-idle: url('/src/lib/cursors/default/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/src/lib/cursors/default/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/src/lib/cursors/default/text.svg') 10 14, text;
+}
+
+[data-theme="dark"] {
+  --cursor-idle: url('/src/lib/cursors/dark/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/src/lib/cursors/dark/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/src/lib/cursors/dark/text.svg') 10 14, text;
+}
+
+*, *::before, *::after {
+  cursor: var(--cursor-idle);
+}
+
+/* Pointer cursor for clickable elements */
+a,
+button,
+label[for],
+select,
+summary,
+[role="button"],
+[role="link"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[type="checkbox"],
+[type="radio"],
+[type="submit"],
+[type="reset"],
+[type="button"],
+.cursor-pointer {
+  cursor: var(--cursor-pointer) !important;
+}
+
+/* Text cursor for text input elements */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input:not([type]),
+textarea,
+[contenteditable="true"],
+[role="textbox"],
+.cursor-text {
+  cursor: var(--cursor-text) !important;
+}
+
+/* Drag states */
+[draggable="true"],
+.cursor-grab {
+  cursor: var(--cursor-pointer) !important;
+}
+
+.cursor-grabbing {
+  cursor: var(--cursor-pointer) !important;
+}
+
+/* Disabled elements - use default browser cursor */
+[disabled],
+[aria-disabled="true"],
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}

@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Label } from "@components/ui/label";
 import { Badge } from "@components/ui/badge";
-import { EggFriedIcon, CitrusIcon, ChevronDown, Check, Search } from "lucide-react";
+import {
+  EggFriedIcon,
+  CitrusIcon,
+  ChevronDown,
+  Check,
+  Search,
+} from "lucide-react";
 import {
   allergenOptions,
   dietaryOptions,
@@ -51,7 +57,10 @@ export default function CustomizeStep1({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (allergyDropdownRef.current && !allergyDropdownRef.current.contains(e.target as Node)) {
+      if (
+        allergyDropdownRef.current &&
+        !allergyDropdownRef.current.contains(e.target as Node)
+      ) {
         setAllergyDropdownOpen(false);
       }
     };
@@ -83,7 +92,7 @@ export default function CustomizeStep1({
     );
   };
 
-  const handleSubmit = (formData: FormData) => {
+  const handleSubmit = () => {
     // console.log(selectedDietary, allergies, skillLevel, selectedCuisines);
     onNext({
       dietaryRestrictions: selectedDietary,
@@ -97,7 +106,7 @@ export default function CustomizeStep1({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        handleSubmit(new FormData(e.currentTarget));
+        handleSubmit();
       }}
       className={`transition-all duration-700 ease-out w-full flex flex-col gap-8 max-md:no-scrollbar ${
         headerTransitioned
@@ -148,12 +157,21 @@ export default function CustomizeStep1({
             <input
               ref={allergySearchRef}
               type="text"
-              placeholder={selectedAllergies.length === 0 ? "Search allergies..." : `${selectedAllergies.length} selected — search more...`}
+              placeholder={
+                selectedAllergies.length === 0
+                  ? "Search allergies..."
+                  : `${selectedAllergies.length} selected — search more...`
+              }
               value={allergySearch}
               onChange={(e) => {
                 setAllergySearch(e.target.value);
                 setAllergyDropdownOpen(true);
               }}
+              onKeyDown={(event) => {
+                const key = event.key;
+                setAllergyDropdownOpen(key === "escape");
+              }}
+              onBlur={() => setAllergyDropdownOpen(false)}
               onFocus={() => setAllergyDropdownOpen(true)}
               className="w-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
             />
@@ -165,7 +183,9 @@ export default function CustomizeStep1({
           {allergyDropdownOpen && (
             <div className="absolute z-50 mt-2 w-full rounded-2xl bg-popover border border-border shadow-lg py-2 max-h-60 overflow-y-auto">
               {filteredAllergyOptions.length === 0 ? (
-                <p className="px-4 py-2.5 text-sm text-muted-foreground">No allergies match your search</p>
+                <p className="px-4 py-2.5 text-sm text-muted-foreground">
+                  No allergies match your search
+                </p>
               ) : (
                 filteredAllergyOptions.map((option) => (
                   <button
@@ -200,7 +220,7 @@ export default function CustomizeStep1({
                 onClick={() => toggleAllergy(allergy)}
                 className="cursor-pointer px-3 py-1 bg-primary text-primary-foreground border-primary hover:opacity-80 transition-all"
               >
-                {allergy} ×
+                {allergy} x
               </Badge>
             ))}
           </div>

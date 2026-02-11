@@ -1,5 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+
+vi.stubEnv("VITE_BASE_API_URL", "http://localhost:4000/api");
+
 import Login from "@/components/ui/Login/login";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -13,7 +16,7 @@ vi.mock("axios", () => ({
 
 vi.mock("react-hot-toast", () => ({
   toast: {
-    loading: vi.fn(),
+    loading: vi.fn(() => "toast-id"),
     dismiss: vi.fn(),
     success: vi.fn(),
     error: vi.fn(),
@@ -34,7 +37,7 @@ function setUrl(url: string) {
 
 // Mock canvas getContext for ogl/Grainient
 beforeAll(() => {
-  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
     value: vi.fn(() => ({
       // mock minimal context if needed
       getExtension: vi.fn(),
@@ -49,7 +52,6 @@ describe("Login/Register UI", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
-    vi.stubEnv("VITE_BASE_API_URL", "http://localhost:4000/api");
     setUrl("/login");
   });
 
@@ -61,7 +63,10 @@ describe("Login/Register UI", () => {
   it("submits registration and stores user on success", async () => {
     setUrl("/login?register=true");
     axiosMock.post.mockResolvedValue({
-      data: { success: true, user: { id: "u1", email: "a@b.com", name: "Alice" } },
+      data: {
+        success: true,
+        user: { id: "u1", email: "a@b.com", name: "Alice" },
+      },
     });
 
     render(<Login />);
@@ -85,12 +90,12 @@ describe("Login/Register UI", () => {
           email: "a@b.com",
           password: "Abcdef1!",
           name: "Alice",
-        }
+        },
       );
     });
 
     expect(localStorage.getItem("user")).toEqual(
-      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" })
+      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
     );
     expect(toast.success).toHaveBeenCalled();
   });
@@ -123,7 +128,10 @@ describe("Login/Register UI", () => {
   it("simulates login flow and shows success", async () => {
     setUrl("/login?register=false");
     axiosMock.post.mockResolvedValue({
-      data: { success: true, user: { id: "u1", email: "a@b.com", name: "Alice" } },
+      data: {
+        success: true,
+        user: { id: "u1", email: "a@b.com", name: "Alice" },
+      },
     });
 
     render(<Login />);
@@ -143,15 +151,15 @@ describe("Login/Register UI", () => {
         {
           email: "a@b.com",
           password: "Password1!",
-        }
+        },
       );
     });
 
     expect(localStorage.getItem("user")).toEqual(
-      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" })
+      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
     );
     expect(toast.success).toHaveBeenCalledWith(
-      "Logged in successfully!\nWelcome back Alice!"
+      "Logged in successfully!\nWelcome back Alice!",
     );
   });
 });

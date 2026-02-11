@@ -38,8 +38,8 @@ export default function Home() {
         <DotGrid
           dotSize={4}
           gap={20}
-          baseColor={colors.base}
-          activeColor={colors.active}
+          baseColor={'var(--grain-color-1)'}
+          activeColor={'var(--grain-color-2)'}
           proximity={100}
           shockRadius={200}
           shockStrength={4}

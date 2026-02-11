@@ -28,10 +28,25 @@ interface GrainientProps {
   className?: string;
 }
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return [1, 1, 1];
-  return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
+const resolveColor = (color: string): [number, number, number] => {
+  let resolved = color.trim();
+
+  if (resolved.startsWith('var(')) {
+    const varName = resolved.slice(4, -1).trim();
+    resolved = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+
+  const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(resolved);
+  if (hexMatch) {
+    return [parseInt(hexMatch[1], 16) / 255, parseInt(hexMatch[2], 16) / 255, parseInt(hexMatch[3], 16) / 255];
+  }
+
+  const rgbMatch = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(resolved);
+  if (rgbMatch) {
+    return [parseInt(rgbMatch[1]) / 255, parseInt(rgbMatch[2]) / 255, parseInt(rgbMatch[3]) / 255];
+  }
+
+  return [1, 1, 1];
 };
 
 const vertex = `#version 300 es
@@ -196,9 +211,9 @@ const Grainient: React.FC<GrainientProps> = ({
         uSaturation: { value: saturation },
         uCenterOffset: { value: new Float32Array([centerX, centerY]) },
         uZoom: { value: zoom },
-        uColor1: { value: new Float32Array(hexToRgb(color1)) },
-        uColor2: { value: new Float32Array(hexToRgb(color2)) },
-        uColor3: { value: new Float32Array(hexToRgb(color3)) }
+        uColor1: { value: new Float32Array(resolveColor(color1)) },
+        uColor2: { value: new Float32Array(resolveColor(color2)) },
+        uColor3: { value: new Float32Array(resolveColor(color3)) }
       }
     });
 
@@ -218,6 +233,21 @@ const Grainient: React.FC<GrainientProps> = ({
     ro.observe(container);
     setSize();
 
+    const updateColors = () => {
+      const c1 = resolveColor(color1);
+      const c2 = resolveColor(color2);
+      const c3 = resolveColor(color3);
+      (program.uniforms.uColor1.value as Float32Array).set(c1);
+      (program.uniforms.uColor2.value as Float32Array).set(c2);
+      (program.uniforms.uColor3.value as Float32Array).set(c3);
+    };
+
+    const themeObserver = new MutationObserver(updateColors);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
     let raf = 0;
     const t0 = performance.now();
     const loop = (t: number) => {
@@ -230,6 +260,7 @@ const Grainient: React.FC<GrainientProps> = ({
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      themeObserver.disconnect();
       try {
         container.removeChild(canvas);
       } catch {

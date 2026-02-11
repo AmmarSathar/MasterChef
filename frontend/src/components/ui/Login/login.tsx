@@ -68,24 +68,6 @@ export default function Login() {
   const customizeContainerRef = useRef<HTMLDivElement>(null);
 
   // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
-  const cssVar = (name: string, fallback: string) =>
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
-    fallback;
-
-  const [, setDark] = useState(
-    document.documentElement.classList.contains("dark"),
-  );
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-    const obs = new MutationObserver(() =>
-      setDark(document.documentElement.classList.contains("dark")),
-    );
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -123,8 +105,8 @@ export default function Login() {
     }, 1000);
   };
 
-  const completeRegistration = async (formData: FormData) => {
-    if (partialPasswordReq.some((req) => !req.complete)) {
+  const completeRegistration = async (formData: FormData): Promise<boolean> => {
+    if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
       console.log(partialPasswordReq.filter((req) => !req.complete));
       toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
       return false;
@@ -171,6 +153,8 @@ export default function Login() {
           toast.error(`An unexpected error occurred. Please try again.`);
           console.error("Request failed:", err);
         }
+
+        return false;
       }
     } else {
       console.log("Sign Up");
@@ -218,6 +202,8 @@ export default function Login() {
           toast.error(`An unexpected error occurred. Please try again.`);
           console.error("Request failed:", err);
         }
+
+        return false;
       }
     }
   };
@@ -258,9 +244,9 @@ export default function Login() {
       <div className="absolute inset-0 z-0">
         {/* React-Bits theme that follows mutated tailwindcss theme palette.. */}
         <Grainient
-          color1={cssVar("--grain-color-1", "#d7c7e7")}
-          color2={cssVar("--grain-color-2", "#ffdab9")}
-          color3={cssVar("--grain-color-3", "#f1eee8")}
+          color1={"var(--grain-color-1)"}
+          color2={"var(--grain-color-2)"}
+          color3={"var(--grain-color-3)"}
           timeSpeed={0.25}
           colorBalance={0}
           warpStrength={1}
@@ -372,16 +358,13 @@ export default function Login() {
                   onBlur={() => setIsPasswordFocused(false)}
                   onChange={(event) => {
                     const partialPassword = event.target.value;
-                    console.log(partialPassword);
-                    partialPasswordReq.forEach((requirement) => {
-                      requirement.complete =
-                        requirement.validate(partialPassword);
-                      if (requirement.complete) {
-                        console.log(`Requirement met: ${requirement.label}`);
-                      }
-                    });
-                    setPartialPasswordReq([...partialPasswordReq]);
-                    console.log(partialPasswordReq);
+                    const updatedRequirements = passRequirements.map(
+                      (requirement) => ({
+                        ...requirement,
+                        complete: requirement.validate(partialPassword),
+                      }),
+                    );
+                    setPartialPasswordReq(updatedRequirements);
                   }}
                   className="w-full h-13 rounded-full bg-input/80 border-border/60 shadow-sm shadow-border/80 not-focus:bg-input/80 px-5 pr-12"
                   required
@@ -482,7 +465,9 @@ export default function Login() {
           </div>
         </div>
       )}
-      <Footer className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}/>
+      <Footer
+        className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}
+      />
     </div>
   );
 }

@@ -23,6 +23,6 @@ describe("Navbar", () => {
       name: /toggle theme/i,
     });
     fireEvent.click(themeButton);
-    expect(document.documentElement.classList.contains("dark")).toBe(true);
+    expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
   });
 });
