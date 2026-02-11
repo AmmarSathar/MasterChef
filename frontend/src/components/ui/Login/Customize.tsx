@@ -30,7 +30,7 @@ export default function Customize({ ready }: CustomizeProps) {
   const [partialUser, setPartialUser] = useState<User>({} as User);
   const [step1Data, setStep1Data] = useState({
     dietaryRestrictions: [] as string[],
-    allergies: "",
+    allergies: [] as string[],
     skillLevel: "",
     favoriteCuisines: [] as string[],
   });
@@ -104,13 +104,8 @@ export default function Customize({ ready }: CustomizeProps) {
     const profilePayload = {
       userId: partialUser.id,
       dietary_restric: step1Data.dietaryRestrictions,
-      allergies: step1Data.allergies
-        .split(",")
-        .map((a) => a.trim())
-        .filter(Boolean),
-      skill_level: step1Data.skillLevel
-        ? (step1Data.skillLevel.toLowerCase() as "beginner" | "intermediate" | "advanced" | "expert")
-        : undefined,
+      allergies: step1Data.allergies,
+      skill_level: step1Data.skillLevel || undefined,
       cuisines_pref: step1Data.favoriteCuisines,
       pfp: data.profilePicture ?? undefined,
       age: data.age,
