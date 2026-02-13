@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
@@ -54,6 +56,8 @@ const passRequirements = [
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
   const [isLogin, setIsLogin] = useState(false); // If false: Register
@@ -72,7 +76,7 @@ export default function Login() {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
       return;
     }
 
@@ -84,7 +88,7 @@ export default function Login() {
     } else {
       setIsLogin(true);
     }
-  }, [isLogin]);
+  }, [isLogin, navigate]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
@@ -132,8 +136,12 @@ export default function Login() {
         const user = response.data.user;
         localStorage.setItem("user", JSON.stringify(user));
 
+        console.log("user loaded: ", user)
+
         toast.dismiss(registrationToast);
         toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
+        
+        navigate("/dashboard");
         return true;
       } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response) {
@@ -240,7 +248,13 @@ export default function Login() {
   };
 
   return (
-    <div className="login-root absolute h-full w-full flex flex-col items-center justify-center max-md:z-100 overflow-hidden">
+    <motion.div
+      className="login-root absolute h-full w-full flex flex-col items-center justify-center max-md:z-100 overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="absolute inset-0 z-0">
         {/* React-Bits theme that follows mutated tailwindcss theme palette.. */}
         <Grainient
@@ -468,6 +482,6 @@ export default function Login() {
       <Footer
         className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}
       />
-    </div>
+    </motion.div>
   );
 }

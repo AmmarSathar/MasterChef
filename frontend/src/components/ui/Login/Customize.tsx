@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import axios, { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 
 import {
@@ -24,6 +25,8 @@ interface CustomizeProps {
 }
 
 export default function Customize({ ready }: CustomizeProps) {
+  const navigate = useNavigate();
+
   const [headerTransitioned, setHeaderTransitioned] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -128,13 +131,18 @@ export default function Customize({ ready }: CustomizeProps) {
 
       toast.dismiss(loadingToast);
       toast.success("Profile customization complete!\nLet's start cooking!");
-      window.location.href = "/dashboard";
-    } catch (err: any) {
+      navigate("/dashboard");
+    } catch (err: unknown) {
       toast.dismiss(loadingToast);
-      const message =
-        err?.response?.data?.message ||
-        "Failed to save profile. Please try again.";
-      toast.error(message);
+
+      if (axios.isAxiosError(err)) {
+        const message =
+          err?.response?.data?.message ||
+          "Failed to save profile. Please try again.";
+        toast.error(message);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -142,12 +150,6 @@ export default function Customize({ ready }: CustomizeProps) {
     <div
       ref={CustomizeRootElement}
       className="customize-root w-full h-full p-10 pl-50 max-md:p-0 max-md:pb-5 max-md:m-0 flex flex-col overflow-y-scroll overflow-x-hidden max-md:scroll-m-5 noScrollbar md:showScrollbar"
-      style={
-        {
-          // msOverflowStyle: "none",
-          // scrollbarWidth: "none",
-        }
-      }
     >
       <div
         className={`customize-stepper max-md:w-full max-md:h-20 max-md:p-5 relative flex items-center justify-center transition-all duration-500 delay-500 ease-out mb-5 ${headerTransitioned ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5"}`}

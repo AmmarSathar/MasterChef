@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ChefHat, Calendar, Utensils, Sparkles } from "lucide-react";
 import Footer from "@/components/ui/footer";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const cssVar = (name: string, fallback: string) =>
@@ -33,7 +34,13 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <motion.div 
+      className="relative min-h-screen overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="absolute inset-0 z-0">
         <DotGrid
           dotSize={4}
@@ -109,6 +116,6 @@ export default function Home() {
 
         <Footer className="absolute bottom-10 max-md:hidden max-md:opacity-0"/>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 import { ArrowLeft, Plus, Bell, Search, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,13 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="dashboard-parent-container w-full h-screen flex relative justify-center items-center p-3 m-0">
+    <motion.div 
+      className="dashboard-parent-container w-full h-screen flex relative justify-center items-center p-3 m-0"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5">
         <div className="dashboard-header w-full bg-card/80 h-40 flex justify-between items-center p-1">
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
@@ -110,6 +117,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
