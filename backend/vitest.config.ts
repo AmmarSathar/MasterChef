@@ -11,11 +11,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@masterchef/shared/constants": fileURLToPath(
+        new URL("../shared/constants/index.ts", import.meta.url)
+      ),
       "@masterchef/shared": fileURLToPath(
         new URL("../shared/index.ts", import.meta.url)
-      ),
-      "@masterchef/shared/*": fileURLToPath(
-        new URL("../shared/*", import.meta.url)
       ),
     },
   },
