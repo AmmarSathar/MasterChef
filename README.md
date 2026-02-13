@@ -1,4 +1,4 @@
-# COEN 341 Group Project - Team CookWise
+# SOEN 341 Group Project - Team CookWise
 
 ## Team Members
 - Ammar Sathar
@@ -17,7 +17,6 @@ The web app will have 5 key features:
 - **Feature 2:** Recipe management
 - **Feature 3:** Weekly meal planner
 - **Feature 4:** TBA
-- **Feature 5:** TBA
 
 The web app will be completed in 4 sprints:
 - **Sprint 1:** Setup Github; prepare sprint plan, prepare user stories with task breakdown, and implement code for **Feature 1**
