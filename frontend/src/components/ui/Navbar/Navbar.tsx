@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Utensils,
   LayoutGrid,
@@ -14,16 +14,17 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import "./styles.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [selectedBtn, setSelectedBtn] = React.useState<string>("");
   const [isMoreOpen, setIsMoreOpen] = React.useState<boolean>(false);
   const [showMoreButton, setShowMoreButton] = React.useState<boolean>(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       setShowMoreButton(window.innerHeight < 700);
       if (window.innerHeight >= 700) {
@@ -31,7 +32,7 @@ export default function Navbar() {
       }
     };
 
-    handleResize(); // Check on mount
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -179,13 +180,21 @@ export default function Navbar() {
             </div>
             <button
               onClick={() => {
-                localStorage.removeItem("user");
+                console.log("pressed");
                 setIsMoreOpen(false);
-                navigate("/login");
+
+                if (localStorage.getItem("user")) {
+                  if (location.pathname === "/login") {
+                    navigate("/");
+                  } else {
+                    navigate("/login");
+                  }
+                }
+
+                localStorage.removeItem("user");
               }}
-              className="flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted"
-              aria-label="Logout"
-              title="Logout"
+              disabled={false}
+              className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
             >
               <LogOut className="w-5 h-5 text-muted-foreground pointer-events-none" />
             </button>

@@ -27,7 +27,15 @@ export default function App() {
     <BrowserRouter>
       <div className="antialiased min-h-screen bg-background text-foreground overflow-x-hidden overflow-y-hidden relative">
         <Navbar />
-        <Toaster position="bottom-center" />
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: "var(--primary-hex)",
+              color: "var(--accent)",
+            },
+          }}
+        />
         <AnimatedRoutes />
       </div>
     </BrowserRouter>

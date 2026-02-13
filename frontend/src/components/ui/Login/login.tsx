@@ -17,7 +17,7 @@ import Footer from "@components/ui/footer";
 
 import Google from "@/lib/icons/google.svg";
 import Github from "@/lib/icons/github.svg";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, BadgeInfo } from "lucide-react";
 import "./login.css";
 
 const passRequirements = [
@@ -70,14 +70,23 @@ export default function Login() {
 
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
+  const hasInitialized = useRef(false);
 
   // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
 
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    if (storedUser && JSON.parse(storedUser).isCustomized) {
       navigate("/dashboard");
       return;
+    } else if (storedUser) {
+      triggerCustomize();
+      toast.success("Welcome back! \nLet's complete your Profile..", {
+        icon: <BadgeInfo size={20} color="var(--info-hex)" />,
+      });
     }
 
     const queryParameters = new URLSearchParams(window.location.search);
@@ -88,7 +97,7 @@ export default function Login() {
     } else {
       setIsLogin(true);
     }
-  }, [isLogin, navigate]);
+  }, [navigate, isLogin]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
@@ -136,12 +145,19 @@ export default function Login() {
         const user = response.data.user;
         localStorage.setItem("user", JSON.stringify(user));
 
-        console.log("user loaded: ", user)
+        console.log("user loaded: ", user);
 
         toast.dismiss(registrationToast);
         toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
-        
-        navigate("/dashboard");
+
+        if (user.isCustomized) {
+          navigate("/dashboard");
+        } else {
+          toast.success("But first, let's complete your Customization!", {
+            icon: <BadgeInfo size={20} />,
+          });
+        }
+
         return true;
       } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response) {
@@ -216,34 +232,38 @@ export default function Login() {
     }
   };
 
+  const triggerCustomize = () => {
+    // console.log("passed");
+    if (loginContainerRef.current) {
+      loginContainerRef.current.classList.add("login-fadeout");
+    }
+
+    setTimeout(() => {
+      setShowCustomize(true);
+    }, 800);
+
+    setTimeout(() => {
+      if (customizeContainerRef.current) {
+        customizeContainerRef.current.classList.add("customize-slide");
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      if (customizeContainerRef.current) {
+        customizeContainerRef.current.classList.add("customize-expand");
+      }
+    }, 1800);
+
+    setTimeout(() => {
+      setIsCustomizeReady(true);
+    }, 3000);
+  };
+
   const handleCreateAccount = async (formData: FormData) => {
     const success = await completeRegistration(formData);
     // console.log("passed 1");
     if (success) {
-      // console.log("passed");
-      if (loginContainerRef.current) {
-        loginContainerRef.current.classList.add("login-fadeout");
-      }
-
-      setTimeout(() => {
-        setShowCustomize(true);
-      }, 800);
-
-      setTimeout(() => {
-        if (customizeContainerRef.current) {
-          customizeContainerRef.current.classList.add("customize-slide");
-        }
-      }, 1000);
-
-      setTimeout(() => {
-        if (customizeContainerRef.current) {
-          customizeContainerRef.current.classList.add("customize-expand");
-        }
-      }, 1800);
-
-      setTimeout(() => {
-        setIsCustomizeReady(true);
-      }, 3000);
+      triggerCustomize();
     }
   };
 
@@ -480,7 +500,7 @@ export default function Login() {
         </div>
       )}
       <Footer
-        className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 max-md:pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}
+        className={`fixed bottom-10 opacity-100 transition-all duration-300 max-md:opacity-0 pointer-events-none max-md:hidden ${showCustomize ? "max-md:hidden opacity-0 transform-y-100" : "opacity-0"}`}
       />
     </motion.div>
   );

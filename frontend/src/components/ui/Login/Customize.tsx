@@ -116,6 +116,7 @@ export default function Customize({ ready }: CustomizeProps) {
       weight: data.weight || undefined,
       height: data.height || undefined,
       bio: data.bio || undefined,
+      isCustomized: true,
     };
 
     try {
