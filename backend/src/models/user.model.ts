@@ -14,6 +14,7 @@ export interface IUser extends Document {
   allergies?: string[];
   skill_level?: "beginner" | "intermediate" | "advanced" | "expert";
   cuisines_pref?: string[];
+  isCustomized: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +51,7 @@ const userSchema = new Schema<IUser>(
       enum: ["beginner", "intermediate", "advanced", "expert"],
     },
     cuisines_pref: { type: [String], default: [] },
+    isCustomized: { type: Boolean, default: false },
   },
   {
     timestamps: true,
