@@ -195,6 +195,8 @@ export default function Navbar() {
               }}
               disabled={false}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
+              aria-label="Logout"
+              title="Logout"
             >
               <LogOut className="w-5 h-5 text-muted-foreground pointer-events-none" />
             </button>
