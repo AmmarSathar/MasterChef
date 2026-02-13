@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Plus, Bell, Search, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { User } from "@masterchef/shared/types/user";
+import toast from "react-hot-toast";
 
 function Skeleton({ className }: { className?: string }) {
   return (
@@ -21,13 +22,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     // For now, I plan to fetch {name, email, pfp} from local. idk if it's a good idea tho
-    const storedUser = localStorage.getItem("user"); 
+    const storedUser = localStorage.getItem("user");
     // After further research, this is a VERY BAD IDEA, as it b64 text will easily bloat the LS
     // I'll implement IndexDB later to store the local user
     if (storedUser) {
+      if (!JSON.parse(storedUser).isCustomized) {
+        toast.error("An error has occured, please login again.");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
       setUser(JSON.parse(storedUser));
     } else {
-      window.location.href = "/login";
+      navigate("/login");
       return;
     }
 
@@ -35,10 +42,10 @@ export default function Dashboard() {
     if (storedLastPage) {
       setLastPage(storedLastPage);
     }
-  }, []);
+  }, [navigate]);
 
   return (
-    <motion.div 
+    <motion.div
       className="dashboard-parent-container w-full h-screen flex relative justify-center items-center p-3 m-0"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -92,9 +99,7 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="user-context-parent absolute top-full right-0 w-50 h-100 bg-card/70 backdrop-blur-sm rounded-xl shadow-lg shadow-border/50 p-3 border-border/50 transition-all duration-300">
-
-          </div>
+          <div className="user-context-parent absolute top-full right-0 w-50 h-100 bg-card/70 backdrop-blur-sm rounded-xl shadow-lg shadow-border/50 p-3 border-border/50 transition-all duration-300"></div>
         </div>
         <div className="dashboard-content w-full h-full flex items-center justify-center pb-4 gap-4">
           <div className="dashboard-content-left bg-card/50 border border-border/50 w-1/2 h-full flex flex-col relative rounded-2xl p-5 gap-4">

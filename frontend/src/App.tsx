@@ -33,6 +33,7 @@ export default function App() {
             style: {
               background: "var(--primary-hex)",
               color: "var(--accent)",
+              fontWeight: "bold",
             },
           }}
         />
