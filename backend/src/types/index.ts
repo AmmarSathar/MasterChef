@@ -34,6 +34,7 @@ export interface UpdateProfileInput {
   allergies?: string[];
   skill_level?: "beginner" | "intermediate" | "advanced" | "expert";
   cuisines_pref?: string[];
+  isCustomized?: boolean;
 }
 
 export interface UserResponse {
@@ -50,6 +51,9 @@ export interface UserResponse {
   allergies?: string[];
   skill_level?: string;
   cuisines_pref?: string[];
+  isCustomized: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // ── Recipe types ──────────────────────────────────────────────

@@ -25,6 +25,9 @@ function toUserResponse(user: InstanceType<typeof User>): UserResponse {
     allergies: user.allergies,
     skill_level: user.skill_level,
     cuisines_pref: user.cuisines_pref,
+    isCustomized: user.isCustomized,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
   };
 }
 
