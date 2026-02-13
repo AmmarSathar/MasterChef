@@ -34,6 +34,7 @@ export interface UpdateProfileInput {
   allergies?: string[];
   skill_level?: "beginner" | "intermediate" | "advanced" | "expert";
   cuisines_pref?: string[];
+  isCustomized?: boolean;
 }
 
 export interface UserResponse {
@@ -50,4 +51,89 @@ export interface UserResponse {
   allergies?: string[];
   skill_level?: string;
   cuisines_pref?: string[];
+  isCustomized: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Recipe types ──────────────────────────────────────────────
+
+export interface IngredientInput {
+  foodItem: string;
+  amount: number;
+  unit: string;
+  notes?: string;
+}
+
+export interface CreateRecipeInput {
+  title: string;
+  description: string;
+  ingredients: IngredientInput[];
+  steps: string[];
+  cookingTime: number;
+  servings: number;
+  skillLevel: string;
+  cuisine?: string;
+  imageUrl?: string;
+  userId: string;
+}
+
+export interface UpdateRecipeInput {
+  recipeId: string;
+  userId: string;
+  title?: string;
+  description?: string;
+  ingredients?: IngredientInput[];
+  steps?: string[];
+  cookingTime?: number;
+  servings?: number;
+  skillLevel?: string;
+  cuisine?: string;
+  imageUrl?: string;
+  dietaryTags?: string[];
+  containsAllergens?: string[];
+}
+
+export interface RecipeResponse {
+  id: string;
+  title: string;
+  description: string;
+  ingredients: IngredientInput[];
+  steps: string[];
+  cookingTime: number;
+  servings: number;
+  skillLevel: string;
+  cuisine?: string;
+  imageUrl?: string;
+  dietaryTags: string[];
+  containsAllergens: string[];
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface RecipeQueryInput {
+  page?: number;
+  limit?: number;
+  skillLevel?: string;
+  cuisine?: string;
+  excludeTags?: string[];
+  excludeAllergens?: string[];
+  createdBy?: string;
+  search?: string;
+}
+
+export interface RecommendationInput {
+  availableIngredients: string[];
+  userId?: string;
+  limit?: number;
+  page?: number;
+}
+
+export interface RecommendationResult {
+  recipe: RecipeResponse;
+  matchScore: number;
+  matchedIngredients: number;
+  totalIngredients: number;
+  missingIngredients: string[];
 }

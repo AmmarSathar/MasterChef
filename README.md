@@ -3,9 +3,9 @@
 ## Team Members
 - Ammar Sathar
 - Charrat Mohamed Taha
-- Haoyang Ni
-- Joey Chan
 - Navnit Chittoo
+- Joey Chan
+- Nicolas Lopez Callupe
 - Paulina Aguayo Dupin
 
 ## Objective
