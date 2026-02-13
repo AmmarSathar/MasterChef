@@ -24,6 +24,14 @@ export default function Navbar() {
   const [isMoreOpen, setIsMoreOpen] = React.useState<boolean>(false);
   const [showMoreButton, setShowMoreButton] = React.useState<boolean>(false);
 
+  const [userConnected, setUserConnected] = React.useState<boolean>(false);
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    console.log(user)
+    setUserConnected(!!user);
+  }, [userConnected]);
+
   useEffect(() => {
     const handleResize = () => {
       setShowMoreButton(window.innerHeight < 700);
@@ -49,7 +57,16 @@ export default function Navbar() {
 
           <div className="flex flex-col items-center gap-6 flex-1 justify-center z-20">
             <button
-              onClick={() => setSelectedBtn("nav-dashboard")}
+              onClick={() => {
+                if (!userConnected) {
+                  navigate("/login");
+                  return;
+                }
+
+                navigate("/dashboard");
+                window.location.hash = "main";
+                setSelectedBtn("nav-dashboard");
+              }}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-dashboard" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-dashboard"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -65,6 +82,10 @@ export default function Navbar() {
               <>
                 <button
                   onClick={() => {
+                    if (!userConnected) {
+                      navigate("/login");
+                      return;
+                    }
                     setSelectedBtn("nav-saved");
                     setIsMoreOpen(false);
                   }}
@@ -81,6 +102,10 @@ export default function Navbar() {
 
                 <button
                   onClick={() => {
+                    if (!userConnected) {
+                      navigate("/login");
+                      return;
+                    }
                     setSelectedBtn("nav-upload");
                     setIsMoreOpen(false);
                   }}
@@ -97,6 +122,10 @@ export default function Navbar() {
 
                 <button
                   onClick={() => {
+                    if (!userConnected) {
+                      navigate("/login");
+                      return;
+                    }
                     setSelectedBtn("nav-tv");
                     setIsMoreOpen(false);
                   }}
@@ -133,6 +162,10 @@ export default function Navbar() {
               <>
                 <button
                   onClick={() => {
+                    if (!userConnected) {
+                      navigate("/login");
+                      return;
+                    }
                     setSelectedBtn("nav-saved");
                     setIsMoreOpen(false);
                   }}
@@ -164,7 +197,15 @@ export default function Navbar() {
 
           <div className="flex flex-col items-center gap-3 z-20">
             <button
-              onClick={() => setSelectedBtn("nav-settings")}
+              onClick={() => {
+                if (!userConnected) {
+                  navigate("/login");
+                  return;
+                }
+                navigate("/dashboard");
+                window.location.hash = "settings";
+                setSelectedBtn("nav-settings");
+              }}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-settings"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -191,6 +232,7 @@ export default function Navbar() {
                   }
                 }
 
+                setSelectedBtn("");
                 localStorage.removeItem("user");
               }}
               disabled={false}
