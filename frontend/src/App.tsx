@@ -1,10 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useLocation,
-  MemoryRouter,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 import { Toaster } from "react-hot-toast";
@@ -21,14 +15,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
-        <Route
-          path="/login"
-          element={
-            <MemoryRouter>
-              <Login />
-            </MemoryRouter>
-          }
-        />
+        <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </AnimatePresence>
@@ -39,9 +26,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="antialiased min-h-screen bg-background text-foreground overflow-x-hidden overflow-y-hidden relative">
-        <MemoryRouter>
-          <Navbar />
-        </MemoryRouter>
+        <Navbar />
         <Toaster
           position="bottom-center"
           toastOptions={{
