@@ -14,6 +14,7 @@ export interface User {
   cuisines_pref: string[]; //ex: indian, mexican, ect
   createdAt?: Date;
   updatedAt?: Date;
+  isCustomized?: boolean;
 }
 
 export interface UserCredentials {

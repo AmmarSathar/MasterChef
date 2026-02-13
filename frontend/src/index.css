@@ -98,6 +98,77 @@
 }
 
 [data-theme="dark"] {
+  /* ===== Semantic UI Colors - Hex (Coffee & Espresso Theme) ===== */
+  --background-hex: #120f0e;           /* Deep Espresso Bean */
+  --foreground-hex: #e8e2da;           /* Steamed Milk Off-White */
+  --card-hex: #1c1816;                 /* Dark Roast Coffee */
+  --card-foreground-hex: #e8e2da;
+  --popover-hex: #1c1816;
+  --popover-foreground-hex: #e8e2da;
+  
+  --primary-hex: #6f4e37;              /* Rich Coffee / Mocha */
+  --primary-foreground-hex: #fdfaf7;
+  
+  --secondary-hex: #2d2622;            /* Dark Chocolate / Roasted Nut */
+  --secondary-foreground-hex: #e8e2da;
+  
+  --muted-hex: #2d2622;
+  --muted-foreground-hex: #a69b92;      /* Muted Coffee Grounds */
+  
+  --accent-hex: #c4a484;               /* Warm Latte / Light Brown highlight */
+  --accent-foreground-hex: #120f0e;
+  
+  --destructive-hex: #8b3a3a;
+  --destructive-foreground-hex: #fdfaf7;
+  
+  --border-hex: #3a322d;               /* Subtle Earthy Brown border */
+  --input-hex: #261f1c;
+  --ring-hex: #6f4e37;
+
+  /* ===== Semantic UI Colors - OKLCH (L C H) ===== */
+  --background-oklch: 10% 0.01 45;
+  --foreground-oklch: 92% 0.01 75;
+  --card-oklch: 14% 0.01 45;
+  --card-foreground-oklch: 92% 0.01 75;
+  --popover-oklch: 14% 0.01 45;
+  --popover-foreground-oklch: 92% 0.01 75;
+  --primary-oklch: 42% 0.07 45;        /* Coffee Mocha LCH */
+  --primary-foreground-oklch: 98% 0.01 75;
+  --secondary-oklch: 18% 0.02 45;
+  --secondary-foreground-oklch: 92% 0.01 75;
+  --muted-oklch: 18% 0.02 45;
+  --muted-foreground-oklch: 65% 0.02 45;
+  --accent-oklch: 72% 0.08 65;         /* Latte LCH */
+  --accent-foreground-oklch: 10% 0.01 45;
+  --destructive-oklch: 40% 0.12 25;
+  --destructive-foreground-oklch: 98% 0.01 75;
+  --border-oklch: 25% 0.02 45;
+  --input-oklch: 16% 0.02 45;
+  --ring-oklch: 42% 0.07 45;
+
+  /* ===== Brand Colors - Hex ===== */
+  --brand-primary-hex: #6f4e37;        /* Coffee Mocha */
+  --brand-secondary-hex: #c4a484;     /* Warm Latte */
+  --brand-accent-hex: #1c1816;        /* Deep Roast */
+
+  /* ===== Brand Colors - OKLCH ===== */
+  --brand-primary-oklch: 42% 0.07 45;
+  --brand-secondary-oklch: 72% 0.08 65;
+  --brand-accent-oklch: 14% 0.01 45;
+
+  /* ===== Dark Mode Specific Shadows & Gradients ===== */
+  --filter-invert-d-l: 100;
+  --shadow-3d-glow: 
+    0 10px 30px -5px rgba(111, 78, 55, 0.2), 
+    0 0 15px -3px rgba(196, 164, 132, 0.1); 
+  --radius: 1.25rem;
+
+  /* ===== Grainient Background Colors ===== */
+  --grain-color-1: #3e2723; /* Dark roast brown */
+  --grain-color-2: #5d4037; /* Medium roast */
+  --grain-color-3: #120f0e; /* Deep obsidian background */}
+
+[data-theme="dark-old"] {
   /* ===== Semantic UI Colors - Hex (Directly from the Dark Design) ===== */
   --background-hex: #0e0e0e; /* Deep obsidian/charcoal */
   --foreground-hex: #f1eee8; /* Creamy off-white for text */

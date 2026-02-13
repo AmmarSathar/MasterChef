@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 vi.stubEnv("VITE_BASE_API_URL", "http://localhost:4000/api");
 
@@ -56,7 +57,11 @@ describe("Login/Register UI", () => {
   });
 
   it("renders login mode by default", () => {
-    render(<Login />);
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>,
+    );
     expect(screen.getByRole("button", { name: "Log In" })).toBeInTheDocument();
   });
 
@@ -69,7 +74,11 @@ describe("Login/Register UI", () => {
       },
     });
 
-    render(<Login />);
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>,
+    );
 
     fireEvent.change(screen.getByLabelText("Full Name"), {
       target: { value: "Alice" },
@@ -106,7 +115,11 @@ describe("Login/Register UI", () => {
     axiosMock.isAxiosError.mockReturnValue(true);
     axiosMock.post.mockRejectedValue(error);
 
-    render(<Login />);
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>,
+    );
 
     fireEvent.change(screen.getByLabelText("Full Name"), {
       target: { value: "Alice" },
@@ -134,7 +147,11 @@ describe("Login/Register UI", () => {
       },
     });
 
-    render(<Login />);
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>,
+    );
 
     fireEvent.change(screen.getByLabelText("Email Address"), {
       target: { value: "a@b.com" },

@@ -21,6 +21,7 @@
     "install:all": "npm install"
   },
   "dependencies": {
+    "framer-motion": "^12.34.0",
     "mongodb": "^7.0.0",
     "vitest": "^4.0.18"
   },
