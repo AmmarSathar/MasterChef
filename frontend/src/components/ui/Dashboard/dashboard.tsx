@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,6 +41,7 @@ const dashboardRoutes: Record<
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const userCardRef = useRef<HTMLDivElement>(null);
 
   const [user, setUser] = useState<User | null>(null);
   const [lastPage, setLastPage] = useState<string>("/");
@@ -94,6 +95,19 @@ export default function Dashboard() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userCardRef.current && !userCardRef.current.contains(event.target as Node)) {
+        setUserPressed(false);
+      }
+    };
+
+    if (userPressed) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [userPressed]);
+
   const handleDashboardChange = (dashboard: DashboardRouteKey) => {
     setActiveDashboard(dashboard);
     window.location.hash = dashboard;
@@ -109,7 +123,7 @@ export default function Dashboard() {
       transition={{ duration: 0.3 }}
     >
       <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5">
-        <div className="dashboard-header w-full bg-card/80 h-40 flex justify-between items-center p-1 px-3 relative">
+        <div className="dashboard-header w-full h-40 flex justify-between items-center p-1 px-3 relative">
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
@@ -182,11 +196,13 @@ export default function Dashboard() {
           <AnimatePresence>
             {userPressed && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                ref={userCardRef}
+                initial={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
+                animate={{ opacity: 1, y: 0, backdropFilter: "blur(4px)" }}
+                exit={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
                 transition={{ duration: 0.2 }}
-                className="user-card absolute w-90 min-h-100 py-10 bg-linear-to-br from-primary/20 via-primary/10 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
+                tabIndex={0}
+                className="user-card absolute pointer-events-auto w-90 min-h-100 py-10 bg-linear-to-br from-primary/30 via-primary/20 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
               >
                 <div className="user-pfp relative flex w-30 h-30 rounded-full overflow-hidden border-3 border-ring shadow-sm shadow-ring/50 items-center justify-center bg-linear-to-tr from-ring to-secondary">
                   {user?.pfp ? (
@@ -272,7 +288,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="w-full h-full"
+            className="w-full h-full overflow-hidden relative"
           >
             <ActiveContent />
           </motion.div>

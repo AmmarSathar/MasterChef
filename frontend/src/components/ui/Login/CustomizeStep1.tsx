@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Check,
   Search,
+  X,
 } from "lucide-react";
 import {
   allergenOptions,
@@ -111,6 +112,10 @@ export default function CustomizeStep1({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
+      onKeyDown={(event) => {
+        const key = event.key;
+        setAllergyDropdownOpen(key === "escape");
+      }}
     >
       <form
         onSubmit={(e) => {
@@ -176,18 +181,31 @@ export default function CustomizeStep1({
                   setAllergySearch(e.target.value);
                   setAllergyDropdownOpen(true);
                 }}
-                onKeyDown={(event) => {
-                  const key = event.key;
-                  setAllergyDropdownOpen(key === "escape");
-                }}
-                onBlur={() => setAllergyDropdownOpen(false)}
                 onFocus={() => setAllergyDropdownOpen(true)}
                 className="w-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
               />
-              <ChevronDown
-                size={18}
-                className={`text-muted-foreground shrink-0 transition-transform duration-200 ${allergyDropdownOpen ? "rotate-180" : ""}`}
-              />
+              <button
+                type="button"
+                className="h-full px-5 absolute flex items-center justify-center top-0 right-0 pointer-events-auto z-10 cursor-pointer hover:brightness-125 transition-all duration-200"
+                onClick={() => {
+                  if (!allergyDropdownOpen) return;
+
+                  if (allergySearchRef.current) {
+                    allergySearchRef.current.disabled = true;
+                    setTimeout(() => {
+                      allergySearchRef.current!.disabled = false;
+
+                      setAllergyDropdownOpen(false);
+                    }, 100);
+                  }
+                  setAllergyDropdownOpen(false);
+                }}
+              >
+                <ChevronDown
+                  size={18}
+                  className={`text-muted-foreground shrink-0 pointer-events-none transition-all duration-200 ${allergyDropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
             </div>
             {allergyDropdownOpen && (
               <div className="absolute z-50 mt-2 w-full rounded-2xl bg-popover border border-border shadow-lg py-2 max-h-60 overflow-y-auto">
@@ -230,9 +248,10 @@ export default function CustomizeStep1({
                 <Badge
                   key={allergy}
                   onClick={() => toggleAllergy(allergy)}
-                  className="cursor-pointer px-3 py-1 bg-primary text-primary-foreground border-primary hover:opacity-80 transition-all"
+                  className="cursor-pointer flex items-center justify-center relative px-3 py-1 bg-primary text-primary-foreground border-primary hover:opacity-80 transition-all"
                 >
-                  {allergy} x
+                  <span className="flex text-sm ">{allergy}</span>
+                  <X size={15} className="text-primary-foreground/80"/>
                 </Badge>
               ))}
             </div>
