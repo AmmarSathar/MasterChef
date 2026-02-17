@@ -59,14 +59,7 @@ export function RecipeFormContent() {
     }));
   };
 
-  const handleDietaryToggle = (tag: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      dietaryTags: prev.dietaryTags.includes(tag)
-        ? prev.dietaryTags.filter((t) => t !== tag)
-        : [...prev.dietaryTags, tag],
-    }));
-  };
+  
 
   const addIngredient = () => {
     const newId = (Math.max(...ingredients.map((i) => parseInt(i.id)), 0) + 1).toString();
@@ -448,11 +441,26 @@ export function RecipeFormContent() {
                 <div
                   key={tag}
                   className="flex items-center gap-2 p-3 rounded-lg border border-border/40 hover:bg-input/20 transition-colors cursor-pointer"
-                  onClick={() => handleDietaryToggle(tag)}
                 >
                   <Checkbox
                     checked={formData.dietaryTags.includes(tag)}
-                    onCheckedChange={() => handleDietaryToggle(tag)}
+                    onCheckedChange={(checked) => {
+                      try {
+                        const isChecked = checked === true;
+                        setFormData((prev) => {
+                          const prevTags = Array.isArray(prev.dietaryTags) ? prev.dietaryTags : [];
+                          return {
+                            ...prev,
+                            dietaryTags: isChecked
+                              ? Array.from(new Set([...prevTags, tag]))
+                              : prevTags.filter((t) => t !== tag),
+                          };
+                        });
+                      } catch (err) {
+                        console.error("Dietary checkbox handler error:", err);
+                        toast.error("Could not toggle dietary tag");
+                      }
+                    }}
                   />
                   <label className="text-sm font-medium text-foreground/80 cursor-pointer select-none">
                     {tag}
