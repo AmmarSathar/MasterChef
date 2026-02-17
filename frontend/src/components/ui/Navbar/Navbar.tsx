@@ -106,17 +106,19 @@ export default function Navbar() {
                       navigate("/login");
                       return;
                     }
-                    setSelectedBtn("nav-upload");
+                    navigate("/dashboard");
+                    window.location.hash = "recipe";
+                    setSelectedBtn("nav-recipe");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-upload" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-upload"
+                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-recipe" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                    selectedBtn === "nav-recipe"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
                 >
                   <FileText
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipe" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
                   />
                 </button>
 
@@ -255,16 +257,22 @@ export default function Navbar() {
           <div className="py-8 p-4 bg-card/70 backdrop-blur-sm rounded-3xl flex flex-col items-center gap-6 shadow-xl border border-border">
             <button
               onClick={() => {
-                setSelectedBtn("nav-upload");
+                if (!userConnected) {
+                  navigate("/login");
+                  return;
+                }
+                navigate("/dashboard");
+                window.location.hash = "recipe";
+                setSelectedBtn("nav-recipe");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-upload" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
-                selectedBtn === "nav-upload"
+              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-recipe" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                selectedBtn === "nav-recipe"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
             >
               <FileText
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipe" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
               />
             </button>
 

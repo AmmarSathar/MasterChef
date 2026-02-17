@@ -22,8 +22,9 @@ import {
   MainDashboardContent,
 } from "./contents/DashboardMain";
 import { SettingsTitle, SettingsContent } from "./contents/Settings";
+import { RecipeFormTitle, RecipeFormContent } from "./contents/RecipeForm";
 
-type DashboardRouteKey = "main" | "settings";
+type DashboardRouteKey = "main" | "settings" | "recipe";
 
 const dashboardRoutes: Record<
   DashboardRouteKey,
@@ -36,6 +37,10 @@ const dashboardRoutes: Record<
   settings: {
     Title: SettingsTitle,
     Content: SettingsContent,
+  },
+  recipe: {
+    Title: RecipeFormTitle,
+    Content: RecipeFormContent,
   },
 };
 
@@ -77,7 +82,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const hash = window.location.hash.substring(1);
-    if (hash === "main" || hash === "settings") {
+    if (hash === "main" || hash === "settings" || hash === "recipe") {
       handleDashboardChange(hash as DashboardRouteKey);
     } else {
       handleDashboardChange("main");
@@ -85,7 +90,7 @@ export default function Dashboard() {
 
     const handleHashChange = () => {
       const newHash = window.location.hash.substring(1);
-      if (newHash === "main" || newHash === "settings") {
+      if (newHash === "main" || newHash === "settings" || newHash === "recipe") {
         handleDashboardChange(newHash as DashboardRouteKey);
       }
     };
@@ -113,7 +118,7 @@ export default function Dashboard() {
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings") {
+                if (activeDashboard === "settings" || activeDashboard === "recipe") {
                   handleDashboardChange("main");
                   return;
                 } else if (activeDashboard === "main") {
