@@ -1,6 +1,19 @@
-import { User } from "@masterchef/shared/types/user";
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
+import axios from "axios";
+
 import { AnimatePresence, motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import ConfirmChanges from "./ConfirmChanges";
+
+import { User } from "@masterchef/shared/types/user";
+import {
+  allergenOptions,
+  dietaryOptions,
+  cuisineOptions,
+  SKILL_LEVELS,
+} from "@masterchef/shared/constants";
 import {
   Scale,
   Salad,
@@ -12,16 +25,6 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import ConfirmChanges from "./ConfirmChanges";
-import {
-  allergenOptions,
-  dietaryOptions,
-  cuisineOptions,
-  SKILL_LEVELS,
-} from "@masterchef/shared/constants";
 
 interface AccountPreferencesProps {
   user: User;
@@ -44,8 +47,8 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
   const [cuisinePreferences, setCuisinePreferences] = useState<string[]>(
     user.cuisines_pref || [],
   );
-
   const [showConfirm, showConfirmChanges] = useState(false);
+  const [formDisabled, setFormDisabled] = useState(false);
 
   const filteredAllergyOptions = allergenOptions.filter((option) =>
     option.toLowerCase().includes(allergySearch.toLowerCase()),
@@ -88,6 +91,60 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
     user,
   ]);
 
+  const onSettingsSubmit = async () => {
+    setFormDisabled(true);
+
+    const loadingToast = toast.loading("Saving changes...");
+
+    const profilePayload = {
+      userId: user.id,
+      dietary_restric: dietaryRestrictions,
+      allergies: allergies,
+      skill_level: skillLevel || undefined,
+      cuisines_pref: cuisinePreferences,
+      isCustomized: true,
+    };
+
+    try {
+      const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+      const res = await axios.put(
+        `${BASE_API_URL}/auth/profile`,
+        profilePayload,
+      );
+      const updatedUser = res.data.user;
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.dismiss(loadingToast);
+      toast.success("Successfully saved\nLet's start cooking!");
+
+      setTimeout(() => {
+        setFormDisabled(false);
+
+        // UnHash and re-hash to trigger soft reload
+        if (window.location.hash === "#settings") {
+          window.location.hash = "main";
+          setTimeout(() => (window.location.hash = "#settings"), 300);
+        } else {
+          window.location.hash = "#settings";
+        }
+      }, 200);
+    } catch (err: unknown) {
+      toast.dismiss(loadingToast);
+
+      if (axios.isAxiosError(err)) {
+        const message =
+          err?.response?.data?.message ||
+          "Failed to save profile. Please try again.";
+        toast.error(message);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+
+      setFormDisabled(false);
+    }
+  };
+
   const toggleDietaryRestriction = (restriction: string) => {
     setDietaryRestrictions((prev) =>
       prev.includes(restriction)
@@ -127,6 +184,8 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
           "\n\n Into: ",
           user,
         );
+
+        onSettingsSubmit();
       }}
       onReset={() => {
         showConfirmChanges(false);
@@ -168,6 +227,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                 <Input
                   type="number"
                   name="weight"
+                  disabled={formDisabled}
                   onChange={(event) => {
                     const value = event.target.value;
                     setWeight(Number(value) || 0);
@@ -193,6 +253,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                 <Input
                   type="number"
                   name="height"
+                  disabled={formDisabled}
                   onChange={(event) => {
                     const value = event.target.value;
                     setHeight(Number(value) || 0);
@@ -226,6 +287,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
               key={restriction}
               type="button"
               onClick={() => toggleDietaryRestriction(restriction)}
+              disabled={formDisabled}
               className={`px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
                 dietaryRestrictions.includes(restriction)
                   ? "bg-accent text-card shadow-md"
@@ -258,6 +320,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
               <input
                 ref={allergySearchRef}
                 type="text"
+                disabled={formDisabled}
                 placeholder={
                   allergies.length === 0
                     ? "Search allergies..."
@@ -273,6 +336,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
               />
               <button
                 type="button"
+                disabled={!allergyDropdownOpen || formDisabled}
                 className="h-full px-5 absolute flex items-center justify-center top-0 right-0 pointer-events-auto z-10 cursor-pointer hover:brightness-125 transition-all duration-200"
                 onClick={() => {
                   if (!allergyDropdownOpen) return;
@@ -304,6 +368,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                     <button
                       key={option}
                       type="button"
+                      disabled={formDisabled}
                       onClick={() => toggleAllergy(option)}
                       className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors cursor-pointer"
                     >
@@ -354,6 +419,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
             <button
               key={value}
               type="button"
+              disabled={formDisabled}
               onClick={() => setSkillLevel(value)}
               className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 ${
                 skillLevel === value
@@ -385,6 +451,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
             <button
               key={cuisine}
               type="button"
+              disabled={formDisabled}
               onClick={() => toggleCuisine(cuisine)}
               className={`flex flex-col items-center justify-center gap-3 px-6 py-5 rounded-2xl transition-all duration-300 ${
                 cuisinePreferences.includes(cuisine)

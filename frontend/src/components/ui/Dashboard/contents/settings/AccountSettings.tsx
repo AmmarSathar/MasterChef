@@ -1,14 +1,15 @@
-import { User } from "@masterchef/shared/types/user";
 import { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+
 import { AnimatePresence, motion } from "framer-motion";
-
-import { UserPen, Shield } from "lucide-react";
-
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import ConfirmChanges from "./ConfirmChanges";
 
+import { User } from "@masterchef/shared/types/user";
+import { UserPen, Shield } from "lucide-react";
 interface AccountSettingsProps {
   user: User;
 }
@@ -21,6 +22,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
 
   const [hasUnderstood, setHasUnderstood] = useState(false);
   const [showConfirm, showConfirmChanges] = useState(false);
+  const [formDisabled, setFormDisabled] = useState(false);
 
   useEffect(() => {
     if (
@@ -35,6 +37,60 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
     }
   }, [name, email, age, bio, user]);
 
+  const onSettingsSubmit = async () => {
+    setFormDisabled(true);
+
+    const loadingToast = toast.loading("Saving changes...");
+
+    const profilePayload = {
+      userId: user.id,
+      name: name,
+      email: email,
+      age: age,
+      bio: bio,
+      isCustomized: true,
+    };
+
+    try {
+      const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+      const res = await axios.put(
+        `${BASE_API_URL}/auth/profile`,
+        profilePayload,
+      );
+      const updatedUser = res.data.user;
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.dismiss(loadingToast);
+      toast.success("Successfully saved\nLet's start cooking!");
+
+      setTimeout(() => {
+        setFormDisabled(false);
+
+        // UnHash and re-hash to trigger soft reload
+        if (window.location.hash === "#settings") {
+          window.location.hash = "main";
+          setTimeout(() => (window.location.hash = "#settings"), 300);
+        } else {
+          window.location.hash = "#settings";
+        }
+      }, 200);
+    } catch (err: unknown) {
+      toast.dismiss(loadingToast);
+
+      if (axios.isAxiosError(err)) {
+        const message =
+          err?.response?.data?.message ||
+          "Failed to save profile. Please try again.";
+        toast.error(message);
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+
+      setFormDisabled(false);
+    }
+  };
+
   return (
     <form
       onSubmit={(e) => {
@@ -48,6 +104,8 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
           "\n\n Into: ",
           user,
         );
+
+        onSettingsSubmit();
       }}
       onReset={() => showConfirmChanges(false)}
       className="account-settings w-full h-auto flex flex-col gap-20 items-center justify-start p-5 py-6 relative"
@@ -80,6 +138,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
               <Input
                 type="text"
                 name="user-name"
+                disabled={formDisabled}
                 onChange={(event) => {
                   const value = event.target.value;
                   setName(value || user.name);
@@ -95,6 +154,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
               <Input
                 type="email"
                 name="user-email"
+                disabled={formDisabled}
                 onChange={(event) => {
                   const value = event.target.value;
                   setEmail(value || user.email);
@@ -110,6 +170,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
               <Input
                 type="number"
                 name="user-age"
+                disabled={formDisabled}
                 onChange={(event) => {
                   const value = event.target.value;
                   setAge(Number(value) || user.age);
@@ -166,6 +227,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
 
             <button
               type="button"
+              disabled={formDisabled}
               className="bg-linear-to-br from-input to-input/60 shadow-sm shadow-input/30 px-5 py-3 hover:from-destructive/50 hover:to-destructive/20 text-sm rounded-lg transition-colors duration-300"
             >
               Update
@@ -219,7 +281,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
 
         <button
           type="button"
-          disabled={!hasUnderstood}
+          disabled={!hasUnderstood || formDisabled}
           className="bg-none text-destructive brightness-150 font-extrabold cursor-pointer mt-3"
         >
           <span className="pointer-events-none select-none underline underline-offset-4 transition-colors duration-300">
