@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { useUser } from "@context/UserContext";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ConfirmChanges from "./ConfirmChanges";
 
-import { User } from "@masterchef/shared/types/user";
 import {
   allergenOptions,
   dietaryOptions,
@@ -26,26 +26,24 @@ import {
   Check,
 } from "lucide-react";
 
-interface AccountPreferencesProps {
-  user: User;
-}
+export default function AccountPreferences() {
+  const { user, setUser, loading } = useUser();
 
-export default function AccountPreferences({ user }: AccountPreferencesProps) {
-  const [weight, setWeight] = useState(user.weight || 0);
-  const [height, setHeight] = useState(user.height || 0);
+  const [weight, setWeight] = useState(user?.weight);
+  const [height, setHeight] = useState(user?.height);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
-    user.dietary_restric || [],
+    user?.dietary_restric || [],
   );
-  const [allergies, setAllergies] = useState<string[]>(user.allergies || []);
+  const [allergies, setAllergies] = useState<string[]>(user?.allergies || []);
   const [allergySearch, setAllergySearch] = useState("");
   const [allergyDropdownOpen, setAllergyDropdownOpen] = useState(false);
   const allergyDropdownRef = useRef<HTMLDivElement>(null);
   const allergySearchRef = useRef<HTMLInputElement>(null);
   const [skillLevel, setSkillLevel] = useState<
     "beginner" | "intermediate" | "advanced" | "expert"
-  >(user.skill_level || "beginner");
+  >(user?.skill_level || "beginner");
   const [cuisinePreferences, setCuisinePreferences] = useState<string[]>(
-    user.cuisines_pref || [],
+    user?.cuisines_pref || [],
   );
   const [showConfirm, showConfirmChanges] = useState(false);
   const [formDisabled, setFormDisabled] = useState(false);
@@ -68,6 +66,19 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
   }, []);
 
   useEffect(() => {
+    if (loading) {
+      console.log("Loading user data...");
+      return;
+    }
+
+    if (!user) {
+      toast.error("User could not be initialized, please reload");
+      setFormDisabled(true);
+      return;
+    }
+
+    console.log(user.weight, user.height);
+
     if (
       weight !== user.weight ||
       height !== user.height ||
@@ -89,6 +100,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
     skillLevel,
     cuisinePreferences,
     user,
+    loading,
   ]);
 
   const onSettingsSubmit = async () => {
@@ -97,7 +109,9 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
     const loadingToast = toast.loading("Saving changes...");
 
     const profilePayload = {
-      userId: user.id,
+      userId: user?.id,
+      weight: weight || undefined,
+      height: height || undefined,
       dietary_restric: dietaryRestrictions,
       allergies: allergies,
       skill_level: skillLevel || undefined,
@@ -113,15 +127,12 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
       );
       const updatedUser = res.data.user;
 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
 
       toast.dismiss(loadingToast);
       toast.success("Successfully saved\nLet's start cooking!");
 
       setTimeout(() => {
-        setFormDisabled(false);
-
-        // UnHash and re-hash to trigger soft reload
         if (window.location.hash === "#settings") {
           window.location.hash = "main";
           setTimeout(() => (window.location.hash = "#settings"), 300);
@@ -129,6 +140,8 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
           window.location.hash = "#settings";
         }
       }, 200);
+
+      setFormDisabled(false);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
 
@@ -189,12 +202,12 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
       }}
       onReset={() => {
         showConfirmChanges(false);
-        setAllergies(user.allergies || []);
-        setDietaryRestrictions(user.dietary_restric || []);
-        setHeight(user.height || 0);
-        setWeight(user.weight || 0);
-        setSkillLevel(user.skill_level || "beginner");
-        setCuisinePreferences(user.cuisines_pref || []);
+        setAllergies(user?.allergies || []);
+        setDietaryRestrictions(user?.dietary_restric || []);
+        setHeight(user?.height || 0);
+        setWeight(user?.weight || 0);
+        setSkillLevel(user?.skill_level || "beginner");
+        setCuisinePreferences(user?.cuisines_pref || []);
       }}
       className="account-preferences w-full h-auto flex flex-col gap-10 items-center justify-start p-5 py-6 relative"
     >
@@ -233,7 +246,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                     setWeight(Number(value) || 0);
                   }}
                   placeholder={
-                    user.weight ? user.weight.toString() : "Unspecified"
+                    user?.weight ? user?.weight.toString() : "Unspecified"
                   }
                   min="20"
                   max="500"
@@ -259,7 +272,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                     setHeight(Number(value) || 0);
                   }}
                   placeholder={
-                    user.height ? user.height.toString() : "Unspecified"
+                    user?.height ? user?.height.toString() : "Unspecified"
                   }
                   min="50"
                   max="300"
@@ -292,7 +305,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                 dietaryRestrictions.includes(restriction)
                   ? "bg-accent text-card shadow-md"
                   : "bg-input/80 text-foreground/80 hover:bg-input"
-              } ${user.dietary_restric?.includes(restriction) ? "ring-3 ring-foreground/80" : ""}`}
+              } ${user?.dietary_restric?.includes(restriction) ? "ring-3 ring-foreground/80" : ""}`}
             >
               {restriction}
             </button>
@@ -425,7 +438,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                 skillLevel === value
                   ? "bg-accent text-card shadow-md"
                   : "bg-input/80 text-foreground/60 hover:bg-input"
-              } ${user.skill_level === value ? "ring-3 ring-foreground/80" : ""}`}
+              } ${user?.skill_level === value ? "ring-3 ring-foreground/80" : ""}`}
             >
               <ChefHat
                 size={24}
@@ -457,7 +470,7 @@ export default function AccountPreferences({ user }: AccountPreferencesProps) {
                 cuisinePreferences.includes(cuisine)
                   ? "bg-accent text-card shadow-md"
                   : "bg-input/80 text-foreground/80 hover:bg-input"
-              } ${user.cuisines_pref?.includes(cuisine) ? "ring-3 ring-foreground/80" : ""}`}
+              } ${user?.cuisines_pref?.includes(cuisine) ? "ring-3 ring-foreground/80" : ""}`}
             >
               <span className="text-sm font-semibold pointer-events-none">
                 {cuisine}

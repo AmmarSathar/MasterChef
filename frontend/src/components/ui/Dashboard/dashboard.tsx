@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@context/UserContext";
 
 import {
   ArrowLeft,
@@ -15,7 +16,6 @@ import {
   House,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { User } from "@masterchef/shared/types/user";
 import toast from "react-hot-toast";
 import {
   MainDashboardTitle,
@@ -42,8 +42,7 @@ const dashboardRoutes: Record<
 export default function Dashboard() {
   const navigate = useNavigate();
   const userCardRef = useRef<HTMLDivElement>(null);
-
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout, loading } = useUser();
   const [lastPage, setLastPage] = useState<string>("/");
   const [userPressed, setUserPressed] = useState(false);
   const [activeDashboard, setActiveDashboard] =
@@ -53,19 +52,21 @@ export default function Dashboard() {
   const ActiveContent = dashboardRoutes[activeDashboard].Content;
 
   useEffect(() => {
-    // For now, I plan to fetch {name, email, pfp} from local. idk if it's a good idea tho
-    const storedUser = localStorage.getItem("user");
-    // After further research, this is a VERY BAD IDEA, as it b64 text will easily bloat the LS
-    // I'll implement IndexDB later to store the local user
-    if (storedUser) {
-      if (!JSON.parse(storedUser).isCustomized) {
-        toast.error("An error has occured, please login again.");
-        localStorage.removeItem("user");
-        navigate("/login");
-        return;
-      }
-      setUser(JSON.parse(storedUser));
-    } else {
+    // if you remove this check, it freaks out because user isn't loaded
+    if(loading) {
+      console.log("Loading user data...");
+      return;
+    }
+
+    if (!user) {
+      console.log("User is false!!!")
+      navigate("/login");
+      return;
+    }
+    
+    if (!user.isCustomized) {
+      toast.error("An error has occured, please login again.");
+      logout();
       navigate("/login");
       return;
     }
@@ -74,7 +75,7 @@ export default function Dashboard() {
     if (storedLastPage) {
       setLastPage(storedLastPage);
     }
-  }, [navigate]);
+  }, [navigate, user, logout, loading]);
 
   useEffect(() => {
     const hash = window.location.hash.substring(1);
@@ -224,7 +225,7 @@ export default function Dashboard() {
                     {user?.name || "Unknown User"}
                   </span>
                   <span className="user-cooking-level font-semibold text-sm text-foreground">
-                    {user?.skill_level || "Beginner"}
+                    {user?.skill_level?.charAt(0).toUpperCase().concat(user?.skill_level.substring(1)) || "Beginner"}
                   </span>
                 </div>
 
@@ -267,7 +268,7 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={() => {
-                        localStorage.removeItem("user");
+                        logout();
                         navigate("/login");
                       }}
                       className="w-10 h-10 rounded-lg bg-destructive/40 hover:bg-destructive/60 transition-all duration-300 text-sm font-semibold text-foreground flex items-center justify-center relative"

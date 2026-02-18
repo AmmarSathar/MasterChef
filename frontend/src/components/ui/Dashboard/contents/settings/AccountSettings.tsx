@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useUser } from "@context/UserContext";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -8,29 +9,39 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import ConfirmChanges from "./ConfirmChanges";
 
-import { User } from "@masterchef/shared/types/user";
 import { UserPen, Shield } from "lucide-react";
-interface AccountSettingsProps {
-  user: User;
-}
 
-export default function AccountSettings({ user }: AccountSettingsProps) {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [age, setAge] = useState(user.age);
-  const [bio, setBio] = useState(user.bio || "");
+export default function AccountSettings() {
+  const { user, setUser } = useUser();
+  const [name, setName] = useState(user?.name);
+  const [email, setEmail] = useState(user?.email);
+  const [age, setAge] = useState(user?.age);
+  const [bio, setBio] = useState(user?.bio || undefined);
 
   const [hasUnderstood, setHasUnderstood] = useState(false);
   const [showConfirm, showConfirmChanges] = useState(false);
   const [formDisabled, setFormDisabled] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     if (
       name !== user.name ||
       email !== user.email ||
       age !== user.age ||
-      bio !== user.bio
+      (bio !== user.bio && (user.bio || bio))
     ) {
+      console.log(
+        "USER: ",
+        user.name,
+        user.email,
+        user.age,
+        user.bio,
+        "\n\nDATA:",
+        name,
+        email,
+        age,
+        bio,
+      );
       showConfirmChanges(true);
     } else {
       showConfirmChanges(false);
@@ -43,7 +54,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
     const loadingToast = toast.loading("Saving changes...");
 
     const profilePayload = {
-      userId: user.id,
+      userId: user?.id,
       name: name,
       email: email,
       age: age,
@@ -59,15 +70,12 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
       );
       const updatedUser = res.data.user;
 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
 
       toast.dismiss(loadingToast);
       toast.success("Successfully saved\nLet's start cooking!");
 
       setTimeout(() => {
-        setFormDisabled(false);
-
-        // UnHash and re-hash to trigger soft reload
         if (window.location.hash === "#settings") {
           window.location.hash = "main";
           setTimeout(() => (window.location.hash = "#settings"), 300);
@@ -75,6 +83,8 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
           window.location.hash = "#settings";
         }
       }, 200);
+
+      setFormDisabled(false);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
 
@@ -141,9 +151,9 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
                 disabled={formDisabled}
                 onChange={(event) => {
                   const value = event.target.value;
-                  setName(value || user.name);
+                  setName(value || user?.name);
                 }}
-                placeholder={user.name || ""}
+                placeholder={user?.name || ""}
                 className="bg-input/80 rounded-xl px-4 py-1 h-14 w-full"
               />
             </div>
@@ -157,9 +167,9 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
                 disabled={formDisabled}
                 onChange={(event) => {
                   const value = event.target.value;
-                  setEmail(value || user.email);
+                  setEmail(value || user?.email);
                 }}
-                placeholder={user.email || ""}
+                placeholder={user?.email || ""}
                 className="bg-input/80 rounded-xl px-4 py-1 h-14 w-full"
               />
             </div>
@@ -173,9 +183,9 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
                 disabled={formDisabled}
                 onChange={(event) => {
                   const value = event.target.value;
-                  setAge(Number(value) || user.age);
+                  setAge(Number(value) || user?.age);
                 }}
-                placeholder={`${user.age || "No age set"}`}
+                placeholder={`${user?.age || "No age set"}`}
                 className="bg-input/80 rounded-xl px-4 py-1 h-14 w-full"
               />
             </div>
@@ -195,9 +205,9 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
               name="user-bio"
               onChange={(event) => {
                 const value = event.target.value;
-                setBio(value || user.bio || "");
+                setBio(value || user?.bio || "");
               }}
-              placeholder={user.bio || "What makes you special?"}
+              placeholder={user?.bio || "What makes you special?"}
               className="bg-input/80 rounded-xl px-4 py-3 h-full w-full resize-none"
             />
           </div>
@@ -219,8 +229,8 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
                 Change Password
               </span>
               <p className="text-muted-foreground/50 text-xs text-left">
-                {user.updatedAt
-                  ? `Last changed ${new Date(user.updatedAt).toLocaleDateString()}`
+                {user?.updatedAt
+                  ? `Last changed ${new Date(user?.updatedAt).toLocaleDateString()}`
                   : "No password set"}
               </p>
             </div>
