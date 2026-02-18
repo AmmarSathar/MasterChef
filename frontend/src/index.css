@@ -39,7 +39,7 @@
   --secondary-foreground-hex: #1a1a1a;
   --muted-hex: #e5e2db;
   --muted-foreground-hex: #6b6b6b;
-  --accent-hex: #191919; /* Darker sage green accent */
+  --accent-hex: #785976; /* Light violet accent */
   --accent-foreground-hex: #1a1a1a;
   --destructive-hex: #ef4444;
   --destructive-foreground-hex: #f1eee8;
@@ -261,6 +261,10 @@
   --color-error-foreground: var(--error-foreground-hex);
   --color-info: var(--info-hex);
   --color-info-foreground: var(--info-foreground-hex);
+
+  --color-grain1: var(--grain-color-1);
+  --color-grain2: var(--grain-color-2);
+  --color-grain3: var(--grain-color-3);
 
   /* ===== Typography ===== */
   --font-family-display: "Outfit", sans-serif;

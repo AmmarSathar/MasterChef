@@ -16,13 +16,23 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import "./styles.css";
 import { useNavigate, useLocation } from "react-router-dom";
 
+import { useUser } from "@/context/UserContext";
+
 export default function Navbar() {
+  const { user, logout } = useUser();
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const [selectedBtn, setSelectedBtn] = React.useState<string>("");
   const [isMoreOpen, setIsMoreOpen] = React.useState<boolean>(false);
   const [showMoreButton, setShowMoreButton] = React.useState<boolean>(false);
+
+  const [userConnected, setUserConnected] = React.useState<boolean>(false);
+
+  useEffect(() => {
+    setUserConnected(!!user);
+  }, [user]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -49,7 +59,16 @@ export default function Navbar() {
 
           <div className="flex flex-col items-center gap-6 flex-1 justify-center z-20">
             <button
-              onClick={() => setSelectedBtn("nav-dashboard")}
+              onClick={() => {
+                if (!userConnected) {
+                  navigate("/login");
+                  return;
+                }
+
+                navigate("/dashboard");
+                window.location.hash = "main";
+                setSelectedBtn("nav-dashboard");
+              }}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-dashboard" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-dashboard"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -64,6 +83,7 @@ export default function Navbar() {
             {!showMoreButton && (
               <>
                 <button
+                  disabled={!userConnected}
                   onClick={() => {
                     setSelectedBtn("nav-saved");
                     setIsMoreOpen(false);
@@ -80,6 +100,7 @@ export default function Navbar() {
                 </button>
 
                 <button
+                  disabled={!userConnected}
                   onClick={() => {
                     setSelectedBtn("nav-upload");
                     setIsMoreOpen(false);
@@ -96,6 +117,7 @@ export default function Navbar() {
                 </button>
 
                 <button
+                  disabled={!userConnected}
                   onClick={() => {
                     setSelectedBtn("nav-tv");
                     setIsMoreOpen(false);
@@ -132,6 +154,7 @@ export default function Navbar() {
             {showMoreButton && (
               <>
                 <button
+                  disabled={!userConnected}
                   onClick={() => {
                     setSelectedBtn("nav-saved");
                     setIsMoreOpen(false);
@@ -164,7 +187,15 @@ export default function Navbar() {
 
           <div className="flex flex-col items-center gap-3 z-20">
             <button
-              onClick={() => setSelectedBtn("nav-settings")}
+              onClick={() => {
+                if (!userConnected) {
+                  navigate("/login");
+                  return;
+                }
+                navigate("/dashboard");
+                window.location.hash = "settings";
+                setSelectedBtn("nav-settings");
+              }}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-settings"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -183,7 +214,7 @@ export default function Navbar() {
                 console.log("pressed");
                 setIsMoreOpen(false);
 
-                if (localStorage.getItem("user")) {
+                if (user) {
                   if (location.pathname === "/login") {
                     navigate("/");
                   } else {
@@ -191,7 +222,8 @@ export default function Navbar() {
                   }
                 }
 
-                localStorage.removeItem("user");
+                setSelectedBtn("");
+                logout();
               }}
               disabled={false}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
@@ -212,6 +244,7 @@ export default function Navbar() {
         >
           <div className="py-8 p-4 bg-card/70 backdrop-blur-sm rounded-3xl flex flex-col items-center gap-6 shadow-xl border border-border">
             <button
+              disabled={!userConnected}
               onClick={() => {
                 setSelectedBtn("nav-upload");
               }}
@@ -227,6 +260,7 @@ export default function Navbar() {
             </button>
 
             <button
+              disabled={!userConnected}
               onClick={() => {
                 setSelectedBtn("nav-tv");
               }}

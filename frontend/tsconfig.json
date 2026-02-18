@@ -17,6 +17,7 @@
       "@/*": ["./src/*"],
       "@/lib/*": ["./src/lib/*"],
       "@components/*": ["./src/components/*"],
+      "@context/*": ["./src/context/*"],
       "@masterchef/shared": ["../shared/index.ts"],
       "@masterchef/shared/*": ["../shared/*"]
     }

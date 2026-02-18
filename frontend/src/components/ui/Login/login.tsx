@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
+import { useUser } from "@context/UserContext";
 
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
@@ -57,6 +58,7 @@ const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
 export default function Login() {
   const navigate = useNavigate();
+  const { user, setUser, loading } = useUser();
 
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
@@ -70,25 +72,11 @@ export default function Login() {
 
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
-  const hasInitialized = useRef(false);
 
   // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
 
   useEffect(() => {
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
-
-    const storedUser = localStorage.getItem("user");
-    if (storedUser && JSON.parse(storedUser).isCustomized) {
-      navigate("/dashboard");
-      return;
-    } else if (storedUser) {
-      triggerCustomize();
-      toast.success("Welcome back! \nLet's complete your Profile..", {
-        icon: <BadgeInfo size={20} color="var(--info-hex)" />,
-      });
-    }
-
+    // First check if in register or login mode, then check user
     const queryParameters = new URLSearchParams(window.location.search);
     const queryRegister = queryParameters.get("register");
 
@@ -97,7 +85,18 @@ export default function Login() {
     } else {
       setIsLogin(true);
     }
-  }, [navigate, isLogin]);
+
+    console.log(user, loading);
+
+    if (user && user.isCustomized) {
+      console.log("Got in there");
+      navigate("/dashboard");
+      return;
+    } else if (user) {
+      // User is logged in but not customized
+      triggerCustomize();
+    }
+  }, [navigate, isLogin, user, loading]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
@@ -107,6 +106,8 @@ export default function Login() {
     setIsLogin(!isLogin);
     const params = new URLSearchParams(window.location.search);
     params.set("register", isLogin.toString());
+    console.log("In register check: ");
+
     window.history.replaceState(
       {},
       "",
@@ -142,19 +143,29 @@ export default function Login() {
           },
         );
 
-        const user = response.data.user;
-        localStorage.setItem("user", JSON.stringify(user));
+        const userData = response.data.user;
+        setUser(userData);
 
-        console.log("user loaded: ", user);
+        console.log("user loaded: ", userData);
 
         toast.dismiss(registrationToast);
-        toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
+        toast.success(
+          `Logged in successfully!\nWelcome back ${userData.name}!`,
+        );
 
-        if (user.isCustomized) {
+        if (userData.isCustomized) {
           navigate("/dashboard");
         } else {
-          toast.success("But first, let's complete your Customization!", {
-            icon: <BadgeInfo size={20} />,
+          triggerCustomize();
+          const params = new URLSearchParams(window.location.search);
+          params.set("customizing", "true");
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}?${params}`,
+          );
+          toast.success("Welcome back! \nLet's complete your Profile..", {
+            icon: <BadgeInfo size={20} color="var(--info-hex)" />,
           });
         }
 
@@ -201,9 +212,8 @@ export default function Login() {
           },
         );
 
-        const user = response.data.user;
-        //save user in localstorage for autoconnect
-        localStorage.setItem("user", JSON.stringify(user));
+        const userData = response.data.user;
+        setUser(userData);
 
         toast.dismiss(registrationToast);
         toast.success(`Account created successfully!\nWelcome aboard ${name}!`);

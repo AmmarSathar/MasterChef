@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { UserProvider } from "@context/UserContext";
 
 vi.stubEnv("VITE_BASE_API_URL", "http://localhost:4000/api");
 
@@ -58,9 +59,11 @@ describe("Login/Register UI", () => {
 
   it("renders login mode by default", () => {
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>,
+      <UserProvider>
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      </UserProvider>,
     );
     expect(screen.getByRole("button", { name: "Log In" })).toBeInTheDocument();
   });
@@ -75,9 +78,11 @@ describe("Login/Register UI", () => {
     });
 
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>,
+      <UserProvider>
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     fireEvent.change(screen.getByLabelText("Full Name"), {
@@ -103,9 +108,11 @@ describe("Login/Register UI", () => {
       );
     });
 
-    expect(localStorage.getItem("user")).toEqual(
-      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
-    );
+    await waitFor(() => {
+      expect(localStorage.getItem("user")).toEqual(
+        JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
+      );
+    });
     expect(toast.success).toHaveBeenCalled();
   });
 
@@ -116,9 +123,11 @@ describe("Login/Register UI", () => {
     axiosMock.post.mockRejectedValue(error);
 
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>,
+      <UserProvider>
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     fireEvent.change(screen.getByLabelText("Full Name"), {
@@ -148,9 +157,11 @@ describe("Login/Register UI", () => {
     });
 
     render(
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>,
+      <UserProvider>
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     fireEvent.change(screen.getByLabelText("Email Address"), {
@@ -172,9 +183,11 @@ describe("Login/Register UI", () => {
       );
     });
 
-    expect(localStorage.getItem("user")).toEqual(
-      JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
-    );
+    await waitFor(() => {
+      expect(localStorage.getItem("user")).toEqual(
+        JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
+      );
+    });
     expect(toast.success).toHaveBeenCalledWith(
       "Logged in successfully!\nWelcome back Alice!",
     );
