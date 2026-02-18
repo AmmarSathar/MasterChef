@@ -156,6 +156,14 @@ export default function Login() {
         if (userData.isCustomized) {
           navigate("/dashboard");
         } else {
+          triggerCustomize();
+          const params = new URLSearchParams(window.location.search);
+          params.set("customizing", "true");
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}?${params}`,
+          );
           toast.success("Welcome back! \nLet's complete your Profile..", {
             icon: <BadgeInfo size={20} color="var(--info-hex)" />,
           });

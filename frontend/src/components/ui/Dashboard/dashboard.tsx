@@ -66,7 +66,7 @@ export default function Dashboard() {
     
     if (!user.isCustomized) {
       toast.error("An error has occured, please login again.");
-      logout();
+      // logout();
       navigate("/login");
       return;
     }
