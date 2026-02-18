@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 interface Ingredient {
   id: string;
   foodItem: string;
-  amount: number;
+  amount: number | "";
   unit: string;
   notes?: string;
 }
@@ -48,15 +48,15 @@ interface RecipeRecord {
 const INITIAL_FORM_DATA = {
   title: "",
   description: "",
-  prepTime: 0,
-  cookTime: 0,
-  cost: 0,
+  prepTime: "" as number | "",
+  cookTime: "" as number | "",
+  cost: "" as number | "",
   difficulty: "beginner" as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as string[],
 };
 
 const INITIAL_INGREDIENTS: Ingredient[] = [
-  { id: "1", foodItem: "", amount: 0, unit: "" },
+  { id: "1", foodItem: "", amount: "", unit: "" },
 ];
 
 const INITIAL_STEPS: Step[] = [{ id: "1", content: "" }];
@@ -151,7 +151,7 @@ export function RecipeFormContent() {
 
   const addIngredient = () => {
     const newId = (Math.max(...ingredients.map((i) => parseInt(i.id, 10)), 0) + 1).toString();
-    setIngredients([...ingredients, { id: newId, foodItem: "", amount: 0, unit: "" }]);
+    setIngredients([...ingredients, { id: newId, foodItem: "", amount: "", unit: "" }]);
   };
 
   const removeIngredient = (id: string) => {
@@ -255,7 +255,12 @@ export function RecipeFormContent() {
       toast.error("Recipe description is required");
       return;
     }
-    if (ingredients.some((ing) => !ing.foodItem || !ing.unit || ing.amount <= 0 || Number.isNaN(ing.amount))) {
+    if (
+      ingredients.some((ing) => {
+        const amount = Number(ing.amount);
+        return !ing.foodItem || !ing.unit || amount <= 0 || Number.isNaN(amount);
+      })
+    ) {
       toast.error("Please fill all ingredient fields");
       return;
     }
@@ -264,10 +269,10 @@ export function RecipeFormContent() {
       return;
     }
     if (
-      formData.prepTime <= 0 ||
-      formData.cookTime <= 0 ||
-      Number.isNaN(formData.prepTime) ||
-      Number.isNaN(formData.cookTime)
+      Number(formData.prepTime) <= 0 ||
+      Number(formData.cookTime) <= 0 ||
+      Number.isNaN(Number(formData.prepTime)) ||
+      Number.isNaN(Number(formData.cookTime))
     ) {
       toast.error("Prep time and cook time must be greater than 0");
       return;
@@ -278,14 +283,14 @@ export function RecipeFormContent() {
       description: formData.description.trim(),
       ingredients: ingredients.map((ing) => ({
         foodItem: ing.foodItem.trim(),
-        amount: ing.amount,
+        amount: Number(ing.amount),
         unit: ing.unit,
         notes: ing.notes,
       })),
       steps: steps.map((s) => s.content.trim()),
-      prepTime: formData.prepTime,
-      cookTime: formData.cookTime,
-      cost: formData.cost,
+      prepTime: Number(formData.prepTime),
+      cookTime: Number(formData.cookTime),
+      cost: Number(formData.cost || 0),
       difficulty: formData.difficulty,
       dietaryTags: formData.dietaryTags,
     };
@@ -379,7 +384,7 @@ export function RecipeFormContent() {
                   onChange={(e) =>
                     handleFormChange(
                       "cost",
-                      e.target.value === "" ? 0 : Number(e.target.value)
+                      e.target.value === "" ? "" : Number(e.target.value)
                     )
                   }
                 />
@@ -417,7 +422,7 @@ export function RecipeFormContent() {
                   onChange={(e) =>
                     handleFormChange(
                       "prepTime",
-                      e.target.value === "" ? 0 : Number(e.target.value)
+                      e.target.value === "" ? "" : Number(e.target.value)
                     )
                   }
                 />
@@ -436,7 +441,7 @@ export function RecipeFormContent() {
                   onChange={(e) =>
                     handleFormChange(
                       "cookTime",
-                      e.target.value === "" ? 0 : Number(e.target.value)
+                      e.target.value === "" ? "" : Number(e.target.value)
                     )
                   }
                 />
@@ -519,7 +524,7 @@ export function RecipeFormContent() {
                           updateIngredient(
                             ingredient.id,
                             "amount",
-                            e.target.value === "" ? 0 : Number(e.target.value)
+                            e.target.value === "" ? "" : Number(e.target.value)
                           )
                         }
                         className="h-8 text-sm"
