@@ -101,14 +101,13 @@ export default function ProfilePictureChange({
         transition={{ duration: 0.4 }}
         className="w-full flex flex-col items-center gap-2"
       >
-        <div className="flex items-baseline justify-center w-full p-1 h-auto">
-          <ImageIcon size={20} className="text-accent/80" />
-        </div>
         <div className="flex items-center gap-2 text-foreground/80">
-          <h3 className="text-lg font-bold text-foreground/80">Change your profile picture</h3>
+          <h3 className="text-lg font-bold text-foreground/80">Account Profile picture</h3>
         </div>
         <p className="text-xs text-foreground/50 text-center">
-          New style, new you
+          Accepts any PNG derived format
+          <br />
+          Max file size: 5MB
         </p>
       </motion.div>
 
@@ -140,7 +139,7 @@ export default function ProfilePictureChange({
           className={`relative w-48 h-48 rounded-3xl transition-all duration-300 cursor-pointer group ${
             isDragging
               ? "bg-primary/20 border-primary scale-105"
-              : "bg-secondary/30 border-border/50 hover:border-primary/50 hover:bg-secondary/50"
+              : "bg-secondary/30 border-border/50 hover:border-primary/50 hover:"
           } border-2 border-dashed flex items-center justify-center overflow-hidden`}
         >
           <AnimatePresence mode="wait">
@@ -171,7 +170,7 @@ export default function ProfilePictureChange({
                     className="absolute top-2 right-2 bg-primary rounded-full p-1.5 shadow-lg pointer-events-none"
                   >
                     <Check
-                      size={16}
+                      size={18}
                       className="text-white pointer-events-none"
                     />
                   </motion.div>
@@ -233,38 +232,35 @@ export default function ProfilePictureChange({
         <button
           type="button"
           onClick={handleReturn}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-secondary/50 hover:bg-secondary/70 border border-border/50 hover:border-border transition-all duration-300 text-foreground/70 hover:text-foreground text-sm font-medium shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border/50 transition-all duration-300 ease-out-cubic text-foreground/70 hover:text-destructive hover:brightness-150 hover:border-destructive text-sm font-medium shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
         >
-          <X size={16} className="pointer-events-none" />
-          <span className="pointer-events-none">Cancel</span>
+          <X size={18} className="pointer-events-none" />
         </button>
 
         <button
           type="button"
           onClick={handleReset}
           disabled={!hasChanges}
-          className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border transition-all duration-300 text-sm font-medium shadow-sm ${
+          className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-border/50 border transition-all duration-300 ease-out-cubic text-sm font-medium shadow-sm ${
             hasChanges
-              ? "bg-accent/10 hover:bg-accent/20 border-accent/50 hover:border-accent text-accent hover:text-accent cursor-pointer hover:scale-105 active:scale-95"
-              : "bg-muted/30 border-border/30 text-foreground/30 cursor-not-allowed"
+              ? "hover:border-warning/80 text-foreground/70 hover:text-warning hover:brightness-90 cursor-pointer hover:scale-105 active:scale-95"
+              : "text-foreground/70 border-border/30 brightness-50 cursor-not-allowed"
           }`}
         >
-          <RotateCcw size={16} className="pointer-events-none" />
-          <span className="pointer-events-none">Reset</span>
+          <RotateCcw size={18} className="pointer-events-none" />
         </button>
 
         <button
           type="button"
           onClick={handleSubmit}
           disabled={!hasChanges}
-          className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border transition-all duration-300 text-sm font-medium shadow-sm ${
+          className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border/50 transition-all duration-300 ease-out-cubic text-sm font-medium shadow-sm ${
             hasChanges
-              ? "bg-primary hover:bg-primary/90 border-primary/50 text-white cursor-pointer hover:scale-105 active:scale-95"
-              : "bg-muted/30 border-border/30 text-foreground/30 cursor-not-allowed"
+              ? "text-foreground/70 cursor-pointer hover:border-success hover:text-success hover:scale-105 active:scale-95"
+              : "border-border/30 text-foreground/70 brightness-50 cursor-not-allowed"
           }`}
         >
-          <Check size={16} className="pointer-events-none" />
-          <span className="pointer-events-none">Save</span>
+          <Check size={18} className="pointer-events-none" />
         </button>
       </motion.div>
     </div>
