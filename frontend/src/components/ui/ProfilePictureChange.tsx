@@ -101,14 +101,14 @@ export default function ProfilePictureChange({
         transition={{ duration: 0.4 }}
         className="w-full flex flex-col items-center gap-2"
       >
-        <div className="flex items-center gap-2 text-foreground/80">
+        <div className="flex items-baseline justify-center w-full p-1 h-auto">
           <ImageIcon size={20} className="text-accent/80" />
-          <h3 className="text-lg font-bold text-foreground/80">
-            Change Profile Picture
-          </h3>
+        </div>
+        <div className="flex items-center gap-2 text-foreground/80">
+          <h3 className="text-lg font-bold text-foreground/80">Change your profile picture</h3>
         </div>
         <p className="text-xs text-foreground/50 text-center">
-          Click or drag an image to upload
+          New style, new you
         </p>
       </motion.div>
 

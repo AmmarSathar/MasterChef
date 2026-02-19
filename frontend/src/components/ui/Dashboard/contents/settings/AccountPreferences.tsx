@@ -1,44 +1,29 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useUser } from "@context/UserContext";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import ConfirmChanges from "./ConfirmChanges";
+import AllergiesSelector from "@/components/ui/AllergiesSelector";
 
 import {
-  allergenOptions,
   dietaryOptions,
   cuisineOptions,
   SKILL_LEVELS,
 } from "@masterchef/shared/constants";
-import {
-  Scale,
-  Salad,
-  AlertTriangle,
-  ChefHat,
-  Globe,
-  X,
-  Search,
-  ChevronDown,
-  Check,
-} from "lucide-react";
+import { Scale, Salad, ChefHat, Globe, AlertTriangle } from "lucide-react";
 
 export default function AccountPreferences() {
   const { user, setUser, loading } = useUser();
 
-  const [weight, setWeight] = useState(user?.weight);
-  const [height, setHeight] = useState(user?.height);
+  const [weight, setWeight] = useState(user?.weight || undefined);
+  const [height, setHeight] = useState(user?.height || undefined);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
     user?.dietary_restric || [],
   );
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || []);
-  const [allergySearch, setAllergySearch] = useState("");
-  const [allergyDropdownOpen, setAllergyDropdownOpen] = useState(false);
-  const allergyDropdownRef = useRef<HTMLDivElement>(null);
-  const allergySearchRef = useRef<HTMLInputElement>(null);
   const [skillLevel, setSkillLevel] = useState<
     "beginner" | "intermediate" | "advanced" | "expert"
   >(user?.skill_level || "beginner");
@@ -47,23 +32,6 @@ export default function AccountPreferences() {
   );
   const [showConfirm, showConfirmChanges] = useState(false);
   const [formDisabled, setFormDisabled] = useState(false);
-
-  const filteredAllergyOptions = allergenOptions.filter((option) =>
-    option.toLowerCase().includes(allergySearch.toLowerCase()),
-  );
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        allergyDropdownRef.current &&
-        !allergyDropdownRef.current.contains(e.target as Node)
-      ) {
-        setAllergyDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     if (loading) {
@@ -89,6 +57,42 @@ export default function AccountPreferences() {
       JSON.stringify(cuisinePreferences) !== JSON.stringify(user.cuisines_pref)
     ) {
       showConfirmChanges(true);
+      console.log("Changes detected:", {
+        weight: {
+          current: weight,
+          user: user.weight,
+          changed: weight !== user.weight,
+        },
+        height: {
+          current: height,
+          user: user.height,
+          changed: height !== user.height,
+        },
+        dietary: {
+          current: dietaryRestrictions,
+          user: user.dietary_restric,
+          changed:
+            JSON.stringify(dietaryRestrictions) !==
+            JSON.stringify(user.dietary_restric),
+        },
+        allergies: {
+          current: allergies,
+          user: user.allergies,
+          changed: JSON.stringify(allergies) !== JSON.stringify(user.allergies),
+        },
+        skill: {
+          current: skillLevel,
+          user: user.skill_level,
+          changed: skillLevel !== user.skill_level,
+        },
+        cuisines: {
+          current: cuisinePreferences,
+          user: user.cuisines_pref,
+          changed:
+            JSON.stringify(cuisinePreferences) !==
+            JSON.stringify(user.cuisines_pref),
+        },
+      });
     } else {
       showConfirmChanges(false);
     }
@@ -158,28 +162,20 @@ export default function AccountPreferences() {
     }
   };
 
-  const toggleDietaryRestriction = (restriction: string) => {
-    setDietaryRestrictions((prev) =>
-      prev.includes(restriction)
-        ? prev.filter((r) => r !== restriction)
-        : [...prev, restriction],
-    );
+  const toggleElementToArray = (
+    element: string,
+    array: string[],
+    setArray: React.Dispatch<React.SetStateAction<string[]>>,
+  ) => {
+    if (!array.includes(element)) {
+      setArray([...array, element]);
+    } else {
+      setArray(array.filter((e) => e !== element));
+    }
   };
 
-  const toggleAllergy = (allergy: string) => {
-    setAllergies((prev) =>
-      prev.includes(allergy)
-        ? prev.filter((a) => a !== allergy)
-        : [...prev, allergy],
-    );
-  };
-
-  const toggleCuisine = (cuisine: string) => {
-    setCuisinePreferences((prev) =>
-      prev.includes(cuisine)
-        ? prev.filter((c) => c !== cuisine)
-        : [...prev, cuisine],
-    );
+  const onAllergyChange = (newAllergies: string[]) => {
+    setAllergies(newAllergies);
   };
 
   return (
@@ -204,8 +200,8 @@ export default function AccountPreferences() {
         showConfirmChanges(false);
         setAllergies(user?.allergies || []);
         setDietaryRestrictions(user?.dietary_restric || []);
-        setHeight(user?.height || 0);
-        setWeight(user?.weight || 0);
+        setHeight(user?.height || undefined);
+        setWeight(user?.weight || undefined);
         setSkillLevel(user?.skill_level || "beginner");
         setCuisinePreferences(user?.cuisines_pref || []);
       }}
@@ -299,7 +295,13 @@ export default function AccountPreferences() {
             <button
               key={restriction}
               type="button"
-              onClick={() => toggleDietaryRestriction(restriction)}
+              onClick={() =>
+                toggleElementToArray(
+                  restriction,
+                  dietaryRestrictions,
+                  setDietaryRestrictions,
+                )
+              }
               disabled={formDisabled}
               className={`px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 ${
                 dietaryRestrictions.includes(restriction)
@@ -320,104 +322,11 @@ export default function AccountPreferences() {
             Allergies & Exclusions
           </span>
         </div>
-        <div className="flex flex-col gap-4" ref={allergyDropdownRef}>
-          <div className="relative">
-            <div
-              onClick={() => {
-                setAllergyDropdownOpen(true);
-                setTimeout(() => allergySearchRef.current?.focus(), 0);
-              }}
-              className="w-full h-14 rounded-xl bg-input/80 border border-border/60 shadow-sm shadow-border/80 px-5 flex items-center gap-3 cursor-text hover:border-accent/50 transition-all"
-            >
-              <Search size={16} className="text-muted-foreground shrink-0" />
-              <input
-                ref={allergySearchRef}
-                type="text"
-                disabled={formDisabled}
-                placeholder={
-                  allergies.length === 0
-                    ? "Search allergies..."
-                    : `${allergies.length} selected — search more...`
-                }
-                value={allergySearch}
-                onChange={(e) => {
-                  setAllergySearch(e.target.value);
-                  setAllergyDropdownOpen(true);
-                }}
-                onFocus={() => setAllergyDropdownOpen(true)}
-                className="w-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
-              />
-              <button
-                type="button"
-                disabled={!allergyDropdownOpen || formDisabled}
-                className="h-full px-5 absolute flex items-center justify-center top-0 right-0 pointer-events-auto z-10 cursor-pointer hover:brightness-125 transition-all duration-200"
-                onClick={() => {
-                  if (!allergyDropdownOpen) return;
-
-                  if (allergySearchRef.current) {
-                    allergySearchRef.current.disabled = true;
-                    setTimeout(() => {
-                      allergySearchRef.current!.disabled = false;
-                      setAllergyDropdownOpen(false);
-                    }, 100);
-                  }
-                  setAllergyDropdownOpen(false);
-                }}
-              >
-                <ChevronDown
-                  size={18}
-                  className={`text-muted-foreground shrink-0 pointer-events-none transition-all duration-200 ${allergyDropdownOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-            </div>
-            {allergyDropdownOpen && (
-              <div className="absolute z-50 mt-2 w-full rounded-2xl bg-popover border border-border shadow-lg py-2 max-h-60 overflow-y-auto">
-                {filteredAllergyOptions.length === 0 ? (
-                  <p className="px-4 py-2.5 text-sm text-muted-foreground">
-                    No allergies match your search
-                  </p>
-                ) : (
-                  filteredAllergyOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      disabled={formDisabled}
-                      onClick={() => toggleAllergy(option)}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-secondary/50 transition-colors cursor-pointer"
-                    >
-                      <div
-                        className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                          allergies.includes(option)
-                            ? "bg-accent border-accent"
-                            : "border-border"
-                        }`}
-                      >
-                        {allergies.includes(option) && (
-                          <Check size={12} className="text-card" />
-                        )}
-                      </div>
-                      <span className="text-sm text-foreground">{option}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-          {allergies.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {allergies.map((allergy) => (
-                <Badge
-                  key={allergy}
-                  onClick={() => toggleAllergy(allergy)}
-                  className="cursor-pointer flex items-center gap-2 px-3 py-1 bg-destructive/20 text-destructive border-destructive/30 border hover:bg-destructive/30 transition-all"
-                >
-                  <span className="text-sm">{allergy}</span>
-                  <X size={14} className="text-destructive/80" />
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
+        <AllergiesSelector
+          allergyData={allergies}
+          formDisabled={formDisabled}
+          onChange={onAllergyChange}
+        />
       </div>
 
       <div className="option-group w-full py-3 flex flex-col gap-8 px-3">
@@ -465,7 +374,13 @@ export default function AccountPreferences() {
               key={cuisine}
               type="button"
               disabled={formDisabled}
-              onClick={() => toggleCuisine(cuisine)}
+              onClick={() =>
+                toggleElementToArray(
+                  cuisine,
+                  cuisinePreferences,
+                  setCuisinePreferences,
+                )
+              }
               className={`flex flex-col items-center justify-center gap-3 px-6 py-5 rounded-2xl transition-all duration-300 ${
                 cuisinePreferences.includes(cuisine)
                   ? "bg-accent text-card shadow-md"
