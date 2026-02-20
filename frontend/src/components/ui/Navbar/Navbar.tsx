@@ -19,7 +19,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 
 export default function Navbar() {
-  const { user, logout } = useUser();
+  const { user, logout, loading } = useUser();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,8 +31,9 @@ export default function Navbar() {
   const [userConnected, setUserConnected] = React.useState<boolean>(false);
 
   useEffect(() => {
-    setUserConnected(!!user);
-  }, [user]);
+    if (loading) return;
+    setUserConnected((!!user && user?.isCustomized) || false);
+  }, [user, loading]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -191,10 +192,12 @@ export default function Navbar() {
                 if (!userConnected) {
                   navigate("/login");
                   return;
+                } else {
+                  console.log("The account was valid!?");
+                  navigate("/dashboard");
+                  window.location.hash = "settings";
+                  setSelectedBtn("nav-settings");
                 }
-                navigate("/dashboard");
-                window.location.hash = "settings";
-                setSelectedBtn("nav-settings");
               }}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-settings"
