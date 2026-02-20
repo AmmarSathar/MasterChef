@@ -62,7 +62,7 @@ const INITIAL_INGREDIENTS: Ingredient[] = [
 const INITIAL_STEPS: Step[] = [{ id: "1", content: "" }];
 
 export function RecipeFormTitle() {
-  return <h1 className="text-xl font-bold text-accent/80">Add a new recipe</h1>;
+  return <h1 className="text-xl font-bold text-accent/80">Recipes</h1>;
 }
 
 export function RecipeFormContent() {
