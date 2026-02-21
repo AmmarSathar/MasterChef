@@ -91,6 +91,44 @@ export function RecipeFormContent() {
     }
   }, []);
 
+  // Load user's recipes from backend when we have a user id
+  useEffect(() => {
+    async function load() {
+      if (!currentUserId) return;
+      try {
+        const res = await fetch(`/api/recipes?createdBy=${encodeURIComponent(currentUserId)}`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || 'Failed to load recipes');
+
+        const items = json?.data?.recipes ?? [];
+        const mapped: RecipeRecord[] = items.map((r: any) => ({
+          id: r.id,
+          createdBy: r.createdBy,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          title: r.title,
+          description: r.description,
+          // Map backend cookingTime -> cookTime (frontend expects prepTime & cookTime)
+          prepTime: 0,
+          cookTime: r.cookingTime ?? 0,
+          cost: 0,
+          difficulty: r.skillLevel,
+          dietaryTags: r.dietaryTags ?? [],
+          ingredients: r.ingredients ?? [],
+          steps: r.steps ?? [],
+        }));
+
+        setRecipes(mapped);
+      } catch (err: unknown) {
+        console.error('Error loading recipes', err);
+        const msg = err instanceof Error ? err.message : 'Could not load recipes';
+        toast.error(msg);
+      }
+    }
+
+    load();
+  }, [currentUserId]);
+
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
     setIngredients(INITIAL_INGREDIENTS);
@@ -221,22 +259,39 @@ export function RecipeFormContent() {
   const handleConfirmDelete = () => {
     if (!pendingDeleteRecipeId) return;
 
-    const recipeId = pendingDeleteRecipeId;
-    const targetRecipe = recipes.find((recipe) => recipe.id === recipeId);
-    if (!targetRecipe || targetRecipe.createdBy !== currentUserId) {
-      setPendingDeleteRecipeId(null);
-      return;
-    }
+    (async () => {
+      const recipeId = pendingDeleteRecipeId;
+      const targetRecipe = recipes.find((recipe) => recipe.id === recipeId);
+      if (!targetRecipe || targetRecipe.createdBy !== currentUserId) {
+        setPendingDeleteRecipeId(null);
+        return;
+      }
 
-    setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeId));
+      try {
+        const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserId }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || 'Delete failed');
 
-    if (editingRecipeId === recipeId) {
-      setEditingRecipeId(null);
-      resetForm();
-    }
+        setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeId));
 
-    setPendingDeleteRecipeId(null);
-    toast.success("Recipe deleted");
+        if (editingRecipeId === recipeId) {
+          setEditingRecipeId(null);
+          resetForm();
+        }
+
+        toast.success('Recipe deleted');
+        } catch (err: unknown) {
+        console.error('Delete recipe error', err);
+        const msg = err instanceof Error ? err.message : 'Could not delete recipe';
+        toast.error(msg);
+      } finally {
+        setPendingDeleteRecipeId(null);
+      }
+    })();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -288,49 +343,99 @@ export function RecipeFormContent() {
         notes: ing.notes,
       })),
       steps: steps.map((s) => s.content.trim()),
-      prepTime: Number(formData.prepTime),
-      cookTime: Number(formData.cookTime),
+      // Map frontend fields to backend schema
+      cookingTime: Number(formData.prepTime || 0) + Number(formData.cookTime || 0),
+      servings: 1,
+      skillLevel: formData.difficulty,
       cost: Number(formData.cost || 0),
-      difficulty: formData.difficulty,
       dietaryTags: formData.dietaryTags,
     };
 
     if (isEditing && editingRecipeId) {
-      setRecipes((prev) =>
-        prev.map((recipe) =>
-          recipe.id === editingRecipeId
-            ? {
-                ...recipe,
-                ...recipePayload,
-                updatedAt: new Date().toISOString(),
-              }
-            : recipe
-        )
-      );
+      (async () => {
+        try {
+          const res = await fetch(`/api/recipes/${encodeURIComponent(editingRecipeId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUserId, ...recipePayload }),
+          });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json?.message || 'Update failed');
 
-      setEditingRecipeId(null);
-      toast.success("Recipe updated successfully!");
-      resetForm();
+          const updated = json?.data;
+          setRecipes((prev) =>
+            prev.map((recipe) =>
+              recipe.id === editingRecipeId
+                ? {
+                    id: updated.id,
+                    createdBy: updated.createdBy,
+                    createdAt: updated.createdAt,
+                    updatedAt: updated.updatedAt,
+                    title: updated.title,
+                    description: updated.description,
+                    prepTime: 0,
+                    cookTime: updated.cookingTime ?? 0,
+                    cost: recipePayload.cost,
+                    difficulty: updated.skillLevel,
+                    dietaryTags: updated.dietaryTags ?? [],
+                    ingredients: updated.ingredients ?? [],
+                    steps: updated.steps ?? [],
+                  }
+                : recipe
+            )
+          );
+
+          setEditingRecipeId(null);
+          toast.success('Recipe updated successfully!');
+          resetForm();
+        } catch (err: unknown) {
+          console.error('Update recipe error', err);
+          const msg = err instanceof Error ? err.message : 'Could not update recipe';
+          toast.error(msg);
+        }
+      })();
       return;
     }
 
-    const now = new Date().toISOString();
-    const newRecipe: RecipeRecord = {
-      id:
-        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : String(Date.now()),
-      createdBy: currentUserId,
-      createdAt: now,
-      updatedAt: now,
-      ...recipePayload,
-    };
+    // Create new recipe via API
+    (async () => {
+      try {
+        const res = await fetch('/api/recipes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserId, ...recipePayload }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || 'Create failed');
 
-    setRecipes((prev) => [newRecipe, ...prev]);
-    toast.success("Recipe created successfully!");
-    resetForm();
-  };
+        const created = json?.data;
+        const now = created?.createdAt ?? new Date().toISOString();
+        const newRecipe: RecipeRecord = {
+          id: created.id,
+          createdBy: created.createdBy,
+          createdAt: now,
+          updatedAt: created.updatedAt ?? now,
+          title: created.title,
+          description: created.description,
+          prepTime: 0,
+          cookTime: created.cookingTime ?? 0,
+          cost: recipePayload.cost,
+          difficulty: created.skillLevel,
+          dietaryTags: created.dietaryTags ?? [],
+          ingredients: created.ingredients ?? [],
+          steps: created.steps ?? [],
+        };
 
+        setRecipes((prev) => [newRecipe, ...prev]);
+        toast.success('Recipe created successfully!');
+        resetForm();
+      } catch (err: unknown) {
+        console.error('Create recipe error', err);
+        const msg = err instanceof Error ? err.message : 'Could not create recipe';
+        toast.error(msg);
+      }
+    })();
+  }
   return (
     <div className="w-full h-full flex flex-col gap-4 overflow-y-auto">
       <div className="bg-card/50 border border-border/50 w-full flex flex-col rounded-2xl p-6 gap-6">
