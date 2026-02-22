@@ -22,6 +22,7 @@ export default defineConfig({
       "@components": fileURLToPath(
         new URL("./src/components", import.meta.url),
       ),
+      "@context": fileURLToPath(new URL("./src/context", import.meta.url)),
       "@masterchef/shared/constants": fileURLToPath(
         new URL("../shared/constants/index.ts", import.meta.url),
       ),

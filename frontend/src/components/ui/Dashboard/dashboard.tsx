@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@context/UserContext";
 
 import {
   ArrowLeft,
@@ -15,7 +16,6 @@ import {
   House,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { User } from "@masterchef/shared/types/user";
 import toast from "react-hot-toast";
 import {
   MainDashboardTitle,
@@ -46,8 +46,8 @@ const dashboardRoutes: Record<
 
 export default function Dashboard() {
   const navigate = useNavigate();
-
-  const [user, setUser] = useState<User | null>(null);
+  const userCardRef = useRef<HTMLDivElement>(null);
+  const { user, logout, loading } = useUser();
   const [lastPage, setLastPage] = useState<string>("/");
   const [userPressed, setUserPressed] = useState(false);
   const [activeDashboard, setActiveDashboard] =
@@ -57,19 +57,21 @@ export default function Dashboard() {
   const ActiveContent = dashboardRoutes[activeDashboard].Content;
 
   useEffect(() => {
-    // For now, I plan to fetch {name, email, pfp} from local. idk if it's a good idea tho
-    const storedUser = localStorage.getItem("user");
-    // After further research, this is a VERY BAD IDEA, as it b64 text will easily bloat the LS
-    // I'll implement IndexDB later to store the local user
-    if (storedUser) {
-      if (!JSON.parse(storedUser).isCustomized) {
-        toast.error("An error has occured, please login again.");
-        localStorage.removeItem("user");
-        navigate("/login");
-        return;
-      }
-      setUser(JSON.parse(storedUser));
-    } else {
+    // if you remove this check, it freaks out because user isn't loaded
+    if (loading) {
+      console.log("Loading user data...");
+      return;
+    }
+
+    if (!user) {
+      console.log("User is false!!!");
+      navigate("/login");
+      return;
+    }
+
+    if (!user.isCustomized) {
+      toast.error("An error has occured, please login again.");
+      // logout();
       navigate("/login");
       return;
     }
@@ -78,7 +80,7 @@ export default function Dashboard() {
     if (storedLastPage) {
       setLastPage(storedLastPage);
     }
-  }, [navigate]);
+  }, [navigate, user, logout, loading]);
 
   useEffect(() => {
     const hash = window.location.hash.substring(1);
@@ -99,6 +101,23 @@ export default function Dashboard() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userCardRef.current &&
+        !userCardRef.current.contains(event.target as Node)
+      ) {
+        setUserPressed(false);
+      }
+    };
+
+    if (userPressed) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [userPressed]);
+
   const handleDashboardChange = (dashboard: DashboardRouteKey) => {
     setActiveDashboard(dashboard);
     window.location.hash = dashboard;
@@ -114,7 +133,7 @@ export default function Dashboard() {
       transition={{ duration: 0.3 }}
     >
       <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5">
-        <div className="dashboard-header w-full bg-card/80 h-40 flex justify-between items-center p-1 px-3 relative">
+        <div className="dashboard-header w-full h-40 flex justify-between items-center p-1 px-3 relative">
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
@@ -166,6 +185,7 @@ export default function Dashboard() {
               <Bell size={20} className="text-accent/60 pointer-events-none" />
             </button>
             <button
+              
               onClick={() => setUserPressed(!userPressed)}
               className="header-account w-13 h-13 rounded-full bg-foreground/10 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-foreground/20 hover:border-border/60 transition-all duration-300 cursor-pointer overflow-hidden"
             >
@@ -187,13 +207,15 @@ export default function Dashboard() {
           <AnimatePresence>
             {userPressed && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                ref={userCardRef}
+                initial={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
+                animate={{ opacity: 1, y: 0, backdropFilter: "blur(4px)" }}
+                exit={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
                 transition={{ duration: 0.2 }}
-                className="user-card absolute w-90 min-h-100 py-10 bg-linear-to-br from-primary/20 via-primary/10 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
+                tabIndex={0}
+                className="user-card absolute pointer-events-auto w-80 min-h-100 py-10 bg-linear-to-br from-primary/30 via-primary/20 to-background z-80 rounded-2xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
               >
-                <div className="user-pfp relative flex w-30 h-30 rounded-full overflow-hidden border-3 border-ring shadow-sm shadow-ring/50 items-center justify-center bg-linear-to-tr from-ring to-secondary">
+                <div className="user-pfp relative flex w-30 h-30 mb-2 rounded-full overflow-hidden border-3 border-ring shadow-lg shadow-ring/80 items-center justify-center bg-linear-to-tr from-ring to-secondary">
                   {user?.pfp ? (
                     <img
                       src={user.pfp}
@@ -213,15 +235,20 @@ export default function Dashboard() {
                     {user?.name || "Unknown User"}
                   </span>
                   <span className="user-cooking-level font-semibold text-sm text-foreground">
-                    {user?.skill_level || "Beginner"}
+                    {user?.skill_level
+                      ?.charAt(0)
+                      .toUpperCase()
+                      .concat(user?.skill_level.substring(1)) || "Beginner"}
                   </span>
                 </div>
 
-                <div className="user-description relative w-full flex items-center justify-center p-1 mt-2">
-                  <span className="text-center text-sm text-foreground/80 line-clamp-2 max-w-60">
-                    {user?.bio ||
-                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip "}
-                  </span>
+                <div className="user-description relative flex w-full max-h-30 items-center justify-center px-9 mt-2">
+                  <div className="relative w-full h-full flex py-4 items-center justify-center shadow-lg shadow-primary/10 rounded-xl bg-linear-to-br from-secondary/20 to-secondary/10 ring-1 ring-secondary/30">
+                    <span className="text-center text-md text-foreground/80 line-clamp-2 max-w-60">
+                      {user?.bio ||
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip "}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="user-actions relative w-full flex flex-col items-center justify-center gap-5 p-1 mt-4">
@@ -256,7 +283,7 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={() => {
-                        localStorage.removeItem("user");
+                        logout();
                         navigate("/login");
                       }}
                       className="w-10 h-10 rounded-lg bg-destructive/40 hover:bg-destructive/60 transition-all duration-300 text-sm font-semibold text-foreground flex items-center justify-center relative"
@@ -277,7 +304,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="w-full h-full"
+            className="w-full h-full overflow-hidden relative"
           >
             <ActiveContent />
           </motion.div>
