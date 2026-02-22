@@ -50,7 +50,6 @@ const INITIAL_FORM_DATA = {
   description: "",
   prepTime: "" as number | "",
   cookTime: "" as number | "",
-  cost: "" as number | "",
   difficulty: "beginner" as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as string[],
 };
