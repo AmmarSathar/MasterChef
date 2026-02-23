@@ -55,6 +55,22 @@ const passRequirements = [
 
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
+interface BetterAuthSessionUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string;
+}
+
+interface BetterAuthSessionResponse {
+  user?: BetterAuthSessionUser;
+}
+
+interface LegacySessionResponse {
+  success: boolean;
+  user: User | null;
+}
+
 export default function Login() {
   const navigate = useNavigate();
 
@@ -72,31 +88,180 @@ export default function Login() {
   const customizeContainerRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
 
+  const persistGoogleUser = (user: BetterAuthSessionUser): User => {
+    const mappedUser: User = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      pfp: user.image,
+      age: 0,
+      cuisines_pref: [],
+      dietary_restric: [],
+      allergies: [],
+      isCustomized: false,
+    };
+
+    localStorage.setItem("user", JSON.stringify(mappedUser));
+    return mappedUser;
+  };
+
+  const bootstrapLegacySession = async (): Promise<boolean> => {
+    try {
+      const response = await axios.get<LegacySessionResponse>(
+        `${BASE_API_URL}/auth/session`,
+        { withCredentials: true },
+      );
+
+      const sessionUser = response.data?.user;
+      if (!sessionUser) {
+        return false;
+      }
+
+      localStorage.setItem("user", JSON.stringify(sessionUser));
+
+      if (sessionUser.isCustomized) {
+        navigate("/dashboard");
+      } else {
+        triggerCustomize();
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const completeGoogleSignIn = async () => {
+    const loadingToast = toast.loading("Completing Google sign-in...");
+
+    try {
+      const response = await axios.get<BetterAuthSessionResponse>(
+        `${BASE_API_URL}/auth/get-session`,
+        {
+          withCredentials: true,
+        },
+      );
+
+      const sessionUser = response.data?.user;
+      if (!sessionUser) {
+        throw new Error("No active session found after Google callback.");
+      }
+
+      const user = persistGoogleUser(sessionUser);
+      const params = new URLSearchParams(window.location.search);
+      params.delete("oauth");
+      params.delete("oauth_error");
+      const nextQuery = params.toString();
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`,
+      );
+
+      toast.dismiss(loadingToast);
+      toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
+
+      if (user.isCustomized) {
+        navigate("/dashboard");
+      } else {
+        toast.success("But first, let's complete your Customization!", {
+          icon: <BadgeInfo size={20} />,
+        });
+        triggerCustomize();
+      }
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error("Google sign-in failed. Please try again.");
+      console.error("Google callback completion failed:", err);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    const loadingToast = toast.loading("Redirecting to Google...");
+
+    try {
+      const callbackURL = `${window.location.origin}/login?oauth=google`;
+      const errorCallbackURL = `${window.location.origin}/login?oauth_error=google`;
+
+      const response = await axios.post<{ url: string }>(
+        `${BASE_API_URL}/auth/sign-in/social`,
+        {
+          provider: "google",
+          callbackURL,
+          errorCallbackURL,
+          disableRedirect: true,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
+      const redirectUrl = response.data?.url;
+      if (!redirectUrl) {
+        throw new Error("Missing OAuth redirect URL from Better Auth.");
+      }
+
+      toast.dismiss(loadingToast);
+      window.location.assign(redirectUrl);
+    } catch (err: unknown) {
+      toast.dismiss(loadingToast);
+      if (axios.isAxiosError(err)) {
+        const backendMessage =
+          (err.response?.data as { error?: string; message?: string } | undefined)?.error ||
+          (err.response?.data as { error?: string; message?: string } | undefined)?.message;
+        toast.error(backendMessage ?? "Unable to start Google sign-in right now.");
+      } else {
+        toast.error("Unable to start Google sign-in right now.");
+      }
+      console.error("Google sign-in init failed:", err);
+    }
+  };
+
   // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
 
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const storedUser = localStorage.getItem("user");
-    if (storedUser && JSON.parse(storedUser).isCustomized) {
-      navigate("/dashboard");
-      return;
-    } else if (storedUser) {
-      triggerCustomize();
-      toast.success("Welcome back! \nLet's complete your Profile..", {
-        icon: <BadgeInfo size={20} color="var(--info-hex)" />,
-      });
-    }
+    const bootstrapAuth = async () => {
+      const queryParameters = new URLSearchParams(window.location.search);
+      const oauth = queryParameters.get("oauth");
+      const oauthError = queryParameters.get("oauth_error");
 
-    const queryParameters = new URLSearchParams(window.location.search);
-    const queryRegister = queryParameters.get("register");
+      if (oauthError === "google") {
+        toast.error("Google sign-in was cancelled or failed.");
+      }
 
-    if (queryRegister === "true") {
-      setIsLogin(false);
-    } else {
-      setIsLogin(true);
-    }
+      if (oauth === "google") {
+        completeGoogleSignIn();
+        return;
+      }
+
+      const hasCookieSession = await bootstrapLegacySession();
+      if (hasCookieSession) {
+        return;
+      }
+
+      const storedUser = localStorage.getItem("user");
+      if (storedUser && JSON.parse(storedUser).isCustomized) {
+        navigate("/dashboard");
+        return;
+      } else if (storedUser) {
+        triggerCustomize();
+        toast.success("Welcome back! \nLet's complete your Profile..", {
+          icon: <BadgeInfo size={20} color="var(--info-hex)" />,
+        });
+      }
+
+      const queryRegister = queryParameters.get("register");
+      if (queryRegister === "true") {
+        setIsLogin(false);
+      } else {
+        setIsLogin(true);
+      }
+    };
+
+    void bootstrapAuth();
   }, [navigate, isLogin]);
 
   const changeRegisterState = () => {
@@ -137,9 +302,11 @@ export default function Login() {
         response = await axios.post<{ success: boolean; user: User }>(
           `${BASE_API_URL}/auth/login`,
           {
-            email: formData.get("email"),
+            email: String(formData.get("email") ?? "").trim(),
             password: formData.get("password"),
+            rememberMe,
           },
+          { withCredentials: true },
         );
 
         const user = response.data.user;
@@ -160,17 +327,25 @@ export default function Login() {
 
         return true;
       } catch (err: unknown) {
-        if (axios.isAxiosError(err) && err.response) {
-          const status = err.response.status;
+        if (axios.isAxiosError(err)) {
+          toast.dismiss(registrationToast);
+          const status = err.response?.status;
+          const backendMessage =
+            (err.response?.data as { error?: string; message?: string } | undefined)?.message ||
+            (err.response?.data as { error?: string; message?: string } | undefined)?.error;
 
           if (status === 400) {
-            toast.dismiss(registrationToast);
-            toast.error("Invalid login data.");
+            toast.error(backendMessage ?? "Invalid login data.");
             console.error("Validation error:", err);
           } else if (status === 401) {
-            toast.dismiss(registrationToast);
-            toast.error("Invalid email or password.");
+            toast.error(backendMessage ?? "Invalid email or password.");
             console.error("Invalid credentials:", err);
+          } else if (!err.response) {
+            toast.error("Cannot reach server. Is backend running on port 4000?");
+            console.error("Network error:", err);
+          } else {
+            toast.error(backendMessage ?? "Login failed. Please try again.");
+            console.error("Login request failed:", err);
           }
         } else {
           toast.dismiss(registrationToast);
@@ -183,9 +358,9 @@ export default function Login() {
     } else {
       console.log("Sign Up");
 
-      const email = formData.get("email") as string;
+      const email = String(formData.get("email") ?? "").trim();
       const password = formData.get("password") as string;
-      const name = formData.get("name") as string;
+      const name = String(formData.get("name") ?? "").trim();
 
       let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
 
@@ -198,7 +373,9 @@ export default function Login() {
             email: email,
             password: password,
             name: name,
+            rememberMe,
           },
+          { withCredentials: true },
         );
 
         const user = response.data.user;
@@ -209,17 +386,25 @@ export default function Login() {
         toast.success(`Account created successfully!\nWelcome aboard ${name}!`);
         return true;
       } catch (err: unknown) {
-        if (axios.isAxiosError(err) && err.response) {
-          const status = err.response.status;
+        if (axios.isAxiosError(err)) {
+          toast.dismiss(registrationToast);
+          const status = err.response?.status;
+          const backendMessage =
+            (err.response?.data as { error?: string; message?: string } | undefined)?.message ||
+            (err.response?.data as { error?: string; message?: string } | undefined)?.error;
 
           if (status === 400) {
-            toast.dismiss(registrationToast);
-            toast.error("Invalid registration data.");
+            toast.error(backendMessage ?? "Invalid registration data.");
             console.error("Validation error:", err);
           } else if (status === 409) {
-            toast.dismiss(registrationToast);
-            toast.error("Email is already taken.");
+            toast.error(backendMessage ?? "Email is already taken.");
             console.error("Email already taken:", err);
+          } else if (!err.response) {
+            toast.error("Cannot reach server. Is backend running on port 4000?");
+            console.error("Network error:", err);
+          } else {
+            toast.error(backendMessage ?? "Registration failed. Please try again.");
+            console.error("Registration request failed:", err);
           }
         } else {
           toast.dismiss(registrationToast);
@@ -461,7 +646,11 @@ export default function Login() {
               <hr className="flex-1 border-border/40" />
             </div>
             <div className="login-icons w-full h-auto flex items-center justify-center gap-4">
-              <button className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
+              <button
+                type="button"
+                onClick={signInWithGoogle}
+                className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all"
+              >
                 <img
                   src={Google}
                   alt="google-icon"

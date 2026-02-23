@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import axios from "axios";
 import {
   Utensils,
   LayoutGrid,
@@ -10,11 +11,14 @@ import {
   LogOut,
   MoreHorizontal,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import "./styles.css";
 import { useNavigate, useLocation } from "react-router-dom";
+
+const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -36,6 +40,39 @@ export default function Navbar() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleLogout = async () => {
+    setIsMoreOpen(false);
+
+    try {
+      await Promise.allSettled([
+        axios.post(
+          `${BASE_API_URL}/auth/sign-out`,
+          {},
+          {
+            withCredentials: true,
+          },
+        ),
+        axios.post(
+          `${BASE_API_URL}/auth/logout`,
+          {},
+          {
+            withCredentials: true,
+          },
+        ),
+      ]);
+    } catch (error) {
+      console.error("Sign-out request failed:", error);
+    } finally {
+      localStorage.removeItem("user");
+      if (location.pathname === "/login") {
+        navigate("/");
+      } else {
+        navigate("/login");
+      }
+      toast.success("Logged out successfully.");
+    }
+  };
 
   return (
     <div className="navbar-parent-container w-screen h-screen flex items-center justify-baseline pointer-events-none absolute top-0 left-0">
@@ -179,20 +216,7 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
             <button
-              onClick={() => {
-                console.log("pressed");
-                setIsMoreOpen(false);
-
-                if (localStorage.getItem("user")) {
-                  if (location.pathname === "/login") {
-                    navigate("/");
-                  } else {
-                    navigate("/login");
-                  }
-                }
-
-                localStorage.removeItem("user");
-              }}
+              onClick={handleLogout}
               disabled={false}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
               aria-label="Logout"

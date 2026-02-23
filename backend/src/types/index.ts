@@ -20,6 +20,7 @@ export interface CreateUserInput {
 export interface LoginUserInput {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface UpdateProfileInput {

@@ -10,14 +10,17 @@
     "lint": "eslint src/**/*.ts",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:server": "tsx src/test/test-server.ts"
+    "test:server": "tsx src/test/test-server.ts",
+    "migrate:better-auth-user-model": "tsx scripts/migrate-better-auth-user-collection.ts"
   },
   "dependencies": {
     "@masterchef/shared": "file:../shared",
     "bcrypt": "^6.0.0",
+    "better-auth": "^1.4.18",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "mongodb": "^7.0.0",
     "mongoose": "^9.1.5"
   },
   "devDependencies": {
@@ -29,8 +32,8 @@
     "eslint": "^9.39.2",
     "mongodb-memory-server": "^9.5.0",
     "supertest": "^7.0.0",
-    "vitest": "^3.2.4",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }
