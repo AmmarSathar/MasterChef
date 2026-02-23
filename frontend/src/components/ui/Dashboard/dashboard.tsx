@@ -311,7 +311,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="w-full h-full overflow-y-hidden relative"
+            className="w-full h-full"
           >
             <ActiveContent />
           </motion.div>
