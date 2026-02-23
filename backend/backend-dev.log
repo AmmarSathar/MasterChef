@@ -1,0 +1,33 @@
+
+> @masterchef/backend@0.1.0 dev
+> tsx watch src/index.ts
+
+MongoDB connected successfully
+✓ Server running on http://localhost:4000
+request for data:  nlopezcallupe@hotmail.com" Nicolas Lopez
+request for data:  nlopezcallupe@hotmail.com Nicolas  Lopez
+Error: 409 Email already registered Error: Email already registered
+    at registerUser (C:\Users\nlope\Documents\Concordia\Winter 2026\SOEN 341\webpage\backend\src\services\auth.service.ts:88:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async register (C:\Users\nlope\Documents\Concordia\Winter 2026\SOEN 341\webpage\backend\src\controllers\auth.controller.ts:18:18)
+Error: 401 Invalid credentials Error: Invalid credentials
+    at loginUser (C:\Users\nlope\Documents\Concordia\Winter 2026\SOEN 341\webpage\backend\src\services\auth.service.ts:148:29)
+    at async login (C:\Users\nlope\Documents\Concordia\Winter 2026\SOEN 341\webpage\backend\src\controllers\auth.controller.ts:38:18)
+Error: 401 Invalid credentials Error: Invalid credentials
+    at loginUser (C:\Users\nlope\Documents\Concordia\Winter 2026\SOEN 341\webpage\backend\src\services\auth.service.ts:148:29)
+    at async login (C:\Users\nlope\Documents\Concordia\Winter 2026\SOEN 341\webpage\backend\src\controllers\auth.controller.ts:38:18)
+request for data:  logintest_302518784@example.com Login Test
+request for data:  nlopezcallupe@hotmail.com Nicolas  Lopez
+updateProfile request - userId: 699bbc8c5f50fc484810e26e fields: [
+  'dietary_restric',
+  'allergies',
+  'skill_level',
+  'cuisines_pref',
+  'age',
+  'birth',
+  'weight',
+  'height',
+  'bio',
+  'isCustomized'
+]
+^C
