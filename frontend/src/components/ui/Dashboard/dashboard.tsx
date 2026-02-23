@@ -92,7 +92,11 @@ export default function Dashboard() {
 
     const handleHashChange = () => {
       const newHash = window.location.hash.substring(1);
-      if (newHash === "main" || newHash === "settings" || newHash === "recipe") {
+      if (
+        newHash === "main" ||
+        newHash === "settings" ||
+        newHash === "recipe"
+      ) {
         handleDashboardChange(newHash as DashboardRouteKey);
       }
     };
@@ -137,7 +141,10 @@ export default function Dashboard() {
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings" || activeDashboard === "recipe") {
+                if (
+                  activeDashboard === "settings" ||
+                  activeDashboard === "recipe"
+                ) {
                   handleDashboardChange("main");
                   return;
                 } else if (activeDashboard === "main") {
@@ -304,7 +311,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="w-full h-full overflow-hidden relative"
+            className="w-full h-full overflow-y-hidden relative"
           >
             <ActiveContent />
           </motion.div>

@@ -4,11 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import {
-  SKILL_LEVELS,
-  allFoodNames,
-  dietaryOptions,
-} from "@masterchef/shared";
+import { SKILL_LEVELS, allFoodNames, dietaryOptions } from "@masterchef/shared";
 import toast from "react-hot-toast";
 
 interface Ingredient {
@@ -69,10 +65,13 @@ export function RecipeFormContent() {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<RecipeRecord[]>([]);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
-  const [pendingDeleteRecipeId, setPendingDeleteRecipeId] = useState<string | null>(null);
+  const [pendingDeleteRecipeId, setPendingDeleteRecipeId] = useState<
+    string | null
+  >(null);
 
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-  const [ingredients, setIngredients] = useState<Ingredient[]>(INITIAL_INGREDIENTS);
+  const [ingredients, setIngredients] =
+    useState<Ingredient[]>(INITIAL_INGREDIENTS);
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
 
   const isEditing = editingRecipeId !== null;
@@ -114,7 +113,7 @@ export function RecipeFormContent() {
             id: String(index + 1),
             ...ingredient,
           }))
-        : INITIAL_INGREDIENTS
+        : INITIAL_INGREDIENTS,
     );
 
     setSteps(
@@ -123,13 +122,13 @@ export function RecipeFormContent() {
             id: String(index + 1),
             content,
           }))
-        : INITIAL_STEPS
+        : INITIAL_STEPS,
     );
   };
 
   const handleFormChange = (
     field: keyof typeof formData,
-    value: string | number | string[]
+    value: string | number | string[],
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -150,8 +149,13 @@ export function RecipeFormContent() {
   };
 
   const addIngredient = () => {
-    const newId = (Math.max(...ingredients.map((i) => parseInt(i.id, 10)), 0) + 1).toString();
-    setIngredients([...ingredients, { id: newId, foodItem: "", amount: "", unit: "" }]);
+    const newId = (
+      Math.max(...ingredients.map((i) => parseInt(i.id, 10)), 0) + 1
+    ).toString();
+    setIngredients([
+      ...ingredients,
+      { id: newId, foodItem: "", amount: "", unit: "" },
+    ]);
   };
 
   const removeIngredient = (id: string) => {
@@ -165,17 +169,17 @@ export function RecipeFormContent() {
   const updateIngredient = (
     id: string,
     field: keyof Ingredient,
-    value: string | number
+    value: string | number,
   ) => {
     setIngredients((prev) =>
-      prev.map((ing) =>
-        ing.id === id ? { ...ing, [field]: value } : ing
-      )
+      prev.map((ing) => (ing.id === id ? { ...ing, [field]: value } : ing)),
     );
   };
 
   const addStep = () => {
-    const newId = (Math.max(...steps.map((s) => parseInt(s.id, 10)), 0) + 1).toString();
+    const newId = (
+      Math.max(...steps.map((s) => parseInt(s.id, 10)), 0) + 1
+    ).toString();
     setSteps([...steps, { id: newId, content: "" }]);
   };
 
@@ -189,7 +193,7 @@ export function RecipeFormContent() {
 
   const updateStep = (id: string, content: string) => {
     setSteps((prev) =>
-      prev.map((step) => (step.id === id ? { ...step, content } : step))
+      prev.map((step) => (step.id === id ? { ...step, content } : step)),
     );
   };
 
@@ -258,7 +262,9 @@ export function RecipeFormContent() {
     if (
       ingredients.some((ing) => {
         const amount = Number(ing.amount);
-        return !ing.foodItem || !ing.unit || amount <= 0 || Number.isNaN(amount);
+        return (
+          !ing.foodItem || !ing.unit || amount <= 0 || Number.isNaN(amount)
+        );
       })
     ) {
       toast.error("Please fill all ingredient fields");
@@ -304,8 +310,8 @@ export function RecipeFormContent() {
                 ...recipePayload,
                 updatedAt: new Date().toISOString(),
               }
-            : recipe
-        )
+            : recipe,
+        ),
       );
 
       setEditingRecipeId(null);
@@ -332,8 +338,8 @@ export function RecipeFormContent() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-4 overflow-y-auto">
-      <div className="bg-card/50 border border-border/50 w-full flex flex-col rounded-2xl p-6 gap-6">
+    <div className="w-full h-full pb-10 flex relative shrink-0 flex-col gap-10 overflow-y-auto">
+      <div className="bg-card/50 border border-border/50 w-full flex flex-col rounded-2xl p-6 gap-10 px-12">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-accent/90">
@@ -350,67 +356,87 @@ export function RecipeFormContent() {
           </span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-accent/90">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-11 ">
+          <div className="flex flex-col items-baseline justify-center relative w-full h-full gap-5">
+            <h3 className="text-lg font-semibold text-foreground/80">
               Recipe Information
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="title" className="text-sm font-medium text-foreground/80">
-                  Recipe Title *
-                </Label>
-                <Input
-                  id="title"
-                  type="text"
-                  placeholder="e.g., Banana Pancakes"
-                  value={formData.title}
-                  onChange={(e) => handleFormChange("title", e.target.value)}
-                />
+            <div className="flex flex-row gap-10 items-center justify-center w-full h-full relative">
+              <div className="flex flex-col w-1/2 gap-8 relative">
+                <div className="flex flex-col gap-4 relative">
+                  <Label
+                    htmlFor="title"
+                    className="text-sm font-medium text-foreground/80"
+                  >
+                    Recipe Title *
+                  </Label>
+                  <Input
+                    id="title"
+                    type="text"
+                    placeholder="e.g., Banana Pancakes"
+                    value={formData.title}
+                    onChange={(e) => handleFormChange("title", e.target.value)}
+                    className="rounded-xl px-3 py-8 text-lg font-semibold bg-input/80 border border-border/60"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-4 relative">
+                  <Label
+                    htmlFor="cost"
+                    className="text-sm font-medium text-foreground/80"
+                  >
+                    Cost ($) *
+                  </Label>
+                  <Input
+                    id="cost"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={formData.cost}
+                    onChange={(e) =>
+                      handleFormChange(
+                        "cost",
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      )
+                    }
+                    className="rounded-xl px-3 py-8 text-lg font-semibold bg-input/80 border border-border/60"
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="cost" className="text-sm font-medium text-foreground/80">
-                  Cost ($) *
+              <div className="flex flex-col items-baseline justify-center gap-4 w-2/3 h-full relative">
+                <Label
+                  htmlFor="description"
+                  className="text-sm font-medium text-foreground/80"
+                >
+                  Description *
                 </Label>
-                <Input
-                  id="cost"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={formData.cost}
+                <textarea
+                  id="description"
+                  placeholder="Write a detailed description of your recipe..."
+                  className="w-full h-full rounded-xl bg-input/80 border border-border/60 px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/60 resize-none"
+                  value={formData.description}
                   onChange={(e) =>
-                    handleFormChange(
-                      "cost",
-                      e.target.value === "" ? "" : Number(e.target.value)
-                    )
+                    handleFormChange("description", e.target.value)
                   }
                 />
               </div>
             </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="description" className="text-sm font-medium text-foreground/80">
-                Description *
-              </Label>
-              <textarea
-                id="description"
-                placeholder="Write a detailed description of your recipe..."
-                className="min-h-24 w-full rounded-xl bg-input/80 border border-border/60 px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/60 resize-none"
-                value={formData.description}
-                onChange={(e) => handleFormChange("description", e.target.value)}
-              />
-            </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-accent/90">Timing & Difficulty</h3>
+            <h3 className="text-base font-semibold text-accent/90">
+              Timing & Difficulty
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="prep-time" className="text-sm font-medium text-foreground/80">
+                <Label
+                  htmlFor="prep-time"
+                  className="text-sm font-medium text-foreground/80"
+                >
                   Prep Time (minutes) *
                 </Label>
                 <Input
@@ -422,14 +448,17 @@ export function RecipeFormContent() {
                   onChange={(e) =>
                     handleFormChange(
                       "prepTime",
-                      e.target.value === "" ? "" : Number(e.target.value)
+                      e.target.value === "" ? "" : Number(e.target.value),
                     )
                   }
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="cook-time" className="text-sm font-medium text-foreground/80">
+                <Label
+                  htmlFor="cook-time"
+                  className="text-sm font-medium text-foreground/80"
+                >
                   Cook Time (minutes) *
                 </Label>
                 <Input
@@ -441,20 +470,25 @@ export function RecipeFormContent() {
                   onChange={(e) =>
                     handleFormChange(
                       "cookTime",
-                      e.target.value === "" ? "" : Number(e.target.value)
+                      e.target.value === "" ? "" : Number(e.target.value),
                     )
                   }
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="difficulty" className="text-sm font-medium text-foreground/80">
+                <Label
+                  htmlFor="difficulty"
+                  className="text-sm font-medium text-foreground/80"
+                >
                   Difficulty Level *
                 </Label>
                 <select
                   id="difficulty"
                   value={formData.difficulty}
-                  onChange={(e) => handleFormChange("difficulty", e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("difficulty", e.target.value)
+                  }
                   className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                 >
                   {SKILL_LEVELS.map((level) => (
@@ -469,7 +503,9 @@ export function RecipeFormContent() {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-accent/90">Ingredients *</h3>
+              <h3 className="text-base font-semibold text-accent/90">
+                Ingredients *
+              </h3>
               <Button
                 type="button"
                 onClick={addIngredient}
@@ -499,7 +535,11 @@ export function RecipeFormContent() {
                         list="food-list"
                         value={ingredient.foodItem}
                         onChange={(e) =>
-                          updateIngredient(ingredient.id, "foodItem", e.target.value)
+                          updateIngredient(
+                            ingredient.id,
+                            "foodItem",
+                            e.target.value,
+                          )
                         }
                         className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50"
                       />
@@ -524,7 +564,7 @@ export function RecipeFormContent() {
                           updateIngredient(
                             ingredient.id,
                             "amount",
-                            e.target.value === "" ? "" : Number(e.target.value)
+                            e.target.value === "" ? "" : Number(e.target.value),
                           )
                         }
                         className="h-8 text-sm"
@@ -538,7 +578,11 @@ export function RecipeFormContent() {
                       <select
                         value={ingredient.unit}
                         onChange={(e) =>
-                          updateIngredient(ingredient.id, "unit", e.target.value)
+                          updateIngredient(
+                            ingredient.id,
+                            "unit",
+                            e.target.value,
+                          )
                         }
                         className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50"
                       >
@@ -572,7 +616,9 @@ export function RecipeFormContent() {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-accent/90">Steps *</h3>
+              <h3 className="text-base font-semibold text-accent/90">
+                Steps *
+              </h3>
               <Button
                 type="button"
                 onClick={addStep}
@@ -587,7 +633,10 @@ export function RecipeFormContent() {
 
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {steps.map((step, index) => (
-                <div key={step.id} className="flex items-start gap-3 p-3 rounded-lg bg-input/30 border border-border/40">
+                <div
+                  key={step.id}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-input/30 border border-border/40"
+                >
                   <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-semibold text-sm">
                     {index + 1}
                   </div>
@@ -615,7 +664,9 @@ export function RecipeFormContent() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-accent/90">Dietary Tags</h3>
+            <h3 className="text-base font-semibold text-accent/90">
+              Dietary Tags
+            </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {dietaryOptions.map((tag) => (
@@ -645,7 +696,12 @@ export function RecipeFormContent() {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40">
-            <Button type="button" variant="secondary" className="px-6" onClick={handleCancel}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="px-6"
+              onClick={handleCancel}
+            >
               {isEditing ? "Cancel" : "Clear"}
             </Button>
             <Button type="submit" className="px-6">
@@ -677,8 +733,12 @@ export function RecipeFormContent() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h4 className="font-semibold text-foreground">{recipe.title}</h4>
-                      <p className="text-sm text-foreground/70 line-clamp-2">{recipe.description}</p>
+                      <h4 className="font-semibold text-foreground">
+                        {recipe.title}
+                      </h4>
+                      <p className="text-sm text-foreground/70 line-clamp-2">
+                        {recipe.description}
+                      </p>
                     </div>
 
                     {isOwner && (
@@ -722,7 +782,9 @@ export function RecipeFormContent() {
       {pendingDeleteRecipeId && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
-            <h4 className="text-base font-semibold text-accent/90">Confirm Delete</h4>
+            <h4 className="text-base font-semibold text-accent/90">
+              Confirm Delete
+            </h4>
             <p className="mt-2 text-sm text-foreground/75">
               Are you sure you want to delete this recipe?
             </p>
