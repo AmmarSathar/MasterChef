@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import bcrypt from "bcrypt";
-import { registerUser, loginUser } from "../src/services/auth.service.js";
+import { registerUser, loginUser, updateUserProfile } from "../src/services/auth.service.js";
 import { User } from "../src/models/user.model.js";
+import { Profile } from "../src/models/profile.model.js";
 
 vi.mock("bcrypt", () => ({
   default: {
@@ -14,12 +15,24 @@ vi.mock("../src/models/user.model.js", () => ({
   User: {
     findOne: vi.fn(),
     create: vi.fn(),
+    findByIdAndUpdate: vi.fn(),
+  },
+}));
+
+vi.mock("../src/models/profile.model.js", () => ({
+  Profile: {
+    findOneAndUpdate: vi.fn(),
   },
 }));
 
 const mockedUser = User as unknown as {
   findOne: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
+  findByIdAndUpdate: ReturnType<typeof vi.fn>;
+};
+
+const mockedProfile = Profile as unknown as {
+  findOneAndUpdate: ReturnType<typeof vi.fn>;
 };
 
 describe("registerUser", () => {
@@ -140,5 +153,58 @@ describe("loginUser", () => {
       email: "a@b.com",
       name: "Alice",
     });
+  });
+});
+
+describe("updateUserProfile", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("updates legacy users when userId is a Mongo ObjectId", async () => {
+    mockedUser.findByIdAndUpdate.mockResolvedValue({
+      _id: { toString: () => "67b77c0a876543210fedcba9" },
+      email: "legacy@user.com",
+      name: "Legacy User",
+      isCustomized: true,
+      createdAt: new Date("2026-01-01"),
+      updatedAt: new Date("2026-01-02"),
+    });
+
+    const result = await updateUserProfile({
+      userId: "67b77c0a876543210fedcba9",
+      isCustomized: true,
+    });
+
+    expect(mockedUser.findByIdAndUpdate).toHaveBeenCalled();
+    expect(result.id).toBe("67b77c0a876543210fedcba9");
+    expect(result.email).toBe("legacy@user.com");
+  });
+
+  it("updates Google-auth users through Profile.authUserId", async () => {
+    mockedUser.findByIdAndUpdate.mockResolvedValue(null);
+    mockedProfile.findOneAndUpdate.mockResolvedValue({
+      authUserId: "auth_google_123",
+      email: "google@user.com",
+      name: "Google User",
+      cuisines_pref: ["italian"],
+      isCustomized: true,
+      createdAt: new Date("2026-01-01"),
+      updatedAt: new Date("2026-01-02"),
+    });
+
+    const result = await updateUserProfile({
+      userId: "auth_google_123",
+      cuisines_pref: ["italian"],
+      isCustomized: true,
+    });
+
+    expect(mockedProfile.findOneAndUpdate).toHaveBeenCalledWith(
+      { authUserId: "auth_google_123" },
+      { $set: { cuisines_pref: ["italian"], isCustomized: true } },
+      { new: true, runValidators: true }
+    );
+    expect(result.id).toBe("auth_google_123");
+    expect(result.isCustomized).toBe(true);
   });
 });

@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import { config } from "./index.js";
 
+let mongoClient: unknown = null;
+let mongoDb: unknown = null;
+
 export async function connectDatabase(): Promise<void> {
   try {
     if (!config.mongodbUri) {
@@ -8,8 +11,10 @@ export async function connectDatabase(): Promise<void> {
     }
 
     await mongoose.connect(config.mongodbUri);
+    mongoClient = mongoose.connection.getClient();
+    mongoDb = mongoose.connection.db;
 
-    console.log("✓ MongoDB connected successfully");
+    console.log("MongoDB connected successfully");
 
     mongoose.connection.on("error", (error) => {
       console.error("MongoDB connection error:", error);
@@ -28,4 +33,20 @@ export async function connectDatabase(): Promise<void> {
     console.error("Failed to connect to MongoDB:", error);
     process.exit(1);
   }
+}
+
+export function getMongoClient(): unknown {
+  if (!mongoClient) {
+    throw new Error("MongoDB client is not initialized. Call connectDatabase() first.");
+  }
+
+  return mongoClient;
+}
+
+export function getMongoDb(): unknown {
+  if (!mongoDb) {
+    throw new Error("MongoDB database is not initialized. Call connectDatabase() first.");
+  }
+
+  return mongoDb;
 }
