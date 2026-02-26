@@ -128,18 +128,29 @@ export async function getRecipes(query: RecipeQueryInput): Promise<{
   totalPages: number;
 }> {
   const {
-    page = 1, limit = 20, skillLevel, cuisine,
+    page = 1, limit = 20, skillLevel, difficulty, cuisine,
     excludeTags, excludeAllergens, createdBy, search,
+    max_time, dietary_tags,
   } = query;
 
   const filter: Record<string, unknown> = {};
 
-  if (skillLevel) filter.skillLevel = skillLevel;
+  // difficulty is an alias for skillLevel; difficulty takes precedence
+  const resolvedSkillLevel = difficulty ?? skillLevel;
+  if (resolvedSkillLevel) filter.skillLevel = resolvedSkillLevel;
+
   if (cuisine) filter.cuisine = cuisine;
   if (createdBy) filter.createdBy = createdBy;
 
+  if (max_time) filter.cookingTime = { $lte: max_time };
+
   if (excludeTags?.length) {
     filter.dietaryTags = { $nin: excludeTags };
+  }
+
+  // dietary_tags: include recipes that have ALL the specified tags
+  if (dietary_tags?.length) {
+    filter.dietaryTags = { $all: dietary_tags };
   }
 
   if (excludeAllergens?.length) {
@@ -149,6 +160,49 @@ export async function getRecipes(query: RecipeQueryInput): Promise<{
   if (search) {
     filter.$text = { $search: search };
   }
+
+  const skip = (page - 1) * limit;
+  const [recipes, total] = await Promise.all([
+    Recipe.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Recipe.countDocuments(filter),
+  ]);
+
+  return {
+    recipes: recipes.map(toRecipeResponse),
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+export async function searchRecipes(input: {
+  q: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  recipes: RecipeResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
+  const { q, page = 1, limit = 20 } = input;
+
+  if (!q?.trim()) {
+    const error: ApiError = new Error("Search query q is required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const regex = new RegExp(q.trim(), "i");
+  const filter = {
+    $or: [
+      { title: regex },
+      { description: regex },
+      { "ingredients.foodItem": regex },
+    ],
+  };
 
   const skip = (page - 1) * limit;
   const [recipes, total] = await Promise.all([
