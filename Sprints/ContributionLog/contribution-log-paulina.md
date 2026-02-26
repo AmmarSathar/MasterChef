@@ -19,5 +19,6 @@
 | 2026-02-10 | Recipe Management Backend | Designed and implemented recipe Mongoose model with ingredient subdocuments, dietary tag inheritance from shared food constants, and skill level/cuisine enum validation. Created CRUD endpoints (POST, GET, PUT, DELETE /api/recipes) with ownership checks. Built recommendation engine that scores recipes by ingredient match and filters by user dietary restrictions/allergies. Added test page at /test-recipes | 3h         |
 | 2026-02-13 | User Customization Tracking | Added isCustomized boolean flag to user model to track onboarding completion. Exposed createdAt and updatedAt timestamps in the user API response. Updated UserResponse type and toUserResponse() | 0.5h       |
 | 2026-02-25 | Recipe Search & Filter API (Stories 5 & 6) | Implemented GET /api/recipes/search?q= with case-insensitive regex search across recipe title, description, and ingredients. Extended GET /api/recipes with max_time, difficulty, and dietary_tags filter params. Updated RecipeQueryInput type, recipe service, controller, and routes. Updated FatSecret OAuth 2.0 credentials in .env and exposed them in config. | 1.5h |
+| 2026-02-25 | Meeting Minutes | Wrote meeting minutes for three Sprint 2 meetings: Feb 13 in-person TA sync, Feb 20 in-person TA sync, and Feb 22 sprint planning session for Stories 5 & 6. | 0.5h |
 
-**Total Time:** 11h
+**Total Time:** 11.5h
