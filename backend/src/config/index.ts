@@ -8,4 +8,6 @@ export const config = {
   isDev: process.env.NODE_ENV !== "production",
   isProd: process.env.NODE_ENV === "production",
   mongodbUri: process.env.MONGODB_URI,
+  fatsecretClientId: process.env.FATSECRET_CLIENT_ID ?? "",
+  fatsecretClientSecret: process.env.FATSECRET_CLIENT_SECRET ?? "",
 } as const;
