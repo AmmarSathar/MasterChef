@@ -3,6 +3,7 @@ import {
   create,
   getById,
   list,
+  search,
   update,
   remove,
   recommend,
@@ -12,6 +13,7 @@ const router = Router();
 
 router.post("/", create);
 router.get("/", list);
+router.get("/search", search);
 router.post("/recommend", recommend);
 router.get("/:id", getById);
 router.put("/:id", update);
