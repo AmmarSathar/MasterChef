@@ -92,9 +92,9 @@
   --shadow-green-3d:
     0 10px 25px -5px rgba(110, 142, 108, 0.3),
     0 8px 10px -6px rgba(110, 142, 108, 0.3); /* ===== Grainient Background Colors ===== */
-  --grain-color-1: #c9b5d9; /* primary violet */
-  --grain-color-2: #ffcca3; /* brand secondary peach */
-  --grain-color-3: #e8dfd2; /* background beige */
+  --grain-color-1: #d49cd8; /* primary violet */
+  --grain-color-2: #f8e8a6; /* brand secondary peach */
+  --grain-color-3: #d3d3d3; /* background beige */
 }
 
 [data-theme="dark"] {
