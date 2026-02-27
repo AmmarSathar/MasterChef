@@ -190,7 +190,47 @@ export async function getUserProfileById(userId: string): Promise<UserResponse |
     };
   }
 
-  return null;
+  // Better Auth users may already have a profile keyed by email but not yet linked
+  // to the current authUserId. Recover and persist that mapping on read.
+  const betterAuthUser = await mongoose.connection
+    .collection(config.betterAuthUserModelName)
+    .findOne<{ id: string; email?: string; name?: string }>({ id: userId });
+
+  const normalizedEmail = betterAuthUser?.email?.toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const linkedProfile = await Profile.findOneAndUpdate(
+    { email: normalizedEmail },
+    {
+      $set: { authUserId: userId },
+      $setOnInsert: {
+        email: normalizedEmail,
+        name: betterAuthUser?.name ?? "User",
+      },
+    },
+    { new: true, upsert: true, runValidators: true }
+  );
+
+  return {
+    id: linkedProfile.authUserId,
+    email: linkedProfile.email,
+    name: linkedProfile.name,
+    pfp: linkedProfile.pfp,
+    age: linkedProfile.age,
+    birth: linkedProfile.birth,
+    weight: linkedProfile.weight,
+    height: linkedProfile.height,
+    bio: linkedProfile.bio,
+    dietary_restric: linkedProfile.dietary_restric,
+    allergies: linkedProfile.allergies,
+    skill_level: linkedProfile.skill_level,
+    cuisines_pref: linkedProfile.cuisines_pref,
+    isCustomized: linkedProfile.isCustomized,
+    createdAt: linkedProfile.createdAt,
+    updatedAt: linkedProfile.updatedAt,
+  };
 }
 
 export async function updateUserProfile(input: UpdateProfileInput): Promise<UserResponse> {

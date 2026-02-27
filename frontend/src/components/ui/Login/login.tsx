@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
+import { useUser } from "@context/UserContext";
 
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
@@ -73,6 +74,7 @@ interface LegacySessionResponse {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
@@ -91,6 +93,7 @@ export default function Login() {
   const persistGoogleUser = (user: BetterAuthSessionUser, profile?: User): User => {
     if (profile) {
       localStorage.setItem("user", JSON.stringify(profile));
+      setUser(profile);
       return profile;
     }
 
@@ -107,6 +110,7 @@ export default function Login() {
     };
 
     localStorage.setItem("user", JSON.stringify(mappedUser));
+    setUser(mappedUser);
     return mappedUser;
   };
 
@@ -123,6 +127,7 @@ export default function Login() {
       }
 
       localStorage.setItem("user", JSON.stringify(sessionUser));
+      setUser(sessionUser);
 
       if (sessionUser.isCustomized) {
         navigate("/dashboard");
@@ -188,6 +193,16 @@ export default function Login() {
         triggerCustomize();
       }
     } catch (err) {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("oauth");
+      params.delete("oauth_error");
+      const nextQuery = params.toString();
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`,
+      );
+      setIsLogin(true);
       toast.dismiss(loadingToast);
       toast.error("Google sign-in failed. Please try again.");
       console.error("Google callback completion failed:", err);
@@ -251,7 +266,8 @@ export default function Login() {
       }
 
       if (oauth === "google") {
-        completeGoogleSignIn();
+        setIsLogin(true);
+        await completeGoogleSignIn();
         return;
       }
 
@@ -262,9 +278,11 @@ export default function Login() {
 
       const storedUser = localStorage.getItem("user");
       if (storedUser && JSON.parse(storedUser).isCustomized) {
+        setUser(JSON.parse(storedUser));
         navigate("/dashboard");
         return;
       } else if (storedUser) {
+        setUser(JSON.parse(storedUser));
         triggerCustomize();
         toast.success("Welcome back! \nLet's complete your Profile..", {
           icon: <BadgeInfo size={20} color="var(--info-hex)" />,
@@ -280,7 +298,7 @@ export default function Login() {
     };
 
     void bootstrapAuth();
-  }, [navigate, isLogin]);
+  }, [navigate, setUser]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
@@ -329,6 +347,7 @@ export default function Login() {
 
         const user = response.data.user;
         localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
 
         console.log("user loaded: ", user);
 
@@ -341,6 +360,7 @@ export default function Login() {
           toast.success("But first, let's complete your Customization!", {
             icon: <BadgeInfo size={20} />,
           });
+          triggerCustomize();
         }
 
         return true;
@@ -399,6 +419,7 @@ export default function Login() {
         const user = response.data.user;
         //save user in localstorage for autoconnect
         localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
 
         toast.dismiss(registrationToast);
         toast.success(`Account created successfully!\nWelcome aboard ${name}!`);
@@ -465,7 +486,7 @@ export default function Login() {
   const handleCreateAccount = async (formData: FormData) => {
     const success = await completeRegistration(formData);
     // console.log("passed 1");
-    if (success) {
+    if (success && !isLogin) {
       triggerCustomize();
     }
   };
