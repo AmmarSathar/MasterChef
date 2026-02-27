@@ -54,6 +54,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     setIsMoreOpen(false);
+    const waitToast = toast.loading("Logging out...");
 
     try {
       await Promise.allSettled([
@@ -74,14 +75,17 @@ export default function Navbar() {
       ]);
     } catch (error) {
       console.error("Sign-out request failed:", error);
+      toast.dismiss(waitToast);
+      toast.error("An error occurred while logging out..");
     } finally {
+      toast.dismiss(waitToast);
+      toast.success("Logged out successfully.");
       localStorage.removeItem("user");
       if (location.pathname === "/login") {
         navigate("/");
       } else {
         navigate("/login");
       }
-      toast.success("Logged out successfully.");
     }
   };
 

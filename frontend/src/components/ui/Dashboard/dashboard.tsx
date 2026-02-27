@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
+import SearchModal from "./SearchModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@context/UserContext";
 
@@ -15,7 +16,6 @@ import {
   Settings,
   House,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import {
   MainDashboardTitle,
@@ -47,9 +47,12 @@ export default function Dashboard() {
   const [userPressed, setUserPressed] = useState(false);
   const [activeDashboard, setActiveDashboard] =
     useState<DashboardRouteKey>("main");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const ActiveTitle = dashboardRoutes[activeDashboard].Title;
   const ActiveContent = dashboardRoutes[activeDashboard].Content;
+
+  const openSearch = useCallback(() => setSearchOpen(true), []);
 
   useEffect(() => {
     // if you remove this check, it freaks out because user isn't loaded
@@ -163,16 +166,23 @@ export default function Dashboard() {
             </AnimatePresence>
           </div>
           <div className="dashboard-header-right w-full h-full flex items-center justify-end relative gap-4">
-            <div className="relative">
+            <button
+              onClick={openSearch}
+              className="relative flex items-center w-60 h-12 bg-input border border-border/50 shadow-sm shadow-border/60 rounded-full pl-4 pr-3 gap-3 text-left hover:bg-input/80 hover:border-border/70 transition-all duration-200 cursor-pointer group"
+            >
               <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                size={16}
+                className="text-muted-foreground shrink-0 group-hover:text-foreground/60 transition-colors"
               />
-              <Input
-                placeholder="Search..."
-                className="w-60 bg-input border-border/50 shadow-sm shadow-border/60 rounded-full h-12 pl-11 pr-5"
-              />
-            </div>
+              <span className="flex-1 text-sm text-muted-foreground truncate">
+                Search...
+              </span>
+              <div className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-border/40 bg-secondary/60 text-[11px] text-muted-foreground select-none shrink-0">
+                <span className="font-sans">Ctrl</span>
+                <span className="mx-0.5 opacity-60">+</span>
+                <span className="font-sans">K</span>
+              </div>
+            </button>
             <button className="header-add w-12 h-12 rounded-full bg-input/80 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-input hover:border-border/60 transition-all duration-300 cursor-pointer">
               <Plus size={20} className="text-accent/60 pointer-events-none" />
             </button>
@@ -304,6 +314,8 @@ export default function Dashboard() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </motion.div>
   );
 }
