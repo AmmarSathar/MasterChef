@@ -98,14 +98,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userCardRef.current && !userCardRef.current.contains(event.target as Node)) {
+      if (
+        userCardRef.current &&
+        !userCardRef.current.contains(event.target as Node)
+      ) {
         setUserPressed(false);
       }
     };
 
     if (userPressed) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [userPressed]);
 
@@ -203,9 +207,9 @@ export default function Dashboard() {
                 exit={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
                 transition={{ duration: 0.2 }}
                 tabIndex={0}
-                className="user-card absolute pointer-events-auto w-90 min-h-100 py-10 bg-linear-to-br from-primary/30 via-primary/20 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
+                className="user-card absolute pointer-events-auto w-80 min-h-100 py-10 bg-linear-to-br from-primary/30 via-primary/20 to-background z-80 rounded-2xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
               >
-                <div className="user-pfp relative flex w-30 h-30 rounded-full overflow-hidden border-3 border-ring shadow-sm shadow-ring/50 items-center justify-center bg-linear-to-tr from-ring to-secondary">
+                <div className="user-pfp relative flex w-30 h-30 mb-2 rounded-full overflow-hidden border-3 border-ring shadow-lg shadow-ring/80 items-center justify-center bg-linear-to-tr from-ring to-secondary">
                   {user?.pfp ? (
                     <img
                       src={user.pfp}
@@ -225,15 +229,20 @@ export default function Dashboard() {
                     {user?.name || "Unknown User"}
                   </span>
                   <span className="user-cooking-level font-semibold text-sm text-foreground">
-                    {user?.skill_level?.charAt(0).toUpperCase().concat(user?.skill_level.substring(1)) || "Beginner"}
+                    {user?.skill_level
+                      ?.charAt(0)
+                      .toUpperCase()
+                      .concat(user?.skill_level.substring(1)) || "Beginner"}
                   </span>
                 </div>
 
-                <div className="user-description relative w-full flex items-center justify-center p-1 mt-2">
-                  <span className="text-center text-sm text-foreground/80 line-clamp-2 max-w-60">
-                    {user?.bio ||
-                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip "}
-                  </span>
+                <div className="user-description relative flex w-full max-h-30 items-center justify-center px-9 mt-2">
+                  <div className="relative w-full h-full flex py-4 items-center justify-center shadow-lg shadow-primary/10 rounded-xl bg-linear-to-br from-secondary/20 to-secondary/10 ring-1 ring-secondary/30">
+                    <span className="text-center text-md text-foreground/80 line-clamp-2 max-w-60">
+                      {user?.bio ||
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip "}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="user-actions relative w-full flex flex-col items-center justify-center gap-5 p-1 mt-4">

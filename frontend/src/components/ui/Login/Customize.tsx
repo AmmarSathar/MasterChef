@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useUser } from "@context/UserContext";
 
 import {
   Stepper,
@@ -26,11 +27,11 @@ interface CustomizeProps {
 
 export default function Customize({ ready }: CustomizeProps) {
   const navigate = useNavigate();
+  const { user: contextUser, setUser } = useUser();
 
   const [headerTransitioned, setHeaderTransitioned] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [partialUser, setPartialUser] = useState<User>({} as User);
   const [step1Data, setStep1Data] = useState({
     dietaryRestrictions: [] as string[],
     allergies: [] as string[],
@@ -45,13 +46,6 @@ export default function Customize({ ready }: CustomizeProps) {
     profilePicture: null as string | null,
     bio: "",
   });
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setPartialUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   useEffect(() => {
     if (ready) {
@@ -103,15 +97,7 @@ export default function Customize({ ready }: CustomizeProps) {
     scrollFormToTop();
 
     setStep2Data(data);
-    const activeUser = (() => {
-      try {
-        const raw = localStorage.getItem("user");
-        return raw ? (JSON.parse(raw) as User) : partialUser;
-      } catch {
-        return partialUser;
-      }
-    })();
-    const resolvedUserId = activeUser?.id;
+    const resolvedUserId = contextUser?.id;
 
     if (!resolvedUserId) {
       toast.dismiss(loadingToast);
@@ -143,8 +129,7 @@ export default function Customize({ ready }: CustomizeProps) {
       );
       const updatedUser = res.data.user;
 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setPartialUser(updatedUser);
+      setUser(updatedUser);
 
       toast.dismiss(loadingToast);
       toast.success("Profile customization complete!\nLet's start cooking!");

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
@@ -90,58 +90,64 @@ export default function Login() {
   const customizeContainerRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
 
-  const persistGoogleUser = (user: BetterAuthSessionUser, profile?: User): User => {
-    if (profile) {
-      localStorage.setItem("user", JSON.stringify(profile));
-      setUser(profile);
-      return profile;
-    }
+  const persistGoogleUser = useCallback(
+    (user: BetterAuthSessionUser, profile?: User): User => {
+      if (profile) {
+        localStorage.setItem("user", JSON.stringify(profile));
+        setUser(profile);
+        return profile;
+      }
 
-    const mappedUser: User = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      pfp: user.image,
-      age: 0,
-      cuisines_pref: [],
-      dietary_restric: [],
-      allergies: [],
-      isCustomized: false,
-    };
+      const mappedUser: User = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        pfp: user.image,
+        age: 0,
+        cuisines_pref: [],
+        dietary_restric: [],
+        allergies: [],
+        isCustomized: false,
+      };
 
-    localStorage.setItem("user", JSON.stringify(mappedUser));
-    setUser(mappedUser);
-    return mappedUser;
-  };
+      localStorage.setItem("user", JSON.stringify(mappedUser));
+      setUser(mappedUser);
+      return mappedUser;
+    },
+    [setUser],
+  );
 
-  const bootstrapLegacySession = async (): Promise<boolean> => {
-    try {
-      const response = await axios.get<LegacySessionResponse>(
-        `${BASE_API_URL}/auth/session`,
-        { withCredentials: true },
-      );
+  const bootstrapLegacySession = useCallback(
+    async (): Promise<boolean> => {
+      try {
+        const response = await axios.get<LegacySessionResponse>(
+          `${BASE_API_URL}/auth/session`,
+          { withCredentials: true },
+        );
 
-      const sessionUser = response.data?.user;
-      if (!sessionUser) {
+        const sessionUser = response.data?.user;
+        if (!sessionUser) {
+          return false;
+        }
+
+        localStorage.setItem("user", JSON.stringify(sessionUser));
+        setUser(sessionUser);
+
+        if (sessionUser.isCustomized) {
+          navigate("/dashboard");
+        } else {
+          triggerCustomize();
+        }
+
+        return true;
+      } catch {
         return false;
       }
+    },
+    [navigate, setUser],
+  );
 
-      localStorage.setItem("user", JSON.stringify(sessionUser));
-      setUser(sessionUser);
-
-      if (sessionUser.isCustomized) {
-        navigate("/dashboard");
-      } else {
-        triggerCustomize();
-      }
-
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const completeGoogleSignIn = async () => {
+  const completeGoogleSignIn = useCallback(async () => {
     const loadingToast = toast.loading("Completing Google sign-in...");
 
     try {
@@ -207,7 +213,7 @@ export default function Login() {
       toast.error("Google sign-in failed. Please try again.");
       console.error("Google callback completion failed:", err);
     }
-  };
+  }, [navigate, persistGoogleUser]);
 
   const signInWithGoogle = async () => {
     const loadingToast = toast.loading("Redirecting to Google...");
@@ -298,7 +304,7 @@ export default function Login() {
     };
 
     void bootstrapAuth();
-  }, [navigate, setUser]);
+  }, [navigate, setUser, bootstrapLegacySession, completeGoogleSignIn]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
@@ -308,6 +314,8 @@ export default function Login() {
     setIsLogin(!isLogin);
     const params = new URLSearchParams(window.location.search);
     params.set("register", isLogin.toString());
+    console.log("In register check: ");
+
     window.history.replaceState(
       {},
       "",
@@ -352,13 +360,23 @@ export default function Login() {
         console.log("user loaded: ", user);
 
         toast.dismiss(registrationToast);
-        toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
+        toast.success(
+          `Logged in successfully!\nWelcome back ${user.name}!`,
+        );
 
         if (user.isCustomized) {
           navigate("/dashboard");
         } else {
-          toast.success("But first, let's complete your Customization!", {
-            icon: <BadgeInfo size={20} />,
+          triggerCustomize();
+          const params = new URLSearchParams(window.location.search);
+          params.set("customizing", "true");
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}?${params}`,
+          );
+          toast.success("Welcome back! \nLet's complete your Profile..", {
+            icon: <BadgeInfo size={20} color="var(--info-hex)" />,
           });
           triggerCustomize();
         }
@@ -507,20 +525,20 @@ export default function Login() {
           color3={"var(--grain-color-3)"}
           timeSpeed={0.25}
           colorBalance={0}
-          warpStrength={1}
+          warpStrength={4}
           warpFrequency={5}
           warpSpeed={2}
-          warpAmplitude={50}
+          warpAmplitude={80}
           blendAngle={0}
           blendSoftness={0.05}
-          rotationAmount={500}
+          rotationAmount={250}
           noiseScale={2}
           grainAmount={0.1}
           grainScale={2}
           grainAnimated={false}
-          contrast={1.5}
+          contrast={1}
           gamma={1}
-          saturation={1}
+          saturation={1.5}
           centerX={0}
           centerY={0}
           zoom={0.9}

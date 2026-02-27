@@ -16,7 +16,12 @@
 
 | Date | Task | Description | Time Spent |
 |------|------|-------------|------------|
-| 2026-01-30 | Example of Task | description of task | time spent |
-| 2026-01-30 | Example of Task | description of task | time spent |
-| 2026-01-30 | | | |
-| 2026-01-30 | | | |
+| 2026-02-06 | Dashboard UI Implementation | Implemented dashboard skeleton with redirects, temporary main menu UI, added loading skeletons, and integrated animated DotGrid and Grainient backgrounds | 5h |
+| 2026-02-10 | Code Quality & Testing | Updated outdated unit tests, replaced useNavigate with Link components, reimplemented CI tests, and updated cursors for better visibility | 3.5h |
+| 2026-02-11 | Theme System Refactor & Bug Fixes | Refactored theme system with component color handling fixes, fixed password validation and mutation issues, resolved test configuration issues | 4h |
+| 2026-02-13 | Navigation & Auth Flow | Added page transitions with framer-motion, implemented user customization tracking, dashboard refactor with auth checks and views, blocked dashboard access for non-customized users | 5.5h |
+| 2026-02-15 | Dashboard Features | Improved dashboard user menu and settings screens with enhanced UI/UX | 2.5h |
+| 2026-02-16 | Backend Integration | Linked frontend user update functionality to backend API endpoints | 2h |
+| 2026-02-17 | Global State & Testing | Implemented global user context for state management and heavily modified tests to fully complete customization flow testing for user registration/login | 4.5h |
+
+**Total Time:** 27h
