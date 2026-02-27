@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
-import { X, Plus, Pencil, Trash2 } from "lucide-react";
+import { X, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { SKILL_LEVELS, allFoodNames, dietaryOptions } from "@masterchef/shared";
+import {
+  SKILL_LEVELS,
+  allFoodNames,
+  dietaryOptions,
+  cuisineOptions,
+} from "@masterchef/shared";
 import toast from "react-hot-toast";
 
 interface Ingredient {
@@ -56,6 +61,7 @@ const INITIAL_INGREDIENTS: Ingredient[] = [
 ];
 
 const INITIAL_STEPS: Step[] = [{ id: "1", content: "" }];
+const RECIPES_API_BASE = "/api/recipes";
 
 export function RecipeFormTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Recipes</h1>;
@@ -64,6 +70,11 @@ export function RecipeFormTitle() {
 export function RecipeFormContent() {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<RecipeRecord[]>([]);
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [cuisineFilter, setCuisineFilter] = useState<string>("all");
+  const [dietaryTagFilter, setDietaryTagFilter] = useState<string>("all");
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [pendingDeleteRecipeId, setPendingDeleteRecipeId] = useState<
     string | null
@@ -92,10 +103,32 @@ export function RecipeFormContent() {
 
   // Load user's recipes from backend when we have a user id
   useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [searchInput]);
+
+  useEffect(() => {
     async function load() {
       if (!currentUserId) return;
       try {
-        const res = await fetch(`/api/recipes?createdBy=${encodeURIComponent(currentUserId)}`);
+        const params = new URLSearchParams();
+        params.set("createdBy", currentUserId);
+        if (debouncedSearch) {
+          params.set("search", debouncedSearch);
+        }
+        if (difficultyFilter !== "all") {
+          params.set("skillLevel", difficultyFilter);
+        }
+        if (cuisineFilter !== "all") {
+          params.set("cuisine", cuisineFilter);
+        }
+
+        const res = await fetch(
+          `${RECIPES_API_BASE}?${params.toString()}`,
+        );
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || 'Failed to load recipes');
 
@@ -126,7 +159,7 @@ export function RecipeFormContent() {
     }
 
     load();
-  }, [currentUserId]);
+  }, [currentUserId, debouncedSearch, difficultyFilter, cuisineFilter]);
 
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
@@ -272,7 +305,7 @@ export function RecipeFormContent() {
       }
 
       try {
-        const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}`, {
+        const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(recipeId)}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: currentUserId }),
@@ -360,11 +393,14 @@ export function RecipeFormContent() {
     if (isEditing && editingRecipeId) {
       (async () => {
         try {
-          const res = await fetch(`/api/recipes/${encodeURIComponent(editingRecipeId)}`, {
+          const res = await fetch(
+            `${RECIPES_API_BASE}/${encodeURIComponent(editingRecipeId)}`,
+            {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: currentUserId, ...recipePayload }),
-          });
+            },
+          );
           const json = await res.json();
           if (!res.ok) {
             throw new Error(json?.message || "Update failed");
@@ -412,7 +448,7 @@ export function RecipeFormContent() {
     // Create new recipe via API
     (async () => {
       try {
-        const res = await fetch('/api/recipes', {
+        const res = await fetch(RECIPES_API_BASE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: currentUserId, ...recipePayload }),
@@ -448,6 +484,12 @@ export function RecipeFormContent() {
       }
     })();
   };
+
+  const filteredRecipes = recipes.filter((recipe) => {
+    if (dietaryTagFilter === "all") return true;
+    return recipe.dietaryTags.includes(dietaryTagFilter);
+  });
+
   return (
     <div className="w-full h-full pb-10 flex relative shrink-0 flex-col gap-10 overflow-y-auto">
       <div className="bg-card/50 border border-border/50 w-full flex flex-col rounded-2xl p-6 gap-10 px-12">
@@ -826,15 +868,86 @@ export function RecipeFormContent() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-accent/90">Your Recipes</h3>
           <span className="text-xs px-3 py-1 rounded-full bg-secondary/70 text-foreground/80 border border-border/60">
-            {recipes.length} total
+            {filteredRecipes.length} total
           </span>
         </div>
 
-        {recipes.length === 0 ? (
-          <p className="text-sm text-foreground/70">No recipes created yet.</p>
+        <div className="rounded-xl border border-border/40 bg-input/20 p-4 flex flex-col gap-4">
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50 pointer-events-none"
+            />
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search recipes by title or description..."
+              className="pl-10 rounded-xl bg-card/50 border-border/50"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <select
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            >
+              <option value="all">All Difficulties</option>
+              {SKILL_LEVELS.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={cuisineFilter}
+              onChange={(e) => setCuisineFilter(e.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            >
+              <option value="all">All Cuisines</option>
+              {cuisineOptions.map((cuisine) => (
+                <option key={cuisine} value={cuisine}>
+                  {cuisine}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={dietaryTagFilter}
+              onChange={(e) => setDietaryTagFilter(e.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            >
+              <option value="all">All Dietary Tags</option>
+              {dietaryOptions.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setSearchInput("");
+                setDifficultyFilter("all");
+                setCuisineFilter("all");
+                setDietaryTagFilter("all");
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+
+        {filteredRecipes.length === 0 ? (
+          <p className="text-sm text-foreground/70">
+            No recipes match your current search/filter.
+          </p>
         ) : (
           <div className="space-y-3">
-            {recipes.map((recipe) => {
+            {filteredRecipes.map((recipe) => {
               const isOwner = recipe.createdBy === currentUserId;
 
               return (
