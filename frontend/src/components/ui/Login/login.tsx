@@ -699,7 +699,7 @@ export default function Login() {
                   Google
                 </span>
               </button>
-              <button className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
+              {/* <button className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
                 <img
                   src={Github}
                   alt="github-icon"
@@ -708,7 +708,7 @@ export default function Login() {
                 <span className="font-bold text-sm text-accent pointer-events-none">
                   GitHub
                 </span>
-              </button>
+              </button> */}
             </div>
 
             <div className="login-no-account w-full flex items-center justify-center gap-1 py-5">
