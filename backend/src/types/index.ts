@@ -116,11 +116,14 @@ export interface RecipeQueryInput {
   page?: number;
   limit?: number;
   skillLevel?: string;
+  difficulty?: string;
   cuisine?: string;
   excludeTags?: string[];
   excludeAllergens?: string[];
   createdBy?: string;
   search?: string;
+  max_time?: number;
+  dietary_tags?: string[];
 }
 
 export interface RecommendationInput {

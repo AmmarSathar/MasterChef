@@ -3,6 +3,7 @@ import {
   createRecipe,
   getRecipeById,
   getRecipes,
+  searchRecipes,
   updateRecipe,
   deleteRecipe,
   getRecommendations,
@@ -43,21 +44,43 @@ export async function list(
 ): Promise<void> {
   try {
     const {
-      page, limit, skillLevel, cuisine,
+      page, limit, skillLevel, difficulty, cuisine,
       excludeTags, excludeAllergens, createdBy, search,
+      max_time, dietary_tags,
     } = req.query;
 
     const result = await getRecipes({
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
       skillLevel: skillLevel as string,
+      difficulty: difficulty as string,
       cuisine: cuisine as string,
       excludeTags: excludeTags ? (excludeTags as string).split(",") : undefined,
       excludeAllergens: excludeAllergens ? (excludeAllergens as string).split(",") : undefined,
       createdBy: createdBy as string,
       search: search as string,
+      max_time: max_time ? Number(max_time) : undefined,
+      dietary_tags: dietary_tags ? (dietary_tags as string).split(",") : undefined,
     });
 
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function search(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { q, page, limit } = req.query;
+    const result = await searchRecipes({
+      q: q as string,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);
