@@ -46,6 +46,7 @@ const INITIAL_FORM_DATA = {
   description: "",
   prepTime: "" as number | "",
   cookTime: "" as number | "",
+  cost: "" as number | "",
   difficulty: "beginner" as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as string[],
 };
@@ -357,24 +358,51 @@ export function RecipeFormContent() {
     };
 
     if (isEditing && editingRecipeId) {
-      setRecipes((prev) =>
-        prev.map((recipe) =>
-          recipe.id === editingRecipeId
-            ? {
-                ...recipe,
-                ...recipePayload,
-                updatedAt: new Date().toISOString(),
-              }
-            : recipe
-        )
-      );
+      (async () => {
+        try {
+          const res = await fetch(`/api/recipes/${encodeURIComponent(editingRecipeId)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: currentUserId, ...recipePayload }),
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            throw new Error(json?.message || "Update failed");
+          }
+
+          const updated = json?.data;
+          const updatedAt = updated?.updatedAt ?? new Date().toISOString();
+
+          setRecipes((prev) =>
+            prev.map((recipe) =>
+              recipe.id === editingRecipeId
+                ? {
+                    ...recipe,
+                    title: updated?.title ?? recipePayload.title,
+                    description: updated?.description ?? recipePayload.description,
+                    prepTime: recipe.prepTime,
+                    cookTime:
+                      typeof updated?.cookingTime === "number"
+                        ? updated.cookingTime
+                        : recipePayload.cookingTime,
+                    cost: recipePayload.cost,
+                    difficulty: updated?.skillLevel ?? recipePayload.skillLevel,
+                    dietaryTags: updated?.dietaryTags ?? recipePayload.dietaryTags,
+                    ingredients: updated?.ingredients ?? recipePayload.ingredients,
+                    steps: updated?.steps ?? recipePayload.steps,
+                    updatedAt,
+                  }
+                : recipe,
+            ),
+          );
 
           setEditingRecipeId(null);
-          toast.success('Recipe updated successfully!');
+          toast.success("Recipe updated successfully!");
           resetForm();
         } catch (err: unknown) {
-          console.error('Update recipe error', err);
-          const msg = err instanceof Error ? err.message : 'Could not update recipe';
+          console.error("Update recipe error", err);
+          const msg =
+            err instanceof Error ? err.message : "Could not update recipe";
           toast.error(msg);
         }
       })();
@@ -419,7 +447,7 @@ export function RecipeFormContent() {
         toast.error(msg);
       }
     })();
-  }
+  };
   return (
     <div className="w-full h-full pb-10 flex relative shrink-0 flex-col gap-10 overflow-y-auto">
       <div className="bg-card/50 border border-border/50 w-full flex flex-col rounded-2xl p-6 gap-10 px-12">
