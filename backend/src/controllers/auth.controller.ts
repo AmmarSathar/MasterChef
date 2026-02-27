@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { loginUser, registerUser, toUserResponse, updateUserProfile } from "../services/auth.service.js";
+import {
+  getUserProfileById,
+  loginUser,
+  registerUser,
+  toUserResponse,
+  updateUserProfile,
+} from "../services/auth.service.js";
 import { CreateUserInput, LoginUserInput, UpdateProfileInput } from "../types/index.js";
 import { createSessionForUser, revokeSession, resolveSessionUser } from "../lib/session.js";
 
@@ -96,6 +102,34 @@ export async function updateProfile(
     console.log("updateProfile request - userId:", userId, "fields:", Object.keys(profileData));
 
     const user = await updateUserProfile({ userId, ...profileData });
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getProfile(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { userId } = req.params as { userId?: string };
+
+    if (!userId) {
+      res.status(400).json({ success: false, message: "User ID is required" });
+      return;
+    }
+
+    const user = await getUserProfileById(userId);
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
 
     res.status(200).json({
       success: true,

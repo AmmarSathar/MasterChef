@@ -154,6 +154,45 @@ export async function loginUser(input: LoginUserInput): Promise<UserResponse> {
   return toUserResponse(user);
 }
 
+export async function getUserProfileById(userId: string): Promise<UserResponse | null> {
+  if (!userId) {
+    return null;
+  }
+
+  const isMongoObjectId = mongoose.Types.ObjectId.isValid(userId);
+
+  if (isMongoObjectId) {
+    const user = await User.findById(userId);
+    if (user) {
+      return toUserResponse(user as unknown as UserLike);
+    }
+  }
+
+  const profile = await Profile.findOne({ authUserId: userId });
+  if (profile) {
+    return {
+      id: profile.authUserId,
+      email: profile.email,
+      name: profile.name,
+      pfp: profile.pfp,
+      age: profile.age,
+      birth: profile.birth,
+      weight: profile.weight,
+      height: profile.height,
+      bio: profile.bio,
+      dietary_restric: profile.dietary_restric,
+      allergies: profile.allergies,
+      skill_level: profile.skill_level,
+      cuisines_pref: profile.cuisines_pref,
+      isCustomized: profile.isCustomized,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+    };
+  }
+
+  return null;
+}
+
 export async function updateUserProfile(input: UpdateProfileInput): Promise<UserResponse> {
   const { userId, ...profileData } = input;
 

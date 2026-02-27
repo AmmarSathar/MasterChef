@@ -88,7 +88,12 @@ export default function Login() {
   const customizeContainerRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
 
-  const persistGoogleUser = (user: BetterAuthSessionUser): User => {
+  const persistGoogleUser = (user: BetterAuthSessionUser, profile?: User): User => {
+    if (profile) {
+      localStorage.setItem("user", JSON.stringify(profile));
+      return profile;
+    }
+
     const mappedUser: User = {
       id: user.id,
       email: user.email,
@@ -147,7 +152,20 @@ export default function Login() {
         throw new Error("No active session found after Google callback.");
       }
 
-      const user = persistGoogleUser(sessionUser);
+      let resolvedProfile: User | undefined;
+      try {
+        const profileResponse = await axios.get<{ success: boolean; user: User }>(
+          `${BASE_API_URL}/auth/profile/${sessionUser.id}`,
+          {
+            withCredentials: true,
+          },
+        );
+        resolvedProfile = profileResponse.data?.user;
+      } catch {
+        resolvedProfile = undefined;
+      }
+
+      const user = persistGoogleUser(sessionUser, resolvedProfile);
       const params = new URLSearchParams(window.location.search);
       params.delete("oauth");
       params.delete("oauth_error");
