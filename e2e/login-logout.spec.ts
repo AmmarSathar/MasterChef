@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-test("user can log in, stay logged in, and log out", async ({ page }) => {
+test("user can log in, stay logged in, and log out", async ({ page, request }) => {
   const email = `login+${Date.now()}@test.com`;
   const password = "Password1!";
 
-  await page.request.post("http://localhost:4000/api/auth/register", {
+  await request.post("http://localhost:4000/api/auth/register", {
     data: { email, password, name: "Login User" },
   });
 
