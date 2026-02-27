@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-test("user can log in, stay logged in, and log out", async ({ page }) => {
+test("user can log in, stay logged in, and log out", async ({ page, request }) => {
   const email = `login+${Date.now()}@test.com`;
   const password = "Password1!";
 
+<<<<<<< HEAD
   // Create a non-customized user via API
   await page.request.post("http://localhost:4000/api/auth/register", {
     data: { 
@@ -11,6 +12,10 @@ test("user can log in, stay logged in, and log out", async ({ page }) => {
       password, 
       name: "Login User",
     },
+=======
+  await request.post("http://localhost:4000/api/auth/register", {
+    data: { email, password, name: "Login User" },
+>>>>>>> 52f3e1a (Fix frontend and e2e auth tests for current session behavior)
   });
 
   await page.goto("/login?register=false");

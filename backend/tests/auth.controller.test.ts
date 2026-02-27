@@ -2,10 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import type { Request, Response, NextFunction } from "express";
 import { register, login } from "../src/controllers/auth.controller.js";
 import { registerUser, loginUser } from "../src/services/auth.service.js";
+import { createSessionForUser } from "../src/lib/session.js";
 
 vi.mock("../src/services/auth.service.js", () => ({
   registerUser: vi.fn(),
   loginUser: vi.fn(),
+}));
+
+vi.mock("../src/lib/session.js", () => ({
+  createSessionForUser: vi.fn(),
 }));
 
 function createResponse() {
@@ -29,6 +34,7 @@ describe("auth controller - register", () => {
       email: "a@b.com",
       name: "Alice",
     });
+    vi.mocked(createSessionForUser).mockResolvedValue(undefined);
 
     await register(req, res, next);
 
@@ -37,6 +43,7 @@ describe("auth controller - register", () => {
       success: true,
       user: { id: "user-id", email: "a@b.com", name: "Alice" },
     });
+    expect(createSessionForUser).toHaveBeenCalledWith(res, "user-id", false);
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -69,6 +76,7 @@ describe("auth controller - login", () => {
       email: "a@b.com",
       name: "Alice",
     });
+    vi.mocked(createSessionForUser).mockResolvedValue(undefined);
 
     await login(req, res, next);
 
@@ -77,6 +85,7 @@ describe("auth controller - login", () => {
       success: true,
       user: { id: "user-id", email: "a@b.com", name: "Alice" },
     });
+    expect(createSessionForUser).toHaveBeenCalledWith(res, "user-id", false);
     expect(next).not.toHaveBeenCalled();
   });
 
