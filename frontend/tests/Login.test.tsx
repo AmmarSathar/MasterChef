@@ -57,7 +57,7 @@ describe("Login/Register UI", () => {
     setUrl("/login");
   });
 
-  it("renders login mode by default", () => {
+  it("renders login mode by default", async () => {
     render(
       <UserProvider>
         <MemoryRouter>
@@ -65,7 +65,7 @@ describe("Login/Register UI", () => {
         </MemoryRouter>
       </UserProvider>,
     );
-    expect(screen.getByRole("button", { name: "Log In" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Log In" })).toBeInTheDocument();
   });
 
   it("submits registration and stores user on success", async () => {
@@ -104,7 +104,9 @@ describe("Login/Register UI", () => {
           email: "a@b.com",
           password: "Abcdef1!",
           name: "Alice",
+          rememberMe: false,
         },
+        { withCredentials: true },
       );
     });
 
@@ -171,7 +173,7 @@ describe("Login/Register UI", () => {
       target: { value: "Password1!" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Log In" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
       expect(axiosMock.post).toHaveBeenCalledWith(
@@ -179,7 +181,9 @@ describe("Login/Register UI", () => {
         {
           email: "a@b.com",
           password: "Password1!",
+          rememberMe: false,
         },
+        { withCredentials: true },
       );
     });
 
