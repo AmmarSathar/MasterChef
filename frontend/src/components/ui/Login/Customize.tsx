@@ -17,7 +17,6 @@ import {
 
 import { EggFriedIcon } from "lucide-react";
 
-import { User } from "@masterchef/shared/types/user";
 import CustomizeStep1 from "./CustomizeStep1";
 import CustomizeStep2 from "./CustomizeStep2";
 

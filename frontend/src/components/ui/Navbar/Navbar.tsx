@@ -20,8 +20,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { useUser } from "@/context/UserContext";
 
+const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+
 export default function Navbar() {
-  const { user, logout, loading } = useUser();
+  const { user, loading } = useUser();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -248,21 +250,7 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
             <button
-              onClick={() => {
-                console.log("pressed");
-                setIsMoreOpen(false);
-
-                if (user) {
-                  if (location.pathname === "/login") {
-                    navigate("/");
-                  } else {
-                    navigate("/login");
-                  }
-                }
-
-                setSelectedBtn("");
-                logout();
-              }}
+              onClick={handleLogout}
               disabled={false}
               className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
               aria-label="Logout"
