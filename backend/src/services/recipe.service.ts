@@ -1,7 +1,8 @@
 import { foods, dietaryExclusions } from "@masterchef/shared/constants";
 import type { FoodTag } from "@masterchef/shared/constants";
 import { Recipe } from "../models/recipe.model.js";
-import { User } from "../models/user.model.js";
+import mongoose from "mongoose";
+const { ObjectId } = mongoose.Types;
 import type {
   ApiError,
   CreateRecipeInput,
@@ -299,11 +300,14 @@ export async function getRecommendations(
   let userCuisines: string[] = [];
 
   if (userId) {
-    const user = await User.findById(userId);
-    if (user) {
-      userDiets = user.dietary_restric ?? [];
-      userAllergies = user.allergies ?? [];
-      userCuisines = user.cuisines_pref ?? [];
+    const db = mongoose.connection.db;
+    if (db) {
+      const user = await db.collection("user").findOne({ _id: new ObjectId(userId) });
+      if (user) {
+        userDiets = (user.dietary_restric as string[]) ?? [];
+        userAllergies = (user.allergies as string[]) ?? [];
+        userCuisines = (user.cuisines_pref as string[]) ?? [];
+      }
     }
   }
 

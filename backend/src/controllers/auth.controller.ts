@@ -1,43 +1,38 @@
 import { Request, Response, NextFunction } from "express";
-import { registerUser, loginUser, updateUserProfile } from "../services/auth.service.js";
-import { CreateUserInput, LoginUserInput, UpdateProfileInput } from "../types/index.js";
+import { fromNodeHeaders } from "better-auth/node";
+import { updateUserProfile } from "../services/auth.service.js";
+import { UpdateProfileInput } from "../types/index.js";
+import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+import { getAuth } from "../lib/auth.js";
 
-export async function register(
+export async function setPassword(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { email, password, name } = req.body as CreateUserInput;
+    const { newPassword } = req.body as { newPassword?: string };
 
-    console.log("request for data: ", email, name)
+    if (!newPassword || typeof newPassword !== "string") {
+      res.status(400).json({ error: "newPassword is required" });
+      return;
+    }
 
-    const user = await registerUser({ email, password, name });
-
-    res.status(201).json({
-      success: true,
-      user,
+    await getAuth().api.setPassword({
+      headers: fromNodeHeaders(req.headers),
+      body: { newPassword },
     });
-  } catch (error) {
-    next(error);
-  }
-}
 
-export async function login(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const { email, password } = req.body as LoginUserInput;
-
-    const user = await loginUser({ email, password });
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
-  } catch (error) {
+    res.status(200).json({ success: true });
+  } catch (error: unknown) {
+    // BetterAuth throws APIError with message "user already has a password"
+    if (error && typeof error === "object" && "message" in error) {
+      const msg = (error as { message: string }).message;
+      if (msg === "user already has a password") {
+        res.status(409).json({ error: "PASSWORD_ALREADY_SET" });
+        return;
+      }
+    }
     next(error);
   }
 }
@@ -48,11 +43,12 @@ export async function updateProfile(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { userId, ...profileData } = req.body as UpdateProfileInput;
+    const { session } = req as AuthenticatedRequest;
+    const profileData = req.body as Omit<UpdateProfileInput, "userId">;
 
-    console.log("updateProfile request - userId:", userId, "fields:", Object.keys(profileData));
+    console.log("updateProfile request - userId:", session.user.id, "fields:", Object.keys(profileData));
 
-    const user = await updateUserProfile({ userId, ...profileData });
+    const user = await updateUserProfile({ userId: session.user.id, ...profileData });
 
     res.status(200).json({
       success: true,
