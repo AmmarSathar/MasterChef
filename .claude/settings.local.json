@@ -7,7 +7,8 @@
       "Bash(# Check if the frontend calls /api/auth or /auth for the profile update grep -rn \"\"BASE_API_URL\\\\|axios\\\\|fetch\"\" /Users/paulina/Dev/MasterChef/frontend/src/components/ui/Login/Customize.tsx)",
       "Bash(# Check the full profilePayload in Customize to see all fields sent to updateProfile grep -A 20 \"\"profilePayload\"\" /Users/paulina/Dev/MasterChef/frontend/src/components/ui/Login/Customize.tsx)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(k,'':'',v\\) for k,v in d.get\\(''exports'',{}\\).items\\(\\)]\")",
-      "Bash(npm install better-auth)"
+      "Bash(npm install better-auth)",
+      "Bash(npm test)"
     ]
   }
 }
