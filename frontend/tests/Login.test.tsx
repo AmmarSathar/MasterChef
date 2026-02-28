@@ -5,14 +5,23 @@ import { UserProvider } from "@context/UserContext";
 
 vi.stubEnv("VITE_BASE_API_URL", "http://localhost:4000/api");
 
-import Login from "@/components/ui/Login/login";
-import axios from "axios";
-import { toast } from "react-hot-toast";
+const { mockSignInEmail, mockSignUpEmail, mockUseSession } = vi.hoisted(() => ({
+  mockSignInEmail: vi.fn(),
+  mockSignUpEmail: vi.fn(),
+  mockUseSession: vi.fn(),
+}));
 
-vi.mock("axios", () => ({
-  default: {
-    post: vi.fn(),
-    isAxiosError: vi.fn(),
+vi.mock("@/lib/auth-client", () => ({
+  authClient: {
+    signIn: {
+      email: mockSignInEmail,
+      social: vi.fn(),
+    },
+    signUp: {
+      email: mockSignUpEmail,
+    },
+    useSession: mockUseSession,
+    signOut: vi.fn(),
   },
 }));
 
@@ -28,10 +37,8 @@ vi.mock("react-hot-toast", () => ({
 vi.mock("@/lib/icons/google.svg", () => ({ default: "google.svg" }));
 vi.mock("@/lib/icons/github.svg", () => ({ default: "github.svg" }));
 
-const axiosMock = axios as unknown as {
-  post: ReturnType<typeof vi.fn>;
-  isAxiosError: ReturnType<typeof vi.fn>;
-};
+import Login from "@/components/ui/Login/login";
+import { toast } from "react-hot-toast";
 
 function setUrl(url: string) {
   window.history.replaceState({}, "", url);
@@ -41,7 +48,6 @@ function setUrl(url: string) {
 beforeAll(() => {
   Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
     value: vi.fn(() => ({
-      // mock minimal context if needed
       getExtension: vi.fn(),
       clearRect: vi.fn(),
       fillRect: vi.fn(),
@@ -52,8 +58,9 @@ beforeAll(() => {
 
 describe("Login/Register UI", () => {
   beforeEach(() => {
-    localStorage.clear();
     vi.clearAllMocks();
+    // Default: no active session, not loading
+    mockUseSession.mockReturnValue({ data: null, isPending: false, refetch: vi.fn() });
     setUrl("/login");
   });
 
@@ -68,13 +75,11 @@ describe("Login/Register UI", () => {
     expect(screen.getByRole("button", { name: "Log In" })).toBeInTheDocument();
   });
 
-  it("submits registration and stores user on success", async () => {
+  it("submits registration and shows success toast", async () => {
     setUrl("/login?register=true");
-    axiosMock.post.mockResolvedValue({
-      data: {
-        success: true,
-        user: { id: "u1", email: "a@b.com", name: "Alice" },
-      },
+    mockSignUpEmail.mockResolvedValue({
+      data: { user: { id: "u1", email: "a@b.com", name: "Alice" } },
+      error: null,
     });
 
     render(
@@ -85,42 +90,32 @@ describe("Login/Register UI", () => {
       </UserProvider>,
     );
 
-    fireEvent.change(screen.getByLabelText("Full Name"), {
-      target: { value: "Alice" },
-    });
-    fireEvent.change(screen.getByLabelText("Email Address"), {
-      target: { value: "a@b.com" },
-    });
-    fireEvent.change(screen.getByLabelText("Password"), {
-      target: { value: "Abcdef1!" },
-    });
+    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Alice" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Abcdef1!" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
 
     await waitFor(() => {
-      expect(axiosMock.post).toHaveBeenCalledWith(
-        "http://localhost:4000/api/auth/register",
-        {
-          email: "a@b.com",
-          password: "Abcdef1!",
-          name: "Alice",
-        },
-      );
+      expect(mockSignUpEmail).toHaveBeenCalledWith({
+        email: "a@b.com",
+        password: "Abcdef1!",
+        name: "Alice",
+      });
     });
-
     await waitFor(() => {
-      expect(localStorage.getItem("user")).toEqual(
-        JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining("Account created successfully"),
       );
     });
-    expect(toast.success).toHaveBeenCalled();
   });
 
   it("shows error when email is already taken", async () => {
     setUrl("/login?register=true");
-    const error = { response: { status: 409 } };
-    axiosMock.isAxiosError.mockReturnValue(true);
-    axiosMock.post.mockRejectedValue(error);
+    mockSignUpEmail.mockResolvedValue({
+      data: null,
+      error: { status: 409, code: "USER_ALREADY_EXISTS" },
+    });
 
     render(
       <UserProvider>
@@ -130,30 +125,25 @@ describe("Login/Register UI", () => {
       </UserProvider>,
     );
 
-    fireEvent.change(screen.getByLabelText("Full Name"), {
-      target: { value: "Alice" },
-    });
-    fireEvent.change(screen.getByLabelText("Email Address"), {
-      target: { value: "a@b.com" },
-    });
-    fireEvent.change(screen.getByLabelText("Password"), {
-      target: { value: "Abcdef1!" },
-    });
+    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Alice" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Abcdef1!" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Email is already taken.");
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringContaining("already linked to a social account"),
+        expect.any(Object),
+      );
     });
   });
 
   it("simulates login flow and shows success", async () => {
     setUrl("/login?register=false");
-    axiosMock.post.mockResolvedValue({
-      data: {
-        success: true,
-        user: { id: "u1", email: "a@b.com", name: "Alice" },
-      },
+    mockSignInEmail.mockResolvedValue({
+      data: { user: { id: "u1", email: "a@b.com", name: "Alice" } },
+      error: null,
     });
 
     render(
@@ -164,32 +154,21 @@ describe("Login/Register UI", () => {
       </UserProvider>,
     );
 
-    fireEvent.change(screen.getByLabelText("Email Address"), {
-      target: { value: "a@b.com" },
-    });
-    fireEvent.change(screen.getByLabelText("Password"), {
-      target: { value: "Password1!" },
-    });
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Password1!" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
-      expect(axiosMock.post).toHaveBeenCalledWith(
-        "http://localhost:4000/api/auth/login",
-        {
-          email: "a@b.com",
-          password: "Password1!",
-        },
-      );
+      expect(mockSignInEmail).toHaveBeenCalledWith({
+        email: "a@b.com",
+        password: "Password1!",
+      });
     });
-
     await waitFor(() => {
-      expect(localStorage.getItem("user")).toEqual(
-        JSON.stringify({ id: "u1", email: "a@b.com", name: "Alice" }),
+      expect(toast.success).toHaveBeenCalledWith(
+        "Logged in successfully!\nWelcome back Alice!",
       );
     });
-    expect(toast.success).toHaveBeenCalledWith(
-      "Logged in successfully!\nWelcome back Alice!",
-    );
   });
 });
