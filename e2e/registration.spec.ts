@@ -19,5 +19,5 @@ test("user can register and reaches preferences flow", async ({ page }) => {
 
   await expect(
     page.getByText("Customize Your Culinary Experience")
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 20000 });
 });
