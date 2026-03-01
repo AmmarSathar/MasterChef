@@ -1,51 +1,85 @@
 import { test, expect } from "@playwright/test";
 
 test("user can log in, stay logged in, and log out", async ({ page }) => {
-  test.setTimeout(120000);
   const email = `login+${Date.now()}@test.com`;
   const password = "Password1!";
 
-  // Create a non-customized user via BetterAuth sign-up API
-  await page.request.post("http://localhost:4000/api/auth/sign-up/email", {
-    data: {
-      email,
-      password,
+  // Create a non-customized user via API
+  await page.request.post("http://localhost:4000/api/auth/register", {
+    data: { 
+      email, 
+      password, 
       name: "Login User",
     },
   });
 
   await page.goto("/login?register=false");
 
-  // Wait for the form to settle into login mode before filling
-  await expect(page.getByRole("button", { name: "Log In" })).toBeVisible();
+  // Wait explicitly for both email and password fields to guarantee they're rendered before interaction
+  await page.waitForSelector('input[name="email"]', { timeout: 15000 });
+  await page.waitForSelector('input[name="password"]', { timeout: 15000 });
 
   await page.getByLabel("Email Address").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log In" }).click();
 
-  // Wait for the customization screen to appear (transitions take ~3s)
-  await expect(
-    page.getByText("Customize Your Culinary Experience")
-  ).toBeVisible({ timeout: 20000 });
+  // Wait 10 seconds for the customization transitions to complete
+  await page.waitForTimeout(10000);
 
-  // Select the first available cuisine badge
-  await page.getByText("Favorite Cuisines").locator("..").locator(".cursor-pointer").first().click();
+  // Click the first option in Favorite Cuisines section
+  const firstCuisine = page.locator('text="Favorite Cuisines"').locator('..').locator('.cursor-pointer').first();
+  await firstCuisine.click();
 
-  // Advance to step 2
-  await page.getByRole("button", { name: "Next: Personal Details" }).click();
+  // Click on the Allergies input text box
+  const allergiesInput = page.getByPlaceholder(/Search allergies/i);
+  await allergiesInput.click();
 
-  // Fill in age and complete setup
-  await page.getByLabel(/^Age/).fill("20");
-  await page.getByRole("button", { name: "Complete Setup" }).click();
+  // Press Enter to submit the first form
+  await page.keyboard.press('Enter');
 
-  // Verify user lands on /dashboard
-  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+  // Wait 1 second
+  await page.waitForTimeout(1000);
 
-  // Navigate away and back to dashboard — cookie session keeps user logged in
-  await page.goto("/login");
-  await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+  // Click on Age text box
+  const ageInput = page.getByLabel(/^Age/);
+  await ageInput.click();
 
-  // Log out from dashboard
+  // Type 20
+  await ageInput.fill('20');
+
+  // Press Enter to submit the second form
+  await page.keyboard.press('Enter');
+
+  // Wait 5 seconds
+  await page.waitForTimeout(5000);
+
+  // Verify user is in /dashboard
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 5000 });
+
+  const storedBefore = await page.evaluate(() =>
+    window.localStorage.getItem("user")
+  );
+  expect(storedBefore).toContain(email);
+
+  // Navigate to home page
+  await page.goto("/");
+  
+  // Wait for page to fully load and React effects to complete
+  await page.waitForTimeout(1000);
+  
+  const storedAfterNav = await page.evaluate(() =>
+    window.localStorage.getItem("user")
+  );
+  expect(storedAfterNav).toContain(email);
+
+  // Click logout button in navbar
   await page.getByRole("button", { name: "Logout" }).click();
-  await page.waitForURL(/\/(login|)$/, { timeout: 10000 });
+  
+  // Should redirect to login or home
+  await page.waitForURL(/\/(login|)$/ , { timeout: 5000 });
+
+  const storedAfterLogout = await page.evaluate(() =>
+    window.localStorage.getItem("user")
+  );
+  expect(storedAfterLogout).toBeNull();
 });
