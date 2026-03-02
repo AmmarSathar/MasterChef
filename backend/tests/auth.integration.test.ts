@@ -5,6 +5,9 @@ import request from "supertest";
 
 const mockGetSession = vi.fn();
 const mockSetPassword = vi.fn();
+const mockAuthHandler = vi.fn((req: { path: string; method: string }, res: { status: (code: number) => { json: (body: unknown) => void } }) => {
+  res.status(200).json({ ok: true, path: req.path, method: req.method });
+});
 
 vi.mock("../src/lib/auth.js", () => ({
   getAuth: vi.fn(() => ({
@@ -16,7 +19,7 @@ vi.mock("../src/lib/auth.js", () => ({
 }));
 
 vi.mock("better-auth/node", () => ({
-  toNodeHandler: vi.fn(() => (_req: unknown, res: { end(): void }) => res.end()),
+  toNodeHandler: vi.fn(() => mockAuthHandler),
   fromNodeHeaders: vi.fn(() => new Headers()),
 }));
 
@@ -35,6 +38,7 @@ describe("user routes (integration)", () => {
   afterEach(async () => {
     mockGetSession.mockReset();
     mockSetPassword.mockReset();
+    mockAuthHandler.mockClear();
     await mongoose.connection.db?.collection("user").deleteMany({});
   });
 
@@ -84,6 +88,36 @@ describe("user routes (integration)", () => {
         user: { email: "a@b.com", name: "Alice Updated", bio: "Chef" },
       });
       expect(res.body.user).not.toHaveProperty("_id");
+    });
+  });
+
+  describe("POST /api/auth/* passthrough", () => {
+    it("delegates sign-in to BetterAuth handler", async () => {
+      const res = await request(app)
+        .post("/api/auth/sign-in/email")
+        .send({ email: "a@b.com", password: "Password1!" });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        ok: true,
+        path: "/api/auth/sign-in/email",
+        method: "POST",
+      });
+      expect(mockAuthHandler).toHaveBeenCalled();
+    });
+
+    it("delegates sign-up to BetterAuth handler", async () => {
+      const res = await request(app)
+        .post("/api/auth/sign-up/email")
+        .send({ email: "a@b.com", password: "Password1!", name: "Alice" });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        ok: true,
+        path: "/api/auth/sign-up/email",
+        method: "POST",
+      });
+      expect(mockAuthHandler).toHaveBeenCalled();
     });
   });
 
