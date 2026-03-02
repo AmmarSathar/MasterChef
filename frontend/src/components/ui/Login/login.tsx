@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useUser } from "@context/UserContext";
+import { authClient } from "@/lib/auth-client";
 
-import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
 import PasswordRequirements from "./PasswordRequirements";
 import Grainient from "@/components/Grainient";
@@ -54,11 +53,9 @@ const passRequirements = [
   },
 ];
 
-const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
-
 export default function Login() {
   const navigate = useNavigate();
-  const { user, setUser, loading } = useUser();
+  const { user, loading } = useUser();
 
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
@@ -73,10 +70,7 @@ export default function Login() {
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
 
-  // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
-
   useEffect(() => {
-    // First check if in register or login mode, then check user
     const queryParameters = new URLSearchParams(window.location.search);
     const queryRegister = queryParameters.get("register");
 
@@ -86,14 +80,10 @@ export default function Login() {
       setIsLogin(true);
     }
 
-    console.log(user, loading);
-
     if (user && user.isCustomized) {
-      console.log("Got in there");
       navigate("/dashboard");
       return;
     } else if (user) {
-      // User is logged in but not customized
       triggerCustomize();
     }
   }, [navigate, isLogin, user, loading]);
@@ -102,11 +92,9 @@ export default function Login() {
     if (isChangingState) return;
 
     setIsChangingState(true);
-    console.log("called");
     setIsLogin(!isLogin);
     const params = new URLSearchParams(window.location.search);
     params.set("register", isLogin.toString());
-    console.log("In register check: ");
 
     window.history.replaceState(
       {},
@@ -119,131 +107,7 @@ export default function Login() {
     }, 1000);
   };
 
-  const completeRegistration = async (formData: FormData): Promise<boolean> => {
-    if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
-      console.log(partialPasswordReq.filter((req) => !req.complete));
-      toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
-      return false;
-    }
-
-    const registrationToast = toast.loading(
-      isLogin ? "Logging in..." : "Creating account...",
-    );
-
-    if (isLogin) {
-      console.log("Login");
-      let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
-
-      try {
-        response = await axios.post<{ success: boolean; user: User }>(
-          `${BASE_API_URL}/auth/login`,
-          {
-            email: formData.get("email"),
-            password: formData.get("password"),
-          },
-        );
-
-        const userData = response.data.user;
-        setUser(userData);
-
-        console.log("user loaded: ", userData);
-
-        toast.dismiss(registrationToast);
-        toast.success(
-          `Logged in successfully!\nWelcome back ${userData.name}!`,
-        );
-
-        if (userData.isCustomized) {
-          navigate("/dashboard");
-        } else {
-          triggerCustomize();
-          const params = new URLSearchParams(window.location.search);
-          params.set("customizing", "true");
-          window.history.replaceState(
-            {},
-            "",
-            `${window.location.pathname}?${params}`,
-          );
-          toast.success("Welcome back! \nLet's complete your Profile..", {
-            icon: <BadgeInfo size={20} color="var(--info-hex)" />,
-          });
-        }
-
-        return true;
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err) && err.response) {
-          const status = err.response.status;
-
-          if (status === 400) {
-            toast.dismiss(registrationToast);
-            toast.error("Invalid login data.");
-            console.error("Validation error:", err);
-          } else if (status === 401) {
-            toast.dismiss(registrationToast);
-            toast.error("Invalid email or password.");
-            console.error("Invalid credentials:", err);
-          }
-        } else {
-          toast.dismiss(registrationToast);
-          toast.error(`An unexpected error occurred. Please try again.`);
-          console.error("Request failed:", err);
-        }
-
-        return false;
-      }
-    } else {
-      console.log("Sign Up");
-
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-      const name = formData.get("name") as string;
-
-      let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
-
-      console.log("Passed logon for: ", email, name);
-
-      try {
-        response = await axios.post<{ success: boolean; user: User }>(
-          `${BASE_API_URL}/auth/register`,
-          {
-            email: email,
-            password: password,
-            name: name,
-          },
-        );
-
-        const userData = response.data.user;
-        setUser(userData);
-
-        toast.dismiss(registrationToast);
-        toast.success(`Account created successfully!\nWelcome aboard ${name}!`);
-        return true;
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err) && err.response) {
-          const status = err.response.status;
-
-          if (status === 400) {
-            toast.dismiss(registrationToast);
-            toast.error("Invalid registration data.");
-            console.error("Validation error:", err);
-          } else if (status === 409) {
-            toast.dismiss(registrationToast);
-            toast.error("Email is already taken.");
-            console.error("Email already taken:", err);
-          }
-        } else {
-          toast.dismiss(registrationToast);
-          toast.error(`An unexpected error occurred. Please try again.`);
-          console.error("Request failed:", err);
-        }
-
-        return false;
-      }
-    }
-  };
-
   const triggerCustomize = () => {
-    // console.log("passed");
     if (loginContainerRef.current) {
       loginContainerRef.current.classList.add("login-fadeout");
     }
@@ -269,10 +133,99 @@ export default function Login() {
     }, 3000);
   };
 
+  const completeRegistration = async (formData: FormData): Promise<boolean> => {
+    if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
+      toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
+      return false;
+    }
+
+    const registrationToast = toast.loading(
+      isLogin ? "Logging in..." : "Creating account...",
+    );
+
+    const email    = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (isLogin) {
+      const { data, error } = await authClient.signIn.email({ email, password });
+
+      if (error || !data?.user) {
+        toast.dismiss(registrationToast);
+        if (error?.status === 401 || error?.code === "INVALID_EMAIL_OR_PASSWORD") {
+          toast.error("Invalid email or password.");
+        } else {
+          toast.error("An unexpected error occurred. Please try again.");
+        }
+        console.error("Login error:", error);
+        return false;
+      }
+
+      toast.dismiss(registrationToast);
+      toast.success(`Logged in successfully!\nWelcome back ${data.user.name}!`);
+
+      const isCustomized = (data.user as Record<string, unknown>).isCustomized as boolean | undefined;
+      if (isCustomized) {
+        navigate("/dashboard");
+      } else {
+        triggerCustomize();
+        const params = new URLSearchParams(window.location.search);
+        params.set("customizing", "true");
+        window.history.replaceState({}, "", `${window.location.pathname}?${params}`);
+        toast.success("Welcome back! \nLet's complete your Profile..", {
+          icon: <BadgeInfo size={20} color="var(--info-hex)" />,
+        });
+      }
+
+      return true;
+    } else {
+      const name = formData.get("name") as string;
+
+      const { data, error } = await authClient.signUp.email({ email, password, name });
+
+      if (error || !data?.user) {
+        toast.dismiss(registrationToast);
+        if (
+          error?.status === 409 ||
+          error?.status === 422 ||
+          error?.code === "USER_ALREADY_EXISTS" ||
+          error?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
+        ) {
+          toast.error(
+            "This email is already linked to a social account.\nSign in with GitHub or Google, then add a password in Account Settings.",
+            { duration: 6000 },
+          );
+        } else if (error?.status === 400) {
+          toast.error("Invalid registration data.");
+        } else {
+          toast.error("An unexpected error occurred. Please try again.");
+        }
+        console.error("Registration error:", error);
+        return false;
+      }
+
+      toast.dismiss(registrationToast);
+      toast.success(`Account created successfully!\nWelcome aboard ${name}!`);
+      return true;
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: `${window.location.origin}/login`,
+    });
+  };
+
+  const handleGithubSignIn = async () => {
+    await authClient.signIn.social({
+      provider: "github",
+      callbackURL: `${window.location.origin}/login`,
+    });
+  };
+
   const handleCreateAccount = async (formData: FormData) => {
     const success = await completeRegistration(formData);
-    // console.log("passed 1");
-    if (success) {
+    if (success && !isLogin) {
       triggerCustomize();
     }
   };
@@ -349,7 +302,6 @@ export default function Login() {
             className="login-form w-full h-auto flex flex-col items-center justify-center gap-7 px-15 max-md:px-5 relative"
             onSubmit={(e) => {
               e.preventDefault();
-              console.log(e.target);
               handleCreateAccount(new FormData(e.currentTarget));
             }}
           >
@@ -471,7 +423,11 @@ export default function Login() {
               <hr className="flex-1 border-border/40" />
             </div>
             <div className="login-icons w-full h-auto flex items-center justify-center gap-4">
-              <button className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all"
+              >
                 <img
                   src={Google}
                   alt="google-icon"
@@ -481,7 +437,11 @@ export default function Login() {
                   Google
                 </span>
               </button>
-              <button className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
+              <button
+                type="button"
+                onClick={handleGithubSignIn}
+                className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all"
+              >
                 <img
                   src={Github}
                   alt="github-icon"

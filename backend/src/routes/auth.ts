@@ -1,10 +1,13 @@
 import { Router } from "express";
-import { register, login, updateProfile } from "../controllers/auth.controller.js";
+import { updateProfile } from "../controllers/auth.controller.js";
+import { requireSession } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.post("/register", register);
-router.post("/login", login);
-router.put("/profile", updateProfile);
+// All /api/auth/sign-in, /api/auth/sign-up, /api/auth/session, etc.
+// are handled by BetterAuth in app.ts (mounted before this router)
+
+// Profile update — requires an active session
+router.put("/profile", requireSession, updateProfile);
 
 export default router;

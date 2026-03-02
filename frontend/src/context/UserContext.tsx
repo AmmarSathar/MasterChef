@@ -1,48 +1,37 @@
 import {
   createContext,
-  useEffect,
-  useState,
   useContext,
-  Dispatch,
-  SetStateAction,
   ReactNode,
 } from "react";
 
+import { authClient } from "@/lib/auth-client";
 import { User } from "@masterchef/shared/types/user";
 
 export interface UserContextType {
   user: User | null;
-  setUser: Dispatch<SetStateAction<User | null>>;
-  logout: () => void;
+  // setUser is kept for compatibility — it triggers a session refresh
+  setUser: (user: User | null) => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, isPending, refetch } = authClient.useSession();
 
-  useEffect(() => {
-    const tempUser = localStorage.getItem("user");
-    if (tempUser) {
-      setUser(JSON.parse(tempUser));
-    }
-    setLoading(false);
-  }, []);
+  // Map BetterAuth session user to our User type
+  const user = session?.user ? (session.user as unknown as User) : null;
+  const loading = isPending;
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
-    }
-  }, [user]);
+  const logout = async () => {
+    await authClient.signOut();
+  };
 
-  const logout = () => {
-    // Just enough time to let all transitions complete then wiping all local data
-    setTimeout(() => setUser(null), 200);
-    localStorage.removeItem("user");
+  // After profile updates, components call setUser to refresh the displayed data.
+  // With BetterAuth sessions we just re-fetch — the server has the updated user.
+  const setUser = (_updatedUser: User | null) => {
+    refetch();
   };
 
   return (

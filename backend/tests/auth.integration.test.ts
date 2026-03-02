@@ -1,11 +1,33 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import request from "supertest";
-import app from "../src/app.js";
-import { User } from "../src/models/user.model.js";
 
-describe("auth routes (integration)", () => {
+const mockGetSession = vi.fn();
+const mockSetPassword = vi.fn();
+const mockAuthHandler = vi.fn((req: { path: string; method: string }, res: { status: (code: number) => { json: (body: unknown) => void } }) => {
+  res.status(200).json({ ok: true, path: req.path, method: req.method });
+});
+
+vi.mock("../src/lib/auth.js", () => ({
+  getAuth: vi.fn(() => ({
+    api: {
+      getSession: mockGetSession,
+      setPassword: mockSetPassword,
+    },
+  })),
+}));
+
+vi.mock("better-auth/node", () => ({
+  toNodeHandler: vi.fn(() => mockAuthHandler),
+  fromNodeHeaders: vi.fn(() => new Headers()),
+}));
+
+import app from "../src/app.js";
+
+const USER_ID = "507f1f77bcf86cd799439011";
+
+describe("user routes (integration)", () => {
   let mongoServer: MongoMemoryServer;
 
   beforeAll(async () => {
@@ -14,7 +36,10 @@ describe("auth routes (integration)", () => {
   });
 
   afterEach(async () => {
-    await User.deleteMany({});
+    mockGetSession.mockReset();
+    mockSetPassword.mockReset();
+    mockAuthHandler.mockClear();
+    await mongoose.connection.db?.collection("user").deleteMany({});
   });
 
   afterAll(async () => {
@@ -22,65 +47,122 @@ describe("auth routes (integration)", () => {
     await mongoServer.stop();
   });
 
-  it("registers a user and persists it", async () => {
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send({ email: "a@b.com", password: "Password1!", name: "Alice" });
-
-    expect(response.status).toBe(201);
-    expect(response.body).toMatchObject({
-      success: true,
-      user: { email: "a@b.com", name: "Alice" },
-    });
-
-    const stored = await User.findOne({ email: "a@b.com" });
-    expect(stored).toBeTruthy();
-    expect(stored?.passwordHash).toBeDefined();
+  const fakeSession = () => ({
+    user: { id: USER_ID, name: "Alice", email: "a@b.com" },
+    session: { id: "s1", userId: USER_ID, expiresAt: new Date() },
   });
 
-  it("rejects duplicate emails", async () => {
-    await request(app)
-      .post("/api/auth/register")
-      .send({ email: "dup@b.com", password: "Password1!", name: "Alice" });
+  describe("PUT /api/user/profile", () => {
+    it("returns 401 when no session", async () => {
+      mockGetSession.mockResolvedValue(null);
 
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send({ email: "dup@b.com", password: "Password1!", name: "Alice" });
+      const res = await request(app).put("/api/user/profile").send({ name: "Alice" });
 
-    expect(response.status).toBe(409);
-    expect(response.body).toMatchObject({
-      error: "Email already registered",
+      expect(res.status).toBe(401);
+      expect(res.body).toMatchObject({ error: "Unauthorized" });
     });
-  });
 
-  it("logs in a registered user", async () => {
-    await request(app)
-      .post("/api/auth/register")
-      .send({ email: "login@b.com", password: "Password1!", name: "Alice" });
+    it("returns 404 when user is not in DB", async () => {
+      mockGetSession.mockResolvedValue(fakeSession());
 
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "login@b.com", password: "Password1!" });
+      const res = await request(app).put("/api/user/profile").send({ name: "Alice" });
 
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({
-      success: true,
-      user: { email: "login@b.com", name: "Alice" },
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 200 with updated user on success", async () => {
+      mockGetSession.mockResolvedValue(fakeSession());
+      await mongoose.connection.db!.collection("user").insertOne({
+        _id: new mongoose.Types.ObjectId(USER_ID),
+        email: "a@b.com",
+        name: "Alice",
+      });
+
+      const res = await request(app)
+        .put("/api/user/profile")
+        .send({ name: "Alice Updated", bio: "Chef" });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        success: true,
+        user: { email: "a@b.com", name: "Alice Updated", bio: "Chef" },
+      });
+      expect(res.body.user).not.toHaveProperty("_id");
     });
   });
 
-  it("rejects invalid login credentials", async () => {
-    await request(app)
-      .post("/api/auth/register")
-      .send({ email: "bad@b.com", password: "Password1!", name: "Alice" });
+  describe("POST /api/auth/* passthrough", () => {
+    it("delegates sign-in to BetterAuth handler", async () => {
+      const res = await request(app)
+        .post("/api/auth/sign-in/email")
+        .send({ email: "a@b.com", password: "Password1!" });
 
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "bad@b.com", password: "WrongPass1!" });
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        ok: true,
+        path: "/api/auth/sign-in/email",
+        method: "POST",
+      });
+      expect(mockAuthHandler).toHaveBeenCalled();
+    });
 
-    expect(response.status).toBe(401);
-    expect(response.body).toMatchObject({
-      error: "Invalid credentials",
+    it("delegates sign-up to BetterAuth handler", async () => {
+      const res = await request(app)
+        .post("/api/auth/sign-up/email")
+        .send({ email: "a@b.com", password: "Password1!", name: "Alice" });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        ok: true,
+        path: "/api/auth/sign-up/email",
+        method: "POST",
+      });
+      expect(mockAuthHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe("POST /api/user/set-password", () => {
+    it("returns 401 when no session", async () => {
+      mockGetSession.mockResolvedValue(null);
+
+      const res = await request(app)
+        .post("/api/user/set-password")
+        .send({ newPassword: "NewPass1!" });
+
+      expect(res.status).toBe(401);
+    });
+
+    it("returns 400 when newPassword is missing", async () => {
+      mockGetSession.mockResolvedValue(fakeSession());
+
+      const res = await request(app).post("/api/user/set-password").send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body).toMatchObject({ error: "newPassword is required" });
+    });
+
+    it("returns 200 on success", async () => {
+      mockGetSession.mockResolvedValue(fakeSession());
+      mockSetPassword.mockResolvedValue(undefined);
+
+      const res = await request(app)
+        .post("/api/user/set-password")
+        .send({ newPassword: "NewPass1!" });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ success: true });
+    });
+
+    it("returns 409 when password already set", async () => {
+      mockGetSession.mockResolvedValue(fakeSession());
+      mockSetPassword.mockRejectedValue(new Error("user already has a password"));
+
+      const res = await request(app)
+        .post("/api/user/set-password")
+        .send({ newPassword: "NewPass1!" });
+
+      expect(res.status).toBe(409);
+      expect(res.body).toMatchObject({ error: "PASSWORD_ALREADY_SET" });
     });
   });
 });

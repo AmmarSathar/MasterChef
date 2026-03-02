@@ -122,8 +122,9 @@ export default function AccountPreferences() {
     try {
       const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
       const res = await axios.put(
-        `${BASE_API_URL}/auth/profile`,
+        `${BASE_API_URL}/user/profile`,
         profilePayload,
+        { withCredentials: true },
       );
       const updatedUser = res.data.user;
 
