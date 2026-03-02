@@ -13,6 +13,38 @@ if (!window.matchMedia) {
   })) as typeof window.matchMedia;
 }
 
+Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+  value: () => ({
+    getExtension: () => null,
+    clearRect: () => {},
+    fillRect: () => {},
+    putImageData: () => {},
+    drawImage: () => {},
+    createImageData: () => ({}),
+    getImageData: () => ({ data: [] }),
+    measureText: () => ({ width: 0 }),
+    setTransform: () => {},
+    resetTransform: () => {},
+    scale: () => {},
+    rotate: () => {},
+    translate: () => {},
+    transform: () => {},
+    save: () => {},
+    restore: () => {},
+    beginPath: () => {},
+    closePath: () => {},
+    moveTo: () => {},
+    lineTo: () => {},
+    stroke: () => {},
+    fill: () => {},
+    rect: () => {},
+    clip: () => {},
+    arc: () => {},
+    fillText: () => {},
+    strokeText: () => {},
+  }),
+});
+
 if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = class {
     observe() {}
