@@ -35,7 +35,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
   }, [containerRef, onClose]);
 
   useEffect(() => {
-    console.log(showResults);
+    console.log(showResults );
   }, [showResults]);
 
   return (

@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
-import { X, Plus, Pencil, Trash2 } from "lucide-react";
+import TiltedCard from "@components/TiltedCard";
+
+import {
+  X,
+  Plus,
+  Pencil,
+  Trash2,
+  CookingPot,
+  Clock4,
+  SignalHigh,
+  Share2,
+} from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,7 +19,14 @@ import { Badge } from "@components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SKILL_LEVELS, allFoodNames, dietaryOptions } from "@masterchef/shared";
 import toast from "react-hot-toast";
-// import kaomojis from "@masterchef/shared/constants/kaomojis";
+import { SAD_KAOMOJIS } from "@masterchef/shared";
+
+import BeefTacos from "@/lib/images/beef-tacos.webp";
+import CaesarSalad from "@/lib/images/caesar-salad.webp";
+import Carbonara from "@/lib/images/carbonara.webp";
+import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
+import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
+import Margherita from "@/lib/images/margherita.webp";
 
 interface Ingredient {
   id: string;
@@ -29,6 +48,7 @@ interface RecipeRecord {
   updatedAt: string;
   title: string;
   description: string;
+  image: string;
   prepTime: number;
   cookTime: number;
   cost: number;
@@ -77,6 +97,16 @@ export function RecipeContent() {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
 
   const isEditing = editingRecipeId !== null;
+
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia("(max-width: 767px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -465,16 +495,220 @@ export function RecipeContent() {
       }
     })();
   };
+
+  const setExampleRecipes = () => {
+    const example: RecipeRecord[] = [
+      {
+        id: "example-1",
+        createdBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: "Spaghetti Carbonara",
+        description:
+          "A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper. Quick and delicious!",
+        image: Carbonara,
+        prepTime: 15,
+        cookTime: 20,
+        cost: 12.5,
+        difficulty: "intermediate",
+        dietaryTags: ["gluten"],
+        ingredients: [
+          { foodItem: "Spaghetti", amount: 200, unit: "g" },
+          { foodItem: "Pancetta", amount: 100, unit: "g" },
+          { foodItem: "Eggs", amount: 2, unit: "large" },
+          { foodItem: "Parmesan Cheese", amount: 50, unit: "g" },
+          { foodItem: "Black Pepper", amount: 1, unit: "tsp" },
+        ],
+        steps: [
+          "Cook spaghetti in salted boiling water until al dente.",
+          "In a pan, cook pancetta until crispy.",
+          "In a bowl, whisk eggs and Parmesan together.",
+          "Drain pasta and combine with pancetta. Remove from heat.",
+          "Quickly stir in egg mixture to create a creamy sauce.",
+          "Season with black pepper and serve immediately.",
+        ],
+      },
+      {
+        id: "example-2",
+        createdBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: "Chicken Stir Fry",
+        image: chickenStirFry,
+        description:
+          "A quick and colorful Asian-inspired dish with tender chicken and fresh vegetables in a savory sauce.",
+        prepTime: 20,
+        cookTime: 15,
+        cost: 10.75,
+        difficulty: "beginner",
+        dietaryTags: ["gluten-free"],
+        ingredients: [
+          { foodItem: "Chicken Breast", amount: 400, unit: "g" },
+          { foodItem: "Bell Peppers", amount: 2, unit: "pcs" },
+          { foodItem: "Broccoli", amount: 200, unit: "g" },
+          { foodItem: "Soy Sauce", amount: 3, unit: "tbsp" },
+          { foodItem: "Garlic", amount: 3, unit: "cloves" },
+          { foodItem: "Ginger", amount: 1, unit: "tbsp" },
+        ],
+        steps: [
+          "Cut chicken into bite-sized pieces and vegetables into chunks.",
+          "Heat oil in a wok or large skillet over high heat.",
+          "Cook chicken until browned, then set aside.",
+          "Stir fry vegetables until tender-crisp.",
+          "Return chicken to the wok, add soy sauce, garlic, and ginger.",
+          "Toss everything together and serve over rice.",
+        ],
+      },
+      {
+        id: "example-3",
+        createdBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: "Margherita Pizza",
+        image: Margherita,
+        description:
+          "Fresh and simple homemade pizza with tomato, mozzarella, basil, and olive oil.",
+        prepTime: 30,
+        cookTime: 12,
+        cost: 8.5,
+        difficulty: "intermediate",
+        dietaryTags: ["vegetarian"],
+        ingredients: [
+          { foodItem: "Pizza Dough", amount: 500, unit: "g" },
+          { foodItem: "Tomato Sauce", amount: 200, unit: "ml" },
+          { foodItem: "Mozzarella", amount: 250, unit: "g" },
+          { foodItem: "Fresh Basil", amount: 20, unit: "g" },
+          { foodItem: "Olive Oil", amount: 2, unit: "tbsp" },
+          { foodItem: "Salt", amount: 1, unit: "tsp" },
+        ],
+        steps: [
+          "Preheat oven to 220°C (425°F).",
+          "Roll out pizza dough onto a baking sheet.",
+          "Spread tomato sauce evenly on the dough.",
+          "Tear mozzarella and distribute over the sauce.",
+          "Drizzle with olive oil and sprinkle salt.",
+          "Bake for 12 minutes until crust is golden.",
+          "Top with fresh basil and serve hot.",
+        ],
+      },
+      {
+        id: "example-4",
+        createdBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: "Caesar Salad",
+        image: CaesarSalad,
+        description:
+          "Classic crisp salad with romaine lettuce, parmesan, croutons, and creamy Caesar dressing.",
+        prepTime: 15,
+        cookTime: 0,
+        cost: 7.25,
+        difficulty: "beginner",
+        dietaryTags: ["vegetarian"],
+        ingredients: [
+          { foodItem: "Romaine Lettuce", amount: 1, unit: "head" },
+          { foodItem: "Parmesan Cheese", amount: 75, unit: "g" },
+          { foodItem: "Croutons", amount: 100, unit: "g" },
+          { foodItem: "Caesar Dressing", amount: 150, unit: "ml" },
+          { foodItem: "Lemon", amount: 0.5, unit: "pcs" },
+        ],
+        steps: [
+          "Wash and chop romaine lettuce into bite-sized pieces.",
+          "Place lettuce in a large salad bowl.",
+          "Add croutons and half the parmesan cheese.",
+          "Pour Caesar dressing and toss gently.",
+          "Top with remaining parmesan and a squeeze of fresh lemon.",
+          "Serve immediately.",
+        ],
+      },
+      {
+        id: "example-5",
+        createdBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: "Chocolate Chip Cookies",
+        image: ChocolateCookie,
+        description:
+          "Soft and chewy cookies loaded with chocolate chips. Perfect for dessert or a sweet snack.",
+        prepTime: 15,
+        cookTime: 12,
+        cost: 5.0,
+        difficulty: "beginner",
+        dietaryTags: ["vegetarian"],
+        ingredients: [
+          { foodItem: "Butter", amount: 115, unit: "g" },
+          { foodItem: "Brown Sugar", amount: 200, unit: "g" },
+          { foodItem: "Egg", amount: 1, unit: "pcs" },
+          { foodItem: "Vanilla Extract", amount: 1, unit: "tsp" },
+          { foodItem: "All-Purpose Flour", amount: 280, unit: "g" },
+          { foodItem: "Baking Soda", amount: 1, unit: "tsp" },
+          { foodItem: "Salt", amount: 0.5, unit: "tsp" },
+          { foodItem: "Chocolate Chips", amount: 200, unit: "g" },
+        ],
+        steps: [
+          "Preheat oven to 190°C (375°F).",
+          "Cream butter and brown sugar together.",
+          "Beat in egg and vanilla extract.",
+          "Mix flour, baking soda, and salt in a separate bowl.",
+          "Combine wet and dry ingredients, then fold in chocolate chips.",
+          "Drop spoonfuls onto a baking sheet.",
+          "Bake for 12 minutes until golden brown.",
+        ],
+      },
+      {
+        id: "example-6",
+        createdBy: "system",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: "Beef Tacos",
+        image: BeefTacos,
+        description:
+          "Flavorful seasoned ground beef tacos with fresh toppings and warm tortillas.",
+        prepTime: 10,
+        cookTime: 10,
+        cost: 9.5,
+        difficulty: "beginner",
+        dietaryTags: [],
+        ingredients: [
+          { foodItem: "Ground Beef", amount: 500, unit: "g" },
+          { foodItem: "Taco Seasoning", amount: 2, unit: "tbsp" },
+          { foodItem: "Taco Shells", amount: 8, unit: "pcs" },
+          { foodItem: "Lettuce", amount: 100, unit: "g" },
+          { foodItem: "Tomato", amount: 2, unit: "pcs" },
+          { foodItem: "Cheddar Cheese", amount: 100, unit: "g" },
+          { foodItem: "Sour Cream", amount: 150, unit: "ml" },
+        ],
+        steps: [
+          "Brown ground beef in a skillet over medium-high heat.",
+          "Add taco seasoning and a splash of water, simmer for 5 minutes.",
+          "Warm taco shells in the oven.",
+          "Chop lettuce and tomato into small pieces.",
+          "Shred cheddar cheese.",
+          "Fill warm taco shells with beef and your favorite toppings.",
+          "Serve with sour cream on the side.",
+        ],
+      },
+    ];
+
+    setRecipes(example);
+  };
+
+  useEffect(() => {
+    if (recipes.length === 0) {
+      setExampleRecipes();
+    }
+  }, [recipes.length]);
+
   return (
     <div className="w-full h-full pb-10 flex relative shrink-0 flex-col gap-10 overflow-y-auto">
-      <div className="bg-card/50 w-full flex flex-col rounded-2xl p-6 gap-4">
+      <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-start justify-baseline">
             <div className="flex items-center justify-baseline gap-5">
-              <h3 className="text-3xl font-semibold text-card-foreground/90">
+              <h3 className="text-3xl font-bold text-card-foreground/90">
                 My Recipes
               </h3>
-              <Badge className="text-xs px-3 py-1 text-foreground/80 bg-accent-foreground ring-2 ring-accent/50 opacity-70 -mb-1.5">
+              <Badge className="text-xs px-3 py-1 text-foreground/80 bg-card ring-2 ring-accent/50 opacity-70 -mb-1.5">
                 {recipes.length} total
               </Badge>
             </div>
@@ -485,70 +719,175 @@ export function RecipeContent() {
             </p>
           </div>
 
-          <Button className="flex items-center justify-center gap-2 rounded-full">
-            <Plus size={10} />
-            <span>Create a new Recipe</span>
+          <Button className="flex items-center justify-center gap-2 rounded-full py-6 px-3 bg-primary">
+            <Plus size={10} className="pointer-events-none ml-2" />
+            <span className="pointer-events-none mr-2">
+              Create a new Recipe
+            </span>
           </Button>
         </div>
 
         {recipes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 w-full h-full border-2 border-dashed border-border/50 rounded-lg">
-            <span className="text-2xl text-center ">
-
+          <div className="no-recipe-container flex flex-col items-center justify-center gap-2 w-full flex-1 border-2 border-dashed border-border/30 rounded-lg">
+            <span className="text-2xl text-center text-bold text-foreground/80">
+              There's.. Nothing to show here
             </span>
+            <div className="text-center text-foreground/50 flex items-center justify-center gap-2">
+              <span className="text-sm">No recipes found</span>
+              <span className="text-xl mb-1">
+                {SAD_KAOMOJIS[Math.floor(Math.random() * SAD_KAOMOJIS.length)]}
+              </span>
+            </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="recipe-container grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-4 w-full">
             {recipes.map((recipe) => {
-              const isOwner = recipe.createdBy === currentUserId;
+              const isOwner = true;
 
-              return (
-                <div
-                  key={recipe.id}
-                  className="rounded-xl border border-border/40 bg-input/20 p-4 flex flex-col gap-3"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="font-semibold text-foreground">
-                        {recipe.title}
-                      </h4>
-                      <p className="text-sm text-foreground/70 line-clamp-2">
-                        {recipe.description}
-                      </p>
+              // For the mobile overlay, I kept a regular static design as it gave problems..
+              if (isMobile) {
+                return (
+                  <div
+                    key={recipe.id}
+                    className="rounded-2xl overflow-hidden bg-card flex flex-col border border-border/30"
+                  >
+                    <div className="relative">
+                      <img
+                        src={recipe.image}
+                        alt={recipe.title}
+                        className="w-full h-36 object-cover"
+                      />
                     </div>
-
-                    {isOwner && (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="gap-1"
-                          onClick={() => handleStartEdit(recipe)}
-                        >
-                          <Pencil className="size-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="destructive"
-                          className="gap-1"
-                          onClick={() => handleRequestDelete(recipe.id)}
-                        >
-                          <Trash2 className="size-3.5" />
-                          Delete
-                        </Button>
+                    <div className="flex flex-col gap-2 px-3 py-3">
+                      <span className="font-semibold text-foreground text-sm truncate">
+                        {recipe.title.length > 25
+                          ? recipe.title.slice(0, 25) + ".."
+                          : recipe.title}
+                      </span>
+                      <div className="flex w-full items-center justify-between text-foreground/60 text-xs">
+                        <span className="flex items-center gap-1">
+                          <Clock4 size={12} /> {recipe.prepTime}m
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <SignalHigh size={12} /> {recipe.difficulty}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <CookingPot size={12} /> {recipe.cookTime}m
+                        </span>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between w-full pt-1">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="p-1.5 h-auto w-auto rounded-full"
+                          >
+                            <Share2 size={13} />
+                          </Button>
+                          {isOwner && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleStartEdit(recipe)}
+                              className="p-1.5 h-auto w-auto rounded-full"
+                            >
+                              <Pencil size={13} />
+                            </Button>
+                          )}
+                        </div>
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRequestDelete(recipe.id)}
+                            className="p-1.5 h-auto w-auto rounded-full hover:bg-destructive/60"
+                          >
+                            <Trash2 size={13} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                );
+              }
 
-                  <div className="text-xs text-foreground/60 flex flex-wrap gap-3">
-                    <span>Prep: {recipe.prepTime}m</span>
-                    <span>Cook: {recipe.cookTime}m</span>
-                    <span>Difficulty: {recipe.difficulty}</span>
-                  </div>
-                </div>
+              // Desktop overlay
+              return (
+                <TiltedCard // From ReactBits
+                  key={recipe.id}
+                  imageSrc={recipe.image}
+                  altText={recipe.title}
+                  containerWidth="100%"
+                  containerHeight="16rem"
+                  imageWidth="100%"
+                  imageHeight="16rem"
+                  rotateAmplitude={6}
+                  scaleOnHover={1.04}
+                  showMobileWarning={false}
+                  showTooltip={false}
+                  displayOverlayContent
+                  overlayContent={
+                    <div className="w-full h-full relative px-4 py-5 flex flex-col gap-3 bg-linear-to-b from-card/80 to-card/40 rounded-lg">
+                      <span className="font-semibold text-foreground text-lg truncate brightness-150">
+                        {recipe.title.length > 25
+                          ? recipe.title.slice(0, 25) + ".."
+                          : recipe.title}
+                      </span>
+
+                      <div className="recipe-details flex flex-col w-full gap-1 items-center justify-baseline text-xs text-foreground font-semibold text-left">
+                        <div className="prep-diff flex w-full items-center justify-between px-0.5">
+                          <span className="flex items-center justify-center gap-1">
+                            <Clock4 size={13} className="brightness-150" />{" "}
+                            {recipe.prepTime}m
+                          </span>
+                          <span className="flex items-center justify-center gap-1">
+                            <SignalHigh size={13} className="brightness-150" />{" "}
+                            {recipe.difficulty}
+                          </span>
+                        </div>
+
+                        <div className="cook-time w-full px-0.5">
+                          <span className="flex items-center justify-baseline gap-1">
+                            <CookingPot size={13} className="brightness-150" />{" "}
+                            {recipe.cookTime}m
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="recipe-option flex items-center justify-between self-end align-bottom w-full pt-5">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-white/20"
+                          >
+                            <Share2 size={13} />
+                          </Button>
+                          {isOwner && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleStartEdit(recipe)}
+                              className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-white/20"
+                            >
+                              <Pencil size={13} />
+                            </Button>
+                          )}
+                        </div>
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRequestDelete(recipe.id)}
+                            className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-destructive/70"
+                          >
+                            <Trash2 size={13} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  }
+                />
               );
             })}
           </div>

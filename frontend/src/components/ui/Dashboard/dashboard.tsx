@@ -43,7 +43,7 @@ const dashboardRoutes: Record<
     Title: RecipeTitle,
     Content: RecipeContent,
   },
-};
+}; 
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -151,7 +151,7 @@ export default function Dashboard() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5">
+      <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5 max-md:px-3 relative max-md:h-auto max-md:py-5 max-md:ml-0">
         <div className="dashboard-header w-full h-40 flex justify-between items-center p-1 px-3 relative">
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
