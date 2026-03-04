@@ -4,7 +4,6 @@ import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useUser } from "@context/UserContext";
-import { useUser } from "@context/UserContext";
 
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
@@ -299,7 +298,7 @@ export default function Login() {
     };
 
     void bootstrapAuth();
-  }, [navigate, setUser]);
+  }, [navigate, setUser, completeGoogleSignIn, bootstrapLegacySession]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
@@ -352,14 +351,14 @@ export default function Login() {
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
 
-        console.log("user loaded: ", userData);
+        console.log("user loaded: ", user);
 
         toast.dismiss(registrationToast);
         toast.success(
-          `Logged in successfully!\nWelcome back ${userData.name}!`,
+          `Logged in successfully!\nWelcome back ${user.name}!`,
         );
 
-        if (userData.isCustomized) {
+        if (user.isCustomized) {
           navigate("/dashboard");
         } else {
           triggerCustomize();

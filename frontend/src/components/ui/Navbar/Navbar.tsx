@@ -14,6 +14,7 @@ import {
 import { toast } from "react-hot-toast";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useUser } from "@context/UserContext";
 
 import "./styles.css";
 import { useNavigate, useLocation } from "react-router-dom";

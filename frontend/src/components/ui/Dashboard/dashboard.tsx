@@ -4,8 +4,6 @@ import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@context/UserContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { useUser } from "@context/UserContext";
 
 import {
   ArrowLeft,
@@ -24,9 +22,10 @@ import {
   MainDashboardContent,
 } from "./contents/DashboardMain";
 import { SettingsTitle, SettingsContent } from "./contents/Settings";
+import { RecipeTitle, RecipeContent } from "./contents/RecipeForm";
 import SearchContainer from "./SearchModal";
 
-type DashboardRouteKey = "main" | "settings";
+type DashboardRouteKey = "main" | "settings" | "recipe";
 
 const dashboardRoutes: Record<
   DashboardRouteKey,
@@ -40,12 +39,13 @@ const dashboardRoutes: Record<
     Title: SettingsTitle,
     Content: SettingsContent,
   },
+  recipe: {
+    Title: RecipeTitle,
+    Content: RecipeContent,
+  },
 };
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const userCardRef = useRef<HTMLDivElement>(null);
-  const { user, logout, loading } = useUser();
   const navigate = useNavigate();
   const userCardRef = useRef<HTMLDivElement>(null);
   const { user, logout, loading } = useUser();
@@ -74,21 +74,6 @@ export default function Dashboard() {
     if (!user.isCustomized) {
       toast.error("An error has occured, please login again.");
       // logout();
-    // if you remove this check, it freaks out because user isn't loaded
-    if (loading) {
-      console.log("Loading user data...");
-      return;
-    }
-
-    if (!user) {
-      console.log("User is false!!!");
-      navigate("/login");
-      return;
-    }
-
-    if (!user.isCustomized) {
-      toast.error("An error has occured, please login again.");
-      // logout();
       navigate("/login");
       return;
     }
@@ -101,7 +86,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const hash = window.location.hash.substring(1);
-    if (hash === "main" || hash === "settings") {
+    if (hash === "main" || hash === "settings" || hash === "recipe") {
       handleDashboardChange(hash as DashboardRouteKey);
     } else {
       handleDashboardChange("main");
@@ -109,7 +94,7 @@ export default function Dashboard() {
 
     const handleHashChange = () => {
       const newHash = window.location.hash.substring(1);
-      if (newHash === "main" || newHash === "settings") {
+      if (newHash === "main" || newHash === "settings" || newHash === "recipe") {
         handleDashboardChange(newHash as DashboardRouteKey);
       }
     };
@@ -168,11 +153,10 @@ export default function Dashboard() {
     >
       <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5">
         <div className="dashboard-header w-full h-40 flex justify-between items-center p-1 px-3 relative">
-        <div className="dashboard-header w-full h-40 flex justify-between items-center p-1 px-3 relative">
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings") {
+                if (activeDashboard === "settings" || activeDashboard === "recipe") {
                   handleDashboardChange("main");
                   return;
                 } else if (activeDashboard === "main") {
@@ -189,18 +173,6 @@ export default function Dashboard() {
                 className="text-accent/60 pointer-events-none"
               />
             </button>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`title-${activeDashboard}`}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.2, delay: 0.05 }}
-                className="flex items-center"
-              >
-                <ActiveTitle />
-              </motion.div>
-            </AnimatePresence>
             <AnimatePresence mode="wait">
               <motion.div
                 key={`title-${activeDashboard}`}

@@ -7,7 +7,7 @@ import { Badge } from "@components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SKILL_LEVELS, allFoodNames, dietaryOptions } from "@masterchef/shared";
 import toast from "react-hot-toast";
-import kaomojis from "@masterchef/shared/constants/kaomojis";
+// import kaomojis from "@masterchef/shared/constants/kaomojis";
 
 interface Ingredient {
   id: string;
@@ -59,11 +59,11 @@ const INITIAL_INGREDIENTS: Ingredient[] = [
 
 const INITIAL_STEPS: Step[] = [{ id: "1", content: "" }];
 
-export function RecipeFormTitle() {
+export function RecipeTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Recipes</h1>;
 }
 
-export function RecipeFormContent() {
+export function RecipeContent() {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<RecipeRecord[]>([]);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
