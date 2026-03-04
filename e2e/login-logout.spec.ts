@@ -4,8 +4,13 @@ test("user can log in, stay logged in, and log out", async ({ page, request }) =
   const email = `login+${Date.now()}@test.com`;
   const password = "Password1!";
 
-  await request.post("http://localhost:4000/api/auth/register", {
-    data: { email, password, name: "Login User" },
+  // Create a non-customized user via API
+  await page.request.post("http://localhost:4000/api/auth/register", {
+    data: { 
+      email, 
+      password, 
+      name: "Login User",
+    },
   });
 
   await page.goto("/login?register=false");
@@ -69,4 +74,8 @@ test("user can log in, stay logged in, and log out", async ({ page, request }) =
   // Should redirect to login or home
   await page.waitForURL(/\/(login|)$/, { timeout: 5000 });
 
+  const storedAfterLogout = await page.evaluate(() =>
+    window.localStorage.getItem("user")
+  );
+  expect(storedAfterLogout).toBeNull();
 });

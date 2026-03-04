@@ -4,6 +4,7 @@ import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useUser } from "@context/UserContext";
+import { useUser } from "@context/UserContext";
 
 import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
@@ -308,6 +309,8 @@ export default function Login() {
     setIsLogin(!isLogin);
     const params = new URLSearchParams(window.location.search);
     params.set("register", isLogin.toString());
+    console.log("In register check: ");
+
     window.history.replaceState(
       {},
       "",
@@ -349,16 +352,26 @@ export default function Login() {
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
 
-        console.log("user loaded: ", user);
+        console.log("user loaded: ", userData);
 
         toast.dismiss(registrationToast);
-        toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
+        toast.success(
+          `Logged in successfully!\nWelcome back ${userData.name}!`,
+        );
 
-        if (user.isCustomized) {
+        if (userData.isCustomized) {
           navigate("/dashboard");
         } else {
-          toast.success("But first, let's complete your Customization!", {
-            icon: <BadgeInfo size={20} />,
+          triggerCustomize();
+          const params = new URLSearchParams(window.location.search);
+          params.set("customizing", "true");
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}?${params}`,
+          );
+          toast.success("Welcome back! \nLet's complete your Profile..", {
+            icon: <BadgeInfo size={20} color="var(--info-hex)" />,
           });
           triggerCustomize();
         }
@@ -507,20 +520,20 @@ export default function Login() {
           color3={"var(--grain-color-3)"}
           timeSpeed={0.25}
           colorBalance={0}
-          warpStrength={1}
+          warpStrength={4}
           warpFrequency={5}
           warpSpeed={2}
-          warpAmplitude={50}
+          warpAmplitude={80}
           blendAngle={0}
           blendSoftness={0.05}
-          rotationAmount={500}
+          rotationAmount={250}
           noiseScale={2}
           grainAmount={0.1}
           grainScale={2}
           grainAnimated={false}
-          contrast={1.5}
+          contrast={1}
           gamma={1}
-          saturation={1}
+          saturation={1.5}
           centerX={0}
           centerY={0}
           zoom={0.9}
