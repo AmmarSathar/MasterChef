@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@components/ui/input";
-import Badge from "@components/ui/badge";
+import { Badge } from "@components/ui/badge";
 
 import { Recipe } from "@masterchef/shared/types/recipe";
 
@@ -35,7 +35,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
   }, [containerRef, onClose]);
 
   useEffect(() => {
-    console.log(showResults );
+    console.log(showResults);
   }, [showResults]);
 
   return (
@@ -51,7 +51,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
             <span className="pointer-events-none font-semibold">Suggested</span>
           </button>
           <button className="flex items-center gap-2 px-2 py-2 rounded-full bg-linear-to-b from-secondary to-card ring-2 ring-border/30 hover:brightness-125 text-foreground/70 hover:text-accent transition-all duration-300">
-            <Filter size={17} className="pointer-events-none"/>
+            <Filter size={17} className="pointer-events-none" />
           </button>
         </div>
         <div

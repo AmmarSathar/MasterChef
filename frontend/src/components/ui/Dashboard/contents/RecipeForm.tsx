@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import TiltedCard from "@components/TiltedCard";
+import { RecipeContainer } from "@/components/ui/RecipeContainer";
 
 import {
   X,
   Plus,
-  Pencil,
-  Trash2,
-  CookingPot,
-  Clock4,
-  SignalHigh,
-  Share2,
+  Wind,
+  Coffee,
+  UtensilsCrossed,
+  Soup,
+  Cookie,
+  Clock,
+  Timer,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -79,6 +81,34 @@ const INITIAL_INGREDIENTS: Ingredient[] = [
 
 const INITIAL_STEPS: Step[] = [{ id: "1", content: "" }];
 
+const MEAL_TYPES = [
+  { label: "Breakfast", icon: Coffee },
+  { label: "Lunch", icon: UtensilsCrossed },
+  { label: "Dinner", icon: Soup },
+  { label: "Snacks", icon: Cookie },
+];
+
+const TIME_RANGES = [
+  { label: "< 15 mins", value: "under15", icon: Clock },
+  { label: "15-30 mins", value: "15to30", icon: Timer },
+  { label: "30-60 mins", value: "30to60", icon: Timer },
+  { label: "1+ hours", value: "over60", icon: Timer },
+];
+
+function SkillBars({ count }: { count: number }) {
+  return (
+    <span className="skill-bars flex items-end gap-0.5">
+      {Array.from({ length: count }, (_, i) => (
+        <span
+          key={i}
+          className="w-1 rounded-xs bg-current"
+          style={{ height: `${(i + 1) * 4}px` }}
+        />
+      ))}
+    </span>
+  );
+}
+
 export function RecipeTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Recipes</h1>;
 }
@@ -98,15 +128,16 @@ export function RecipeContent() {
 
   const isEditing = editingRecipeId !== null;
 
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia("(max-width: 767px)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{
+    mealType: string[];
+    skillLevel: string[];
+    cookingTime: string[];
+  }>({
+    mealType: [],
+    skillLevel: [],
+    cookingTime: [],
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -285,6 +316,24 @@ export function RecipeContent() {
 
     resetForm();
   };
+
+  const toggleFilter = (
+    category: keyof typeof activeFilters,
+    value: string,
+  ) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      [category]: prev[category].includes(value)
+        ? prev[category].filter((v) => v !== value)
+        : [...prev[category], value],
+    }));
+  };
+
+  const clearFilters = () => {
+    setActiveFilters({ mealType: [], skillLevel: [], cookingTime: [] });
+  };
+
+  const activeFilterCount = Object.values(activeFilters).flat().length;
 
   const handleRequestDelete = (recipeId: string) => {
     const targetRecipe = recipes.find((recipe) => recipe.id === recipeId);
@@ -475,6 +524,7 @@ export function RecipeContent() {
           updatedAt: created.updatedAt ?? now,
           title: created.title,
           description: created.description,
+          image: created.imageUrl ?? "",
           prepTime: 0,
           cookTime: created.cookingTime ?? 0,
           cost: recipePayload.cost,
@@ -699,36 +749,201 @@ export function RecipeContent() {
     }
   }, [recipes.length]);
 
+  const filteredRecipes = recipes.filter((recipe) => {
+    if (
+      activeFilters.skillLevel.length > 0 &&
+      !activeFilters.skillLevel.includes(recipe.difficulty)
+    ) {
+      return false;
+    }
+
+    if (activeFilters.cookingTime.length > 0) {
+      const totalTime = recipe.prepTime + recipe.cookTime;
+      const matchesTime = activeFilters.cookingTime.some((range) => {
+        switch (range) {
+          case "under15":
+            return totalTime < 15;
+          case "15to30":
+            return totalTime >= 15 && totalTime <= 30;
+          case "30to60":
+            return totalTime > 30 && totalTime <= 60;
+          case "over60":
+            return totalTime > 60;
+          default:
+            return true;
+        }
+      });
+      if (!matchesTime) return false;
+    }
+
+    if (activeFilters.mealType.length > 0) {
+      const text = `${recipe.title} ${recipe.description}`.toLowerCase();
+      const matchesMeal = activeFilters.mealType.some((type) => {
+        switch (type) {
+          case "Breakfast":
+            return /breakfast|pancake|waffle|omelette|cereal|morning|brunch|toast/i.test(
+              text,
+            );
+          case "Lunch":
+            return /lunch|sandwich|wrap|salad|soup/i.test(text);
+          case "Dinner":
+            return /dinner|steak|roast|pasta|curry|casserole|stir.?fry|taco/i.test(
+              text,
+            );
+          case "Snacks":
+            return /snack|cookie|chips|dip|appetizer|bite|treat|dessert/i.test(
+              text,
+            );
+          default:
+            return true;
+        }
+      });
+      if (!matchesMeal) return false;
+    }
+
+    return true;
+  });
+
   return (
-    <div className="w-full h-full pb-10 flex relative shrink-0 flex-col gap-10 overflow-y-auto">
-      <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4">
+    <div className="w-full h-full flex relative flex-col gap-10 overflow-hidden">
+      <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4 overflow-hidden min-h-0">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-start justify-baseline">
             <div className="flex items-center justify-baseline gap-5">
-              <h3 className="text-3xl font-bold text-card-foreground/90">
-                My Recipes
-              </h3>
+              <span className="text-3xl font-bold text-card-foreground/90">
+                My Collection
+              </span>
               <Badge className="text-xs px-3 py-1 text-foreground/80 bg-card ring-2 ring-accent/50 opacity-70 -mb-1.5">
                 {recipes.length} total
               </Badge>
             </div>
             <p className="py-4 flex text-left text-sm text-foreground/70">
-              {recipes.length === 0
-                ? "Start by creating your first recipe!"
-                : "View, edit, or delete your existing recipes below."}
+              {recipes.length > 1
+                ? `You currently have ${recipes.length} recipe${recipes.length > 1 ? "s" : ""} in your Kitchen!`
+                : "Only dust.."}
             </p>
           </div>
 
-          <Button className="flex items-center justify-center gap-2 rounded-full py-6 px-3 bg-primary">
-            <Plus size={10} className="pointer-events-none ml-2" />
-            <span className="pointer-events-none mr-2">
-              Create a new Recipe
-            </span>
-          </Button>
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              disabled={recipes.length === 0}
+              onClick={() => setFilterOpen((prev) => !prev)}
+              className={`flex items-center justify-center gap-2 rounded-full py-6 px-3 transition-all duration-300 cursor-pointer ${
+                filterOpen
+                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                  : "bg-secondary hover:bg-secondary/60"
+              }`}
+            >
+              <SlidersHorizontal
+                size={14}
+                className="pointer-events-none ml-1"
+              />
+              <span className="pointer-events-none mr-1">Filter</span>
+              {activeFilterCount > 0 && (
+                <span className="pointer-events-none ml-0.5 min-w-5 h-5 flex items-center justify-center rounded-full bg-accent/90 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+
+            <Button className="flex items-center justify-center gap-2 rounded-full py-6 px-3 bg-primary">
+              <Plus size={10} className="pointer-events-none ml-2" />
+              <span className="pointer-events-none mr-2">
+                Create a new Recipe
+              </span>
+            </Button>
+          </div>
         </div>
 
-        {recipes.length === 0 ? (
-          <div className="no-recipe-container flex flex-col items-center justify-center gap-2 w-full flex-1 border-2 border-dashed border-border/30 rounded-lg">
+        <div
+          className={`filter-menu w-full flex flex-col gap-3 transition-all duration-300 ease-out ${
+            filterOpen
+              ? "opacity-100 mt-0 pointer-events-auto"
+              : "opacity-0 -mt-14 pointer-events-none"
+          }`}
+        >
+          <div className="filter-header flex items-center gap-2 px-1">
+            <SlidersHorizontal size={14} className="text-foreground/50" />
+            <span className="text-sm font-semibold text-foreground/60">
+              Quick Filters
+            </span>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={clearFilters}
+                className="ml-auto text-xs font-medium text-accent/70 hover:text-accent transition-colors cursor-pointer"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+
+          <div
+            className="filter-chips overflow-x-auto flex items-center gap-2 pb-1"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {MEAL_TYPES.map(({ label, icon: Icon }) => {
+              const isActive = activeFilters.mealType.includes(label);
+              return (
+                <button
+                  key={label}
+                  onClick={() => toggleFilter("mealType", label)}
+                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                  }`}
+                >
+                  <Icon size={15} className="pointer-events-none" />
+                  <span className="pointer-events-none">{label}</span>
+                </button>
+              );
+            })}
+
+            <div className="filter-divider w-px h-6 bg-border/40 shrink-0 mx-1" />
+
+            {SKILL_LEVELS.map((level, index) => {
+              const isActive = activeFilters.skillLevel.includes(level.value);
+              return (
+                <button
+                  key={level.value}
+                  onClick={() => toggleFilter("skillLevel", level.value)}
+                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                  }`}
+                >
+                  <SkillBars count={index + 1} />
+                  <span className="pointer-events-none">{level.label}</span>
+                </button>
+              );
+            })}
+
+            <div className="filter-divider w-px h-6 bg-border/40 shrink-0 mx-1" />
+
+            {TIME_RANGES.map(({ label, value, icon: Icon }) => {
+              const isActive = activeFilters.cookingTime.includes(value);
+              return (
+                <button
+                  key={value}
+                  onClick={() => toggleFilter("cookingTime", value)}
+                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                  }`}
+                >
+                  <Icon size={15} className="pointer-events-none" />
+                  <span className="pointer-events-none">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {recipes.length === 0 || filteredRecipes.length === 0 ? (
+          <div className="no-recipe-container flex flex-col items-center justify-center gap-2 w-full flex-1 border-2 border-dashed border-border/30 rounded-lg -mt-40 pointer-events-none">
+            <Wind size={28} className="opacity-80" />
             <span className="text-2xl text-center text-bold text-foreground/80">
               There's.. Nothing to show here
             </span>
@@ -740,157 +955,13 @@ export function RecipeContent() {
             </div>
           </div>
         ) : (
-          <div className="recipe-container grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-4 w-full">
-            {recipes.map((recipe) => {
-              const isOwner = true;
-
-              // For the mobile overlay, I kept a regular static design as it gave problems..
-              if (isMobile) {
-                return (
-                  <div
-                    key={recipe.id}
-                    className="rounded-2xl overflow-hidden bg-card flex flex-col border border-border/30"
-                  >
-                    <div className="relative">
-                      <img
-                        src={recipe.image}
-                        alt={recipe.title}
-                        className="w-full h-36 object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2 px-3 py-3">
-                      <span className="font-semibold text-foreground text-sm truncate">
-                        {recipe.title.length > 25
-                          ? recipe.title.slice(0, 25) + ".."
-                          : recipe.title}
-                      </span>
-                      <div className="flex w-full items-center justify-between text-foreground/60 text-xs">
-                        <span className="flex items-center gap-1">
-                          <Clock4 size={12} /> {recipe.prepTime}m
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <SignalHigh size={12} /> {recipe.difficulty}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <CookingPot size={12} /> {recipe.cookTime}m
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between w-full pt-1">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="p-1.5 h-auto w-auto rounded-full"
-                          >
-                            <Share2 size={13} />
-                          </Button>
-                          {isOwner && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(recipe)}
-                              className="p-1.5 h-auto w-auto rounded-full"
-                            >
-                              <Pencil size={13} />
-                            </Button>
-                          )}
-                        </div>
-                        {isOwner && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRequestDelete(recipe.id)}
-                            className="p-1.5 h-auto w-auto rounded-full hover:bg-destructive/60"
-                          >
-                            <Trash2 size={13} />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Desktop overlay
-              return (
-                <TiltedCard // From ReactBits
-                  key={recipe.id}
-                  imageSrc={recipe.image}
-                  altText={recipe.title}
-                  containerWidth="100%"
-                  containerHeight="16rem"
-                  imageWidth="100%"
-                  imageHeight="16rem"
-                  rotateAmplitude={6}
-                  scaleOnHover={1.04}
-                  showMobileWarning={false}
-                  showTooltip={false}
-                  displayOverlayContent
-                  overlayContent={
-                    <div className="w-full h-full relative px-4 py-5 flex flex-col gap-3 bg-linear-to-b from-card/80 to-card/40 rounded-lg">
-                      <span className="font-semibold text-foreground text-lg truncate brightness-150">
-                        {recipe.title.length > 25
-                          ? recipe.title.slice(0, 25) + ".."
-                          : recipe.title}
-                      </span>
-
-                      <div className="recipe-details flex flex-col w-full gap-1 items-center justify-baseline text-xs text-foreground font-semibold text-left">
-                        <div className="prep-diff flex w-full items-center justify-between px-0.5">
-                          <span className="flex items-center justify-center gap-1">
-                            <Clock4 size={13} className="brightness-150" />{" "}
-                            {recipe.prepTime}m
-                          </span>
-                          <span className="flex items-center justify-center gap-1">
-                            <SignalHigh size={13} className="brightness-150" />{" "}
-                            {recipe.difficulty}
-                          </span>
-                        </div>
-
-                        <div className="cook-time w-full px-0.5">
-                          <span className="flex items-center justify-baseline gap-1">
-                            <CookingPot size={13} className="brightness-150" />{" "}
-                            {recipe.cookTime}m
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="recipe-option flex items-center justify-between self-end align-bottom w-full pt-5">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-white/20"
-                          >
-                            <Share2 size={13} />
-                          </Button>
-                          {isOwner && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleStartEdit(recipe)}
-                              className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-white/20"
-                            >
-                              <Pencil size={13} />
-                            </Button>
-                          )}
-                        </div>
-                        {isOwner && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRequestDelete(recipe.id)}
-                            className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-destructive/70"
-                          >
-                            <Trash2 size={13} />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  }
-                />
-              );
-            })}
-          </div>
+          <RecipeContainer
+            recipes={filteredRecipes}
+            currentUserId={currentUserId}
+            onEdit={handleStartEdit}
+            onDelete={handleRequestDelete}
+            type="standard"
+          />
         )}
       </div>
 
@@ -941,9 +1012,9 @@ export function RecipeContent() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-11 ">
           <div className="flex flex-col items-baseline justify-center relative w-full h-full gap-5">
-            <h3 className="text-lg font-semibold text-foreground/80">
+            <span className="text-lg font-semibold text-foreground/80">
               Recipe Information
-            </h3>
+            </span>
 
             <div className="flex flex-row gap-10 items-center justify-center w-full h-full relative">
               <div className="flex flex-col w-1/2 gap-8 relative">
@@ -1010,9 +1081,9 @@ export function RecipeContent() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-accent/90">
+            <span className="text-base font-semibold text-accent/90">
               Timing & Difficulty
-            </h3>
+            </span>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
@@ -1086,9 +1157,9 @@ export function RecipeContent() {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-accent/90">
+              <span className="text-base font-semibold text-accent/90">
                 Ingredients *
-              </h3>
+              </span>
               <Button
                 type="button"
                 onClick={addIngredient}
@@ -1199,9 +1270,9 @@ export function RecipeContent() {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-accent/90">
+              <span className="text-base font-semibold text-accent/90">
                 Steps *
-              </h3>
+              </span>
               <Button
                 type="button"
                 onClick={addStep}
@@ -1247,9 +1318,9 @@ export function RecipeContent() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-base font-semibold text-accent/90">
+            <span className="text-base font-semibold text-accent/90">
               Dietary Tags
-            </h3>
+            </span>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {dietaryOptions.map((tag) => (

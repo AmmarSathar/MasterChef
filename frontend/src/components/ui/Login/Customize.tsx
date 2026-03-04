@@ -100,9 +100,9 @@ export default function Customize({ ready }: CustomizeProps) {
     const activeUser = (() => {
       try {
         const raw = localStorage.getItem("user");
-        return raw ? (JSON.parse(raw) as User) : partialUser;
+        return raw ? (JSON.parse(raw) as User) : contextUser;
       } catch {
-        return partialUser;
+        return contextUser;
       }
     })();
     const resolvedUserId = activeUser?.id;
