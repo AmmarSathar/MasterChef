@@ -1,43 +1,31 @@
 import express from "express";
 import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
+import { getAuth } from "./lib/auth.js";
 import routes from "./routes/index.js";
 import { config } from "./config/index.js";
 import { betterAuthMiddleware } from "./lib/better-auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { config } from "./config/index.js";
 
 const app = express();
 
-// Middleware
 app.use(
   cors({
     origin: config.frontendUrl,
-    credentials: true,
+    credentials: true, // required for cookie-based sessions
   })
 );
-app.use(express.json({ limit: "10mb" }));
 
-app.get("/api/auth/debug-config", (_req, res) => {
-  res.json({
-    betterAuthConfigured: Boolean(
-      config.betterAuthSecret &&
-        config.betterAuthUrl &&
-        config.googleClientId &&
-        config.googleClientSecret
-    ),
-    values: {
-      frontendUrl: config.frontendUrl,
-      betterAuthUrl: config.betterAuthUrl,
-      betterAuthUserModelName: config.betterAuthUserModelName,
-      hasBetterAuthSecret: Boolean(config.betterAuthSecret),
-      hasGoogleClientId: Boolean(config.googleClientId),
-      hasGoogleClientSecret: Boolean(config.googleClientSecret),
-      betterAuthSecretLength: config.betterAuthSecret?.length ?? 0,
-      googleClientIdPrefix: config.googleClientId?.slice(0, 12) ?? null,
-    },
-  });
+// BetterAuth handler must be mounted BEFORE express.json()
+// It handles all /api/auth/* routes (sign-in, sign-up, OAuth callbacks, session, sign-out)
+app.all("/api/auth/*", (req, res) => {
+  return toNodeHandler(getAuth())(req, res);
 });
 
-// Routes
+app.use(express.json({ limit: "10mb" }));
+
+// Remaining app routes
 app.use(routes);
 app.all("/api/auth", betterAuthMiddleware);
 app.all("/api/auth/*", betterAuthMiddleware);

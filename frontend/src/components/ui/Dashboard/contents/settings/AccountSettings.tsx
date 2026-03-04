@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useUser } from "@context/UserContext";
+import { authClient } from "@/lib/auth-client";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import ConfirmChanges from "./ConfirmChanges";
 
-import { UserPen, Shield } from "lucide-react";
+import { UserPen, Shield, Eye, EyeOff } from "lucide-react";
+
+const PW_REQUIREMENTS = [
+  { label: "At least 8 characters",      validate: (p: string) => p.length >= 8 },
+  { label: "Contains uppercase letter",   validate: (p: string) => /[A-Z]/.test(p) },
+  { label: "Contains lowercase letter",   validate: (p: string) => /[a-z]/.test(p) },
+  { label: "Contains number",             validate: (p: string) => /[0-9]/.test(p) },
+  { label: "Contains special character",  validate: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+];
 
 export default function AccountSettings() {
   const { user, setUser } = useUser();
@@ -22,6 +31,24 @@ export default function AccountSettings() {
   const [showConfirm, showConfirmChanges] = useState(false);
   const [formDisabled, setFormDisabled] = useState(false);
 
+  // Password section state
+  const [hasCredentialAccount, setHasCredentialAccount] = useState<boolean | null>(null);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showCurrPw, setShowCurrPw] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [pwReqs, setPwReqs] = useState(PW_REQUIREMENTS.map((r) => ({ ...r, complete: false })));
+
+  useEffect(() => {
+    authClient.listAccounts().then(({ data }) => {
+      if (data) {
+        setHasCredentialAccount(data.some((a) => a.providerId === "credential"));
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     if (
@@ -30,18 +57,6 @@ export default function AccountSettings() {
       age !== user.age ||
       (bio !== user.bio && (user.bio || bio))
     ) {
-      console.log(
-        "USER: ",
-        user.name,
-        user.email,
-        user.age,
-        user.bio,
-        "\n\nDATA:",
-        name,
-        email,
-        age,
-        bio,
-      );
       showConfirmChanges(true);
     } else {
       showConfirmChanges(false);
@@ -65,8 +80,9 @@ export default function AccountSettings() {
     try {
       const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
       const res = await axios.put(
-        `${BASE_API_URL}/auth/profile`,
+        `${BASE_API_URL}/user/profile`,
         profilePayload,
+        { withCredentials: true },
       );
       const updatedUser = res.data.user;
 
@@ -101,20 +117,72 @@ export default function AccountSettings() {
     }
   };
 
+  const onPasswordSubmit = async () => {
+    if (!newPassword) return;
+    const failing = pwReqs.find((r) => !r.complete);
+    if (failing) {
+      toast.error(failing.label);
+      return;
+    }
+
+    setPasswordLoading(true);
+    const loadingToast = toast.loading(
+      hasCredentialAccount ? "Updating password..." : "Setting password...",
+    );
+
+    try {
+      if (hasCredentialAccount) {
+        // User already has a password → use BetterAuth's changePassword
+        const { error } = await authClient.changePassword({
+          currentPassword,
+          newPassword,
+        });
+        if (error) {
+          toast.dismiss(loadingToast);
+          if (error.code === "INVALID_PASSWORD") {
+            toast.error("Current password is incorrect.");
+          } else {
+            toast.error(error.message || "Failed to update password.");
+          }
+          return;
+        }
+      } else {
+        // OAuth-only user → call our custom set-password endpoint
+        const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+        await axios.post(
+          `${BASE_API_URL}/user/set-password`,
+          { newPassword },
+          { withCredentials: true },
+        );
+        setHasCredentialAccount(true);
+      }
+
+      toast.dismiss(loadingToast);
+      toast.success("Password updated successfully!");
+      setShowPasswordForm(false);
+      setNewPassword("");
+      setCurrentPassword("");
+    } catch (err: unknown) {
+      toast.dismiss(loadingToast);
+      if (axios.isAxiosError(err)) {
+        if (err.response?.data?.error === "PASSWORD_ALREADY_SET") {
+          toast.error("A password is already set. Please use Change Password.");
+          setHasCredentialAccount(true);
+        } else {
+          toast.error(err.response?.data?.message || "Failed to update password.");
+        }
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        console.log(
-          "Data to parse: ",
-          name,
-          email,
-          age,
-          bio,
-          "\n\n Into: ",
-          user,
-        );
-
         onSettingsSubmit();
       }}
       onReset={() => showConfirmChanges(false)}
@@ -223,25 +291,105 @@ export default function AccountSettings() {
           </label>
         </div>
         <div className="flex flex-col w-full items-center justify-center">
-          <div className="w-full flex items-center justify-between px-8 py-6 bg-linear-to-br from-secondary/5 to-secondary/60 border border-border/70 rounded-t-2xl">
-            <div className="flex flex-col h-full gap-1 items-start justify-center">
-              <span className="text-foreground/80 text-sm font-semibold tracking-wide text-left">
-                Change Password
-              </span>
-              <p className="text-muted-foreground/50 text-xs text-left">
-                {user?.updatedAt
-                  ? `Last changed ${new Date(user?.updatedAt).toLocaleDateString()}`
-                  : "No password set"}
-              </p>
+          <div className="w-full flex flex-col bg-linear-to-br from-secondary/5 to-secondary/60 border border-border/70 rounded-t-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-8 py-6">
+              <div className="flex flex-col h-full gap-1 items-start justify-center">
+                <span className="text-foreground/80 text-sm font-semibold tracking-wide text-left">
+                  {hasCredentialAccount ? "Change Password" : "Set Password"}
+                </span>
+                <p className="text-muted-foreground/50 text-xs text-left">
+                  {hasCredentialAccount
+                    ? user?.updatedAt
+                      ? `Last changed ${new Date(user.updatedAt).toLocaleDateString()}`
+                      : "Password is set"
+                    : "Add email/password sign-in to your account"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={formDisabled || hasCredentialAccount === null}
+                onClick={() => setShowPasswordForm((v) => !v)}
+                className="bg-linear-to-br from-input to-input/60 shadow-sm shadow-input/30 px-5 py-3 hover:from-destructive/50 hover:to-destructive/20 text-sm rounded-lg transition-colors duration-300"
+              >
+                {showPasswordForm ? "Cancel" : hasCredentialAccount ? "Update" : "Set up"}
+              </button>
             </div>
 
-            <button
-              type="button"
-              disabled={formDisabled}
-              className="bg-linear-to-br from-input to-input/60 shadow-sm shadow-input/30 px-5 py-3 hover:from-destructive/50 hover:to-destructive/20 text-sm rounded-lg transition-colors duration-300"
-            >
-              Update
-            </button>
+            <AnimatePresence initial={false}>
+              {showPasswordForm && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-4 px-8 pb-6">
+                    {hasCredentialAccount && (
+                      <div className="relative">
+                        <label className="text-xs font-semibold text-foreground/70 mb-1 block">
+                          Current Password
+                        </label>
+                        <Input
+                          type={showCurrPw ? "text" : "password"}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder="Current password"
+                          autoComplete="current-password"
+                          className="bg-input/80 rounded-xl h-12 pr-12"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrPw((v) => !v)}
+                          className="absolute right-4 top-8 text-accent/60 hover:text-accent"
+                          tabIndex={-1}
+                        >
+                          {showCurrPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    )}
+                    <div className="relative">
+                      <label className="text-xs font-semibold text-foreground/70 mb-1 block">
+                        New Password
+                      </label>
+                      <Input
+                        type={showNewPw ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewPassword(val);
+                          setPwReqs(PW_REQUIREMENTS.map((r) => ({ ...r, complete: r.validate(val) })));
+                        }}
+                        placeholder="At least 8 characters"
+                        autoComplete="new-password"
+                        className="bg-input/80 rounded-xl h-12 pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPw((v) => !v)}
+                        className="absolute right-4 top-8 text-accent/60 hover:text-accent"
+                        tabIndex={-1}
+                      >
+                        {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onPasswordSubmit}
+                      disabled={passwordLoading}
+                      className="w-full h-11 bg-primary/90 text-accent font-bold rounded-xl shadow-sm shadow-primary/50 hover:opacity-90 transition-all duration-200 disabled:opacity-50"
+                    >
+                      {passwordLoading
+                        ? "Saving..."
+                        : hasCredentialAccount
+                          ? "Update Password"
+                          : "Set Password"}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="w-full flex items-center justify-between px-8 py-6 bg-linear-to-br from-secondary/5 to-secondary/60 border border-border/70 rounded-b-2xl">

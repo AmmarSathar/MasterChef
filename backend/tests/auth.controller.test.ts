@@ -1,105 +1,123 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Request, Response, NextFunction } from "express";
-import { register, login } from "../src/controllers/auth.controller.js";
-import { registerUser, loginUser } from "../src/services/auth.service.js";
-import { createSessionForUser } from "../src/lib/session.js";
+import { updateProfile, setPassword } from "../src/controllers/auth.controller.js";
+import { updateUserProfile } from "../src/services/auth.service.js";
+
+const mockSetPassword = vi.hoisted(() => vi.fn());
 
 vi.mock("../src/services/auth.service.js", () => ({
-  registerUser: vi.fn(),
-  loginUser: vi.fn(),
+  updateUserProfile: vi.fn(),
 }));
 
-vi.mock("../src/lib/session.js", () => ({
-  createSessionForUser: vi.fn(),
+vi.mock("../src/lib/auth.js", () => ({
+  getAuth: vi.fn().mockReturnValue({
+    api: { setPassword: mockSetPassword },
+  }),
+}));
+
+vi.mock("better-auth/node", () => ({
+  fromNodeHeaders: vi.fn().mockReturnValue(new Headers()),
 }));
 
 function createResponse() {
-  const res = {
+  return {
     status: vi.fn().mockReturnThis(),
     json: vi.fn(),
   } as unknown as Response;
-  return res;
 }
 
-describe("auth controller - register", () => {
-  it("returns 201 and user payload on success", async () => {
-    const req = {
-      body: { email: "a@b.com", password: "Password1!", name: "Alice" },
-    } as Request;
+function makeAuthReq(body = {}) {
+  return {
+    body,
+    headers: {},
+    session: {
+      user: { id: "507f1f77bcf86cd799439011", name: "Alice", email: "a@b.com" },
+      session: { id: "s1", userId: "507f1f77bcf86cd799439011", expiresAt: new Date() },
+    },
+  } as unknown as Request;
+}
+
+describe("updateProfile", () => {
+  it("returns 200 with updated user on success", async () => {
+    const req = makeAuthReq({ name: "Alice" });
     const res = createResponse();
     const next = vi.fn() as NextFunction;
 
-    vi.mocked(registerUser).mockResolvedValue({
-      id: "user-id",
-      email: "a@b.com",
-      name: "Alice",
-    });
-    vi.mocked(createSessionForUser).mockResolvedValue(undefined);
+    vi.mocked(updateUserProfile).mockResolvedValue({ name: "Alice", email: "a@b.com" });
 
-    await register(req, res, next);
+    await updateProfile(req, res, next);
 
-    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
-      user: { id: "user-id", email: "a@b.com", name: "Alice" },
+      user: { name: "Alice", email: "a@b.com" },
     });
     expect(createSessionForUser).toHaveBeenCalledWith(res, "user-id", false);
     expect(next).not.toHaveBeenCalled();
   });
 
   it("calls next with error on failure", async () => {
-    const req = {
-      body: { email: "a@b.com", password: "Password1!", name: "Alice" },
-    } as Request;
+    const req = makeAuthReq();
     const res = createResponse();
     const next = vi.fn() as NextFunction;
-    const error = Object.assign(new Error("boom"), { statusCode: 400 });
+    const error = new Error("db error");
 
-    vi.mocked(registerUser).mockRejectedValue(error);
+    vi.mocked(updateUserProfile).mockRejectedValue(error);
 
-    await register(req, res, next);
+    await updateProfile(req, res, next);
 
     expect(next).toHaveBeenCalledWith(error);
   });
 });
 
-describe("auth controller - login", () => {
-  it("returns 200 and user payload on success", async () => {
-    const req = {
-      body: { email: "a@b.com", password: "Password1!" },
-    } as Request;
+describe("setPassword", () => {
+  it("returns 400 when newPassword is missing", async () => {
+    const req = { body: {}, headers: {} } as Request;
     const res = createResponse();
     const next = vi.fn() as NextFunction;
 
-    vi.mocked(loginUser).mockResolvedValue({
-      id: "user-id",
-      email: "a@b.com",
-      name: "Alice",
-    });
-    vi.mocked(createSessionForUser).mockResolvedValue(undefined);
+    await setPassword(req, res, next);
 
-    await login(req, res, next);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      success: true,
-      user: { id: "user-id", email: "a@b.com", name: "Alice" },
-    });
-    expect(createSessionForUser).toHaveBeenCalledWith(res, "user-id", false);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: "newPassword is required" });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("calls next with error on failure", async () => {
-    const req = {
-      body: { email: "a@b.com", password: "Password1!" },
-    } as Request;
+  it("returns 200 on success", async () => {
+    const req = { body: { newPassword: "NewPass1!" }, headers: {} } as Request;
     const res = createResponse();
     const next = vi.fn() as NextFunction;
-    const error = Object.assign(new Error("boom"), { statusCode: 401 });
 
-    vi.mocked(loginUser).mockRejectedValue(error);
+    mockSetPassword.mockResolvedValue(undefined);
 
-    await login(req, res, next);
+    await setPassword(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ success: true });
+  });
+
+  it("returns 409 when user already has a password", async () => {
+    const req = { body: { newPassword: "NewPass1!" }, headers: {} } as Request;
+    const res = createResponse();
+    const next = vi.fn() as NextFunction;
+
+    mockSetPassword.mockRejectedValue(new Error("user already has a password"));
+
+    await setPassword(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({ error: "PASSWORD_ALREADY_SET" });
+  });
+
+  it("calls next with unexpected errors", async () => {
+    const req = { body: { newPassword: "NewPass1!" }, headers: {} } as Request;
+    const res = createResponse();
+    const next = vi.fn() as NextFunction;
+    const error = new Error("unexpected");
+
+    mockSetPassword.mockRejectedValue(error);
+
+    await setPassword(req, res, next);
 
     expect(next).toHaveBeenCalledWith(error);
   });

@@ -18,6 +18,22 @@ test("user can register and reaches preferences flow", async ({ page }) => {
   await page.getByRole("button", { name: "Create Account" }).click();
 
   await expect(
-    page.getByText("Customize Your Culinary Experience")
-  ).toBeVisible();
+    page.getByRole("heading", { name: "Customize Your Culinary Experience" })
+  ).toBeVisible({ timeout: 20000 });
+
+  const firstCuisine = page.locator('text="Favorite Cuisines"').locator('..').locator('.cursor-pointer').first();
+  await firstCuisine.click();
+
+  const allergiesInput = page.getByPlaceholder(/Search allergies/i);
+  await allergiesInput.click();
+  await page.keyboard.press("Enter");
+
+  await expect(
+    page.getByRole("heading", { name: "Tell Us About Yourself" })
+  ).toBeVisible({ timeout: 10000 });
+
+  await page.getByLabel(/^Age/).fill("22");
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
 });

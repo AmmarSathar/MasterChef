@@ -1,54 +1,38 @@
 import { Request, Response, NextFunction } from "express";
-import {
-  getUserProfileById,
-  loginUser,
-  registerUser,
-  toUserResponse,
-  updateUserProfile,
-} from "../services/auth.service.js";
-import { CreateUserInput, LoginUserInput, UpdateProfileInput } from "../types/index.js";
-import { createSessionForUser, revokeSession, resolveSessionUser } from "../lib/session.js";
+import { fromNodeHeaders } from "better-auth/node";
+import { updateUserProfile } from "../services/auth.service.js";
+import { UpdateProfileInput } from "../types/index.js";
+import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+import { getAuth } from "../lib/auth.js";
 
-export async function register(
+export async function setPassword(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { email, password, name, rememberMe } = req.body as CreateUserInput & {
-      rememberMe?: boolean;
-    };
+    const { newPassword } = req.body as { newPassword?: string };
 
-    console.log("request for data: ", email, name)
+    if (!newPassword || typeof newPassword !== "string") {
+      res.status(400).json({ error: "newPassword is required" });
+      return;
+    }
 
-    const user = await registerUser({ email, password, name });
-    await createSessionForUser(res, user.id, Boolean(rememberMe));
-
-    res.status(201).json({
-      success: true,
-      user,
+    await getAuth().api.setPassword({
+      headers: fromNodeHeaders(req.headers),
+      body: { newPassword },
     });
-  } catch (error) {
-    next(error);
-  }
-}
 
-export async function login(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const { email, password, rememberMe } = req.body as LoginUserInput;
-
-    const user = await loginUser({ email, password });
-    await createSessionForUser(res, user.id, Boolean(rememberMe));
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
-  } catch (error) {
+    res.status(200).json({ success: true });
+  } catch (error: unknown) {
+    // BetterAuth throws APIError with message "user already has a password"
+    if (error && typeof error === "object" && "message" in error) {
+      const msg = (error as { message: string }).message;
+      if (msg === "user already has a password") {
+        res.status(409).json({ error: "PASSWORD_ALREADY_SET" });
+        return;
+      }
+    }
     next(error);
   }
 }
@@ -97,39 +81,12 @@ export async function updateProfile(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { userId, ...profileData } = req.body as UpdateProfileInput;
+    const { session } = req as AuthenticatedRequest;
+    const profileData = req.body as Omit<UpdateProfileInput, "userId">;
 
-    console.log("updateProfile request - userId:", userId, "fields:", Object.keys(profileData));
+    console.log("updateProfile request - userId:", session.user.id, "fields:", Object.keys(profileData));
 
-    const user = await updateUserProfile({ userId, ...profileData });
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function getProfile(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const { userId } = req.params as { userId?: string };
-
-    if (!userId) {
-      res.status(400).json({ success: false, message: "User ID is required" });
-      return;
-    }
-
-    const user = await getUserProfileById(userId);
-    if (!user) {
-      res.status(404).json({ success: false, message: "User not found" });
-      return;
-    }
+    const user = await updateUserProfile({ userId: session.user.id, ...profileData });
 
     res.status(200).json({
       success: true,

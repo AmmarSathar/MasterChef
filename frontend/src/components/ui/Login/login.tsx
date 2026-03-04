@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios, { AxiosResponse } from "axios";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useUser } from "@context/UserContext";
+import { authClient } from "@/lib/auth-client";
 
-import { User } from "@masterchef/shared/types/user";
 import Customize from "./Customize";
 import PasswordRequirements from "./PasswordRequirements";
 import Grainient from "@/components/Grainient";
@@ -54,27 +53,9 @@ const passRequirements = [
   },
 ];
 
-const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
-
-interface BetterAuthSessionUser {
-  id: string;
-  email: string;
-  name: string;
-  image?: string;
-}
-
-interface BetterAuthSessionResponse {
-  user?: BetterAuthSessionUser;
-}
-
-interface LegacySessionResponse {
-  success: boolean;
-  user: User | null;
-}
-
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser } = useUser();
+  const { user, loading } = useUser();
 
   const [showCustomize, setShowCustomize] = useState(false);
   const [isCustomizeReady, setIsCustomizeReady] = useState(false);
@@ -88,227 +69,32 @@ export default function Login() {
 
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
-  const hasInitialized = useRef(false);
-
-  const persistGoogleUser = (user: BetterAuthSessionUser, profile?: User): User => {
-    if (profile) {
-      localStorage.setItem("user", JSON.stringify(profile));
-      setUser(profile);
-      return profile;
-    }
-
-    const mappedUser: User = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      pfp: user.image,
-      age: 0,
-      cuisines_pref: [],
-      dietary_restric: [],
-      allergies: [],
-      isCustomized: false,
-    };
-
-    localStorage.setItem("user", JSON.stringify(mappedUser));
-    setUser(mappedUser);
-    return mappedUser;
-  };
-
-  const bootstrapLegacySession = async (): Promise<boolean> => {
-    try {
-      const response = await axios.get<LegacySessionResponse>(
-        `${BASE_API_URL}/auth/session`,
-        { withCredentials: true },
-      );
-
-      const sessionUser = response.data?.user;
-      if (!sessionUser) {
-        return false;
-      }
-
-      localStorage.setItem("user", JSON.stringify(sessionUser));
-      setUser(sessionUser);
-
-      if (sessionUser.isCustomized) {
-        navigate("/dashboard");
-      } else {
-        triggerCustomize();
-      }
-
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const completeGoogleSignIn = async () => {
-    const loadingToast = toast.loading("Completing Google sign-in...");
-
-    try {
-      const response = await axios.get<BetterAuthSessionResponse>(
-        `${BASE_API_URL}/auth/get-session`,
-        {
-          withCredentials: true,
-        },
-      );
-
-      const sessionUser = response.data?.user;
-      if (!sessionUser) {
-        throw new Error("No active session found after Google callback.");
-      }
-
-      let resolvedProfile: User | undefined;
-      try {
-        const profileResponse = await axios.get<{ success: boolean; user: User }>(
-          `${BASE_API_URL}/auth/profile/${sessionUser.id}`,
-          {
-            withCredentials: true,
-          },
-        );
-        resolvedProfile = profileResponse.data?.user;
-      } catch {
-        resolvedProfile = undefined;
-      }
-
-      const user = persistGoogleUser(sessionUser, resolvedProfile);
-      const params = new URLSearchParams(window.location.search);
-      params.delete("oauth");
-      params.delete("oauth_error");
-      const nextQuery = params.toString();
-      window.history.replaceState(
-        {},
-        "",
-        `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`,
-      );
-
-      toast.dismiss(loadingToast);
-      toast.success(`Logged in successfully!\nWelcome back ${user.name}!`);
-
-      if (user.isCustomized) {
-        navigate("/dashboard");
-      } else {
-        toast.success("But first, let's complete your Customization!", {
-          icon: <BadgeInfo size={20} />,
-        });
-        triggerCustomize();
-      }
-    } catch (err) {
-      const params = new URLSearchParams(window.location.search);
-      params.delete("oauth");
-      params.delete("oauth_error");
-      const nextQuery = params.toString();
-      window.history.replaceState(
-        {},
-        "",
-        `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`,
-      );
-      setIsLogin(true);
-      toast.dismiss(loadingToast);
-      toast.error("Google sign-in failed. Please try again.");
-      console.error("Google callback completion failed:", err);
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    const loadingToast = toast.loading("Redirecting to Google...");
-
-    try {
-      const callbackURL = `${window.location.origin}/login?oauth=google`;
-      const errorCallbackURL = `${window.location.origin}/login?oauth_error=google`;
-
-      const response = await axios.post<{ url: string }>(
-        `${BASE_API_URL}/auth/sign-in/social`,
-        {
-          provider: "google",
-          callbackURL,
-          errorCallbackURL,
-          disableRedirect: true,
-        },
-        {
-          withCredentials: true,
-        },
-      );
-
-      const redirectUrl = response.data?.url;
-      if (!redirectUrl) {
-        throw new Error("Missing OAuth redirect URL from Better Auth.");
-      }
-
-      toast.dismiss(loadingToast);
-      window.location.assign(redirectUrl);
-    } catch (err: unknown) {
-      toast.dismiss(loadingToast);
-      if (axios.isAxiosError(err)) {
-        const backendMessage =
-          (err.response?.data as { error?: string; message?: string } | undefined)?.error ||
-          (err.response?.data as { error?: string; message?: string } | undefined)?.message;
-        toast.error(backendMessage ?? "Unable to start Google sign-in right now.");
-      } else {
-        toast.error("Unable to start Google sign-in right now.");
-      }
-      console.error("Google sign-in init failed:", err);
-    }
-  };
-
-  // Methods to trace tailwindcss theme changes in plain ts. It's really not efficient, but will be enough for the firt sprint demo..
 
   useEffect(() => {
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
+    const queryParameters = new URLSearchParams(window.location.search);
+    const queryRegister = queryParameters.get("register");
 
-    const bootstrapAuth = async () => {
-      const queryParameters = new URLSearchParams(window.location.search);
-      const oauth = queryParameters.get("oauth");
-      const oauthError = queryParameters.get("oauth_error");
+    if (queryRegister === "true") {
+      setIsLogin(false);
+    } else {
+      setIsLogin(true);
+    }
 
-      if (oauthError === "google") {
-        toast.error("Google sign-in was cancelled or failed.");
-      }
-
-      if (oauth === "google") {
-        setIsLogin(true);
-        await completeGoogleSignIn();
-        return;
-      }
-
-      const hasCookieSession = await bootstrapLegacySession();
-      if (hasCookieSession) {
-        return;
-      }
-
-      const storedUser = localStorage.getItem("user");
-      if (storedUser && JSON.parse(storedUser).isCustomized) {
-        setUser(JSON.parse(storedUser));
-        navigate("/dashboard");
-        return;
-      } else if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        triggerCustomize();
-        toast.success("Welcome back! \nLet's complete your Profile..", {
-          icon: <BadgeInfo size={20} color="var(--info-hex)" />,
-        });
-      }
-
-      const queryRegister = queryParameters.get("register");
-      if (queryRegister === "true") {
-        setIsLogin(false);
-      } else {
-        setIsLogin(true);
-      }
-    };
-
-    void bootstrapAuth();
-  }, [navigate, setUser, completeGoogleSignIn, bootstrapLegacySession]);
+    if (user && user.isCustomized) {
+      navigate("/dashboard");
+      return;
+    } else if (user) {
+      triggerCustomize();
+    }
+  }, [navigate, isLogin, user, loading]);
 
   const changeRegisterState = () => {
     if (isChangingState) return;
 
     setIsChangingState(true);
-    console.log("called");
     setIsLogin(!isLogin);
     const params = new URLSearchParams(window.location.search);
     params.set("register", isLogin.toString());
-    console.log("In register check: ");
 
     window.history.replaceState(
       {},
@@ -321,155 +107,7 @@ export default function Login() {
     }, 1000);
   };
 
-  const completeRegistration = async (formData: FormData): Promise<boolean> => {
-    if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
-      console.log(partialPasswordReq.filter((req) => !req.complete));
-      toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
-      return false;
-    }
-
-    const registrationToast = toast.loading(
-      isLogin ? "Logging in..." : "Creating account...",
-    );
-
-    if (isLogin) {
-      console.log("Login");
-      let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
-
-      try {
-        response = await axios.post<{ success: boolean; user: User }>(
-          `${BASE_API_URL}/auth/login`,
-          {
-            email: String(formData.get("email") ?? "").trim(),
-            password: formData.get("password"),
-            rememberMe,
-          },
-          { withCredentials: true },
-        );
-
-        const user = response.data.user;
-        localStorage.setItem("user", JSON.stringify(user));
-        setUser(user);
-
-        console.log("user loaded: ", user);
-
-        toast.dismiss(registrationToast);
-        toast.success(
-          `Logged in successfully!\nWelcome back ${user.name}!`,
-        );
-
-        if (user.isCustomized) {
-          navigate("/dashboard");
-        } else {
-          triggerCustomize();
-          const params = new URLSearchParams(window.location.search);
-          params.set("customizing", "true");
-          window.history.replaceState(
-            {},
-            "",
-            `${window.location.pathname}?${params}`,
-          );
-          toast.success("Welcome back! \nLet's complete your Profile..", {
-            icon: <BadgeInfo size={20} color="var(--info-hex)" />,
-          });
-          triggerCustomize();
-        }
-
-        return true;
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          toast.dismiss(registrationToast);
-          const status = err.response?.status;
-          const backendMessage =
-            (err.response?.data as { error?: string; message?: string } | undefined)?.message ||
-            (err.response?.data as { error?: string; message?: string } | undefined)?.error;
-
-          if (status === 400) {
-            toast.error(backendMessage ?? "Invalid login data.");
-            console.error("Validation error:", err);
-          } else if (status === 401) {
-            toast.error(backendMessage ?? "Invalid email or password.");
-            console.error("Invalid credentials:", err);
-          } else if (!err.response) {
-            toast.error("Cannot reach server. Is backend running on port 4000?");
-            console.error("Network error:", err);
-          } else {
-            toast.error(backendMessage ?? "Login failed. Please try again.");
-            console.error("Login request failed:", err);
-          }
-        } else {
-          toast.dismiss(registrationToast);
-          toast.error(`An unexpected error occurred. Please try again.`);
-          console.error("Request failed:", err);
-        }
-
-        return false;
-      }
-    } else {
-      console.log("Sign Up");
-
-      const email = String(formData.get("email") ?? "").trim();
-      const password = formData.get("password") as string;
-      const name = String(formData.get("name") ?? "").trim();
-
-      let response: AxiosResponse<{ success: boolean; user: User }> | undefined;
-
-      console.log("Passed logon for: ", email, name);
-
-      try {
-        response = await axios.post<{ success: boolean; user: User }>(
-          `${BASE_API_URL}/auth/register`,
-          {
-            email: email,
-            password: password,
-            name: name,
-            rememberMe,
-          },
-          { withCredentials: true },
-        );
-
-        const user = response.data.user;
-        //save user in localstorage for autoconnect
-        localStorage.setItem("user", JSON.stringify(user));
-        setUser(user);
-
-        toast.dismiss(registrationToast);
-        toast.success(`Account created successfully!\nWelcome aboard ${name}!`);
-        return true;
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          toast.dismiss(registrationToast);
-          const status = err.response?.status;
-          const backendMessage =
-            (err.response?.data as { error?: string; message?: string } | undefined)?.message ||
-            (err.response?.data as { error?: string; message?: string } | undefined)?.error;
-
-          if (status === 400) {
-            toast.error(backendMessage ?? "Invalid registration data.");
-            console.error("Validation error:", err);
-          } else if (status === 409) {
-            toast.error(backendMessage ?? "Email is already taken.");
-            console.error("Email already taken:", err);
-          } else if (!err.response) {
-            toast.error("Cannot reach server. Is backend running on port 4000?");
-            console.error("Network error:", err);
-          } else {
-            toast.error(backendMessage ?? "Registration failed. Please try again.");
-            console.error("Registration request failed:", err);
-          }
-        } else {
-          toast.dismiss(registrationToast);
-          toast.error(`An unexpected error occurred. Please try again.`);
-          console.error("Request failed:", err);
-        }
-
-        return false;
-      }
-    }
-  };
-
   const triggerCustomize = () => {
-    // console.log("passed");
     if (loginContainerRef.current) {
       loginContainerRef.current.classList.add("login-fadeout");
     }
@@ -495,9 +133,98 @@ export default function Login() {
     }, 3000);
   };
 
+  const completeRegistration = async (formData: FormData): Promise<boolean> => {
+    if (!isLogin && partialPasswordReq.some((req) => !req.complete)) {
+      toast.error(partialPasswordReq.filter((req) => !req.complete)[0].error);
+      return false;
+    }
+
+    const registrationToast = toast.loading(
+      isLogin ? "Logging in..." : "Creating account...",
+    );
+
+    const email    = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (isLogin) {
+      const { data, error } = await authClient.signIn.email({ email, password });
+
+      if (error || !data?.user) {
+        toast.dismiss(registrationToast);
+        if (error?.status === 401 || error?.code === "INVALID_EMAIL_OR_PASSWORD") {
+          toast.error("Invalid email or password.");
+        } else {
+          toast.error("An unexpected error occurred. Please try again.");
+        }
+        console.error("Login error:", error);
+        return false;
+      }
+
+      toast.dismiss(registrationToast);
+      toast.success(`Logged in successfully!\nWelcome back ${data.user.name}!`);
+
+      const isCustomized = (data.user as Record<string, unknown>).isCustomized as boolean | undefined;
+      if (isCustomized) {
+        navigate("/dashboard");
+      } else {
+        triggerCustomize();
+        const params = new URLSearchParams(window.location.search);
+        params.set("customizing", "true");
+        window.history.replaceState({}, "", `${window.location.pathname}?${params}`);
+        toast.success("Welcome back! \nLet's complete your Profile..", {
+          icon: <BadgeInfo size={20} color="var(--info-hex)" />,
+        });
+      }
+
+      return true;
+    } else {
+      const name = formData.get("name") as string;
+
+      const { data, error } = await authClient.signUp.email({ email, password, name });
+
+      if (error || !data?.user) {
+        toast.dismiss(registrationToast);
+        if (
+          error?.status === 409 ||
+          error?.status === 422 ||
+          error?.code === "USER_ALREADY_EXISTS" ||
+          error?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
+        ) {
+          toast.error(
+            "This email is already linked to a social account.\nSign in with GitHub or Google, then add a password in Account Settings.",
+            { duration: 6000 },
+          );
+        } else if (error?.status === 400) {
+          toast.error("Invalid registration data.");
+        } else {
+          toast.error("An unexpected error occurred. Please try again.");
+        }
+        console.error("Registration error:", error);
+        return false;
+      }
+
+      toast.dismiss(registrationToast);
+      toast.success(`Account created successfully!\nWelcome aboard ${name}!`);
+      return true;
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: `${window.location.origin}/login`,
+    });
+  };
+
+  const handleGithubSignIn = async () => {
+    await authClient.signIn.social({
+      provider: "github",
+      callbackURL: `${window.location.origin}/login`,
+    });
+  };
+
   const handleCreateAccount = async (formData: FormData) => {
     const success = await completeRegistration(formData);
-    // console.log("passed 1");
     if (success && !isLogin) {
       triggerCustomize();
     }
@@ -575,7 +302,6 @@ export default function Login() {
             className="login-form w-full h-auto flex flex-col items-center justify-center gap-7 px-15 max-md:px-5 relative"
             onSubmit={(e) => {
               e.preventDefault();
-              console.log(e.target);
               handleCreateAccount(new FormData(e.currentTarget));
             }}
           >
@@ -699,7 +425,7 @@ export default function Login() {
             <div className="login-icons w-full h-auto flex items-center justify-center gap-4">
               <button
                 type="button"
-                onClick={signInWithGoogle}
+                onClick={handleGoogleSignIn}
                 className="login-google flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all"
               >
                 <img
@@ -711,7 +437,11 @@ export default function Login() {
                   Google
                 </span>
               </button>
-              <button className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all">
+              <button
+                type="button"
+                onClick={handleGithubSignIn}
+                className="login-github flex w-full items-center justify-center gap-3 px-4 py-4 border border-border/60 bg-input/40 rounded-full shadow-sm shadow-border/60 hover:opacity-90 cursor-pointer transition-all"
+              >
                 <img
                   src={Github}
                   alt="github-icon"
