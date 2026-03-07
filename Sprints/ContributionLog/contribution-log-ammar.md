@@ -15,7 +15,10 @@
 
 | Date | Task | Description | Time Spent |
 |------|------|-------------|------------|
-| 2026-01-30 | Example of Task | description of task | time spent |
-| 2026-01-30 | Example of Task | description of task | time spent |
-| 2026-01-30 | | | |
-| 2026-01-30 | | | |
+| 2026-02-13 | Test Updates | Rewrote user registration and login test cases for the new BetterAuth implementation | 2h |
+| 2026-02-14 | Testing | Added unit tests for profile management user story and added integration tests | 2h |
+| 2026-02-17 | Sprint Planning | Created sprint 2 backlog plan with all user stories and tasks | 1.5h |
+| 2026-02-20 | Issue Tracking | Created GitHub issues for all acceptance tests and user stories for sprint 2 | 1.5h |
+| 2026-02-26 | Merge & Conflict Resolution | Merged all features to main and resolved merge conflicts | 3h |
+
+**Total Time:** 10h
