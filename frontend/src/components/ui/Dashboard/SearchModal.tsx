@@ -45,76 +45,15 @@ const TIME_RANGES = [
 ];
 
 const RECIPES_API_BASE = "/api/recipes";
+const RECIPES_SEARCH_API_BASE = "/api/recipes/search";
 
 interface SearchContainerProps {
   onClose: (searchResult: Recipe | undefined) => void;
 }
 
-const EXAMPLE_RECIPES: Recipe[] = [
-  {
-    id: "example-1",
-    createdBy: "system",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    title: "Spaghetti Carbonara",
-    description:
-      "A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper. Quick and delicious!",
-    imageUrl: undefined,
-    cookingTime: 20,
-    skillLevel: "intermediate",
-    servings: 2,
-    dietaryTags: ["gluten"],
-    containsAllergens: ["eggs", "dairy"],
-    cuisine: "Italian",
-    ingredients: [
-      { foodItem: "Spaghetti", amount: 200, unit: "g" },
-      { foodItem: "Pancetta", amount: 100, unit: "g" },
-      { foodItem: "Eggs", amount: 2, unit: "large" },
-      { foodItem: "Parmesan Cheese", amount: 50, unit: "g" },
-      { foodItem: "Black Pepper", amount: 1, unit: "tsp" },
-    ],
-    steps: [
-      "Cook spaghetti in salted boiling water until al dente.",
-      "In a pan, cook pancetta until crispy.",
-      "In a bowl, whisk eggs and Parmesan together.",
-      "Drain pasta and combine with pancetta. Remove from heat.",
-      "Quickly stir in egg mixture to create a creamy sauce.",
-      "Season with black pepper and serve immediately.",
-    ],
-  },
-  {
-    id: "example-2",
-    createdBy: "system",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    title: "Chicken Stir Fry",
-    description:
-      "A quick and colorful Asian-inspired dish with tender chicken and fresh vegetables in a savory sauce.",
-    imageUrl: undefined,
-    cookingTime: 15,
-    skillLevel: "beginner",
-    servings: 2,
-    dietaryTags: ["gluten"],
-    containsAllergens: ["soy"],
-    cuisine: "Thai",
-    ingredients: [
-      { foodItem: "Chicken Breast", amount: 400, unit: "g" },
-      { foodItem: "Bell Peppers", amount: 2, unit: "pcs" },
-      { foodItem: "Broccoli", amount: 200, unit: "g" },
-      { foodItem: "Soy Sauce", amount: 3, unit: "tbsp" },
-      { foodItem: "Garlic", amount: 3, unit: "cloves" },
-      { foodItem: "Ginger", amount: 1, unit: "tbsp" },
-    ],
-    steps: [
-      "Cut chicken into bite-sized pieces and vegetables into chunks.",
-      "Heat oil in a wok or large skillet over high heat.",
-      "Cook chicken until browned, then set aside.",
-      "Stir fry vegetables until tender-crisp.",
-      "Return chicken to the wok, add soy sauce, garlic, and ginger.",
-      "Toss everything together and serve over rice.",
-    ],
-  },
-];
+// Kept for potential future use as local examples
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const EXAMPLE_RECIPES: Recipe[] = [];
 
 export default function SearchContainer({ onClose }: SearchContainerProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -128,15 +67,81 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
     skillLevel: string[];
     cookingTime: string[];
   }>({ mealType: [], skillLevel: [], cookingTime: [] });
+  const [filterMode, setFilterMode] = useState<"AND" | "OR">("AND");
 
   const [phraseIndex, setPhraseIndex] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const filteredResults = results.filter((recipe) => {
+    const hasMealFilters = activeFilters.mealType.length > 0;
+    const hasSkillFilters = activeFilters.skillLevel.length > 0;
+    const hasTimeFilters = activeFilters.cookingTime.length > 0;
+
+    if (!hasMealFilters && !hasSkillFilters && !hasTimeFilters) return true;
+
+    const text = `${recipe.title} ${recipe.description}`.toLowerCase();
+
+    const matchesMeal = hasMealFilters
+      ? activeFilters.mealType.some((type) => {
+          switch (type) {
+            case "Breakfast":
+              return /breakfast|pancake|waffle|omelette|cereal|morning|brunch|toast/i.test(
+                text,
+              );
+            case "Lunch":
+              return /lunch|sandwich|wrap|salad|soup/i.test(text);
+            case "Dinner":
+              return /dinner|steak|roast|pasta|curry|casserole|stir.?fry|taco/i.test(
+                text,
+              );
+            case "Snacks":
+              return /snack|cookie|chips|dip|appetizer|bite|treat|dessert/i.test(
+                text,
+              );
+            default:
+              return true;
+          }
+        })
+      : true;
+
+    const matchesSkill = hasSkillFilters
+      ? activeFilters.skillLevel.includes(recipe.skillLevel)
+      : true;
+
+    const time = recipe.cookingTime ?? 0;
+    const matchesTime = hasTimeFilters
+      ? activeFilters.cookingTime.some((range) => {
+          switch (range) {
+            case "under15":
+              return time < 15;
+            case "15to30":
+              return time >= 15 && time <= 30;
+            case "30to60":
+              return time > 30 && time <= 60;
+            case "over60":
+              return time > 60;
+            default:
+              return true;
+          }
+        })
+      : true;
+
+    if (filterMode === "AND") {
+      return matchesMeal && matchesSkill && matchesTime;
+    }
+
+    return (
+      (hasMealFilters && matchesMeal) ||
+      (hasSkillFilters && matchesSkill) ||
+      (hasTimeFilters && matchesTime)
+    );
+  });
+
   useEffect(() => {
     if (!loading) return;
-    setPhraseIndex(0);
+    setPhraseIndex(Math.round(Math.random() * (SEARCHING_PHRASES.length - 1)));
     const interval = setInterval(() => {
       setPhraseIndex((i) => (i + 1) % SEARCHING_PHRASES.length);
     }, 1800);
@@ -173,10 +178,18 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
       async () => {
         try {
           const params = new URLSearchParams();
-          if (searchTerm) params.set("search", searchTerm);
-          if (activeFilters.skillLevel.length === 1)
-            params.set("skillLevel", activeFilters.skillLevel[0]);
-          const res = await fetch(`${RECIPES_API_BASE}?${params.toString()}`);
+          let url = RECIPES_API_BASE;
+
+          if (searchTerm) {
+            url = RECIPES_SEARCH_API_BASE;
+            params.set("q", searchTerm);
+          } else {
+            if (activeFilters.skillLevel.length === 1) {
+              params.set("skillLevel", activeFilters.skillLevel[0]);
+            }
+          }
+
+          const res = await fetch(`${url}?${params.toString()}`);
           const json = await res.json();
           console.log(json);
           if (!res.ok)
@@ -239,6 +252,20 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
                 {activeFilterCount}
               </span>
             )}
+          </Button>
+          <Button
+            onClick={() =>
+              setFilterMode((prev) => (prev === "AND" ? "OR" : "AND"))
+            }
+            className={`relative flex items-center gap-2 px-2 py-2 rounded-full bg-linear-to-b from-secondary to-card ring-2 ring-border/30 hover:brightness-125 transition-all duration-300 ${
+              filterMode === "AND"
+                ? "text-accent ring-accent/40"
+                : "text-foreground/70 hover:text-accent"
+            }`}
+          >
+            <span className="pointer-events-none text-xs font-semibold">
+              {filterMode}
+            </span>
           </Button>
         </div>
         <div
@@ -368,7 +395,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
                       </motion.span>
                     </AnimatePresence>
                   </motion.div>
-                ) : results.length === 0 ? (
+                ) : filteredResults.length === 0 ? (
                   <motion.div
                     key="empty"
                     initial={{ opacity: 0, y: 10 }}
@@ -401,7 +428,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
                     transition={{ duration: 0.15 }}
                     className="flex flex-col gap-2"
                   >
-                    {results.map((recipe) => (
+                    {filteredResults.map((recipe) => (
                       <div
                         key={recipe.id}
                         onClick={() => onClose(recipe)}
