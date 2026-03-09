@@ -9,34 +9,13 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { SKILL_LEVELS } from "@masterchef/shared";
 
-export interface RecipeEntry {
-  id: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  title: string;
-  description: string;
-  image: string;
-  prepTime: number;
-  cookTime: number;
-  cost: number;
-  difficulty: (typeof SKILL_LEVELS)[number]["value"];
-  dietaryTags: string[];
-  ingredients: Array<{
-    foodItem: string;
-    amount: number;
-    unit: string;
-    notes?: string;
-  }>;
-  steps: string[];
-}
+import { Recipe } from "@masterchef/shared";
 
 export interface RecipeContainerProps {
-  recipes: RecipeEntry[];
+  recipes: Recipe[];
   currentUserId: string;
-  onEdit: (recipe: RecipeEntry) => void;
+  onEdit: (recipe: Recipe) => void;
   onDelete: (recipeId: string) => void;
   type: ViewMode;
 }
@@ -49,9 +28,9 @@ function StandardCard({
   onEdit,
   onDelete,
 }: {
-  recipe: RecipeEntry;
+  recipe: Recipe;
   isOwner: boolean;
-  onEdit: (r: RecipeEntry) => void;
+  onEdit: (r: Recipe) => void;
   onDelete: (id: string) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -63,7 +42,7 @@ function StandardCard({
       className="recipe-standard-view rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300"
     >
       <img
-        src={recipe.image}
+        src={recipe.imageUrl}
         alt={recipe.title}
         className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} object-cover duration-300 ease-out-cubic transition-all`}
       />
@@ -79,18 +58,18 @@ function StandardCard({
             <div className="prep-diff flex w-full items-center justify-between px-0.5">
               <span className="flex items-center justify-center gap-1">
                 <Clock4 size={13} className="brightness-125" />{" "}
-                {recipe.prepTime}m
+                {recipe.prepingTime}m
               </span>
               <span className="flex items-center justify-center gap-1">
                 <SignalHigh size={13} className="brightness-125" />{" "}
-                {recipe.difficulty}
+                {recipe.skillLevel}
               </span>
             </div>
 
             <div className="cook-time w-full px-0.5">
               <span className="flex items-center justify-baseline gap-1">
                 <CookingPot size={13} className="brightness-125" />{" "}
-                {recipe.cookTime}m
+                {recipe.cookingTime}m
               </span>
             </div>
           </div>
@@ -138,15 +117,15 @@ function TiltedRecipeCard({
   onEdit,
   onDelete,
 }: {
-  recipe: RecipeEntry;
+  recipe: Recipe;
   isOwner: boolean;
-  onEdit: (r: RecipeEntry) => void;
+  onEdit: (r: Recipe) => void;
   onDelete: (id: string) => void;
 }) {
   return (
     <TiltedCard
       key={recipe.id}
-      imageSrc={recipe.image}
+      imageSrc={recipe.imageUrl}
       altText={recipe.title}
       containerWidth="100%"
       containerHeight="16rem"
@@ -169,17 +148,17 @@ function TiltedRecipeCard({
             <div className="flex w-full items-center justify-between px-0.5">
               <span className="flex items-center gap-1">
                 <Clock4 size={13} className="brightness-150" />{" "}
-                {recipe.prepTime}m
+                {recipe.prepingTime}m
               </span>
               <span className="flex items-center gap-1">
                 <SignalHigh size={13} className="brightness-150" />{" "}
-                {recipe.difficulty}
+                {recipe.skillLevel}
               </span>
             </div>
             <div className="w-full px-0.5">
               <span className="flex items-center gap-1">
                 <CookingPot size={13} className="brightness-150" />{" "}
-                {recipe.cookTime}m
+                {recipe.cookingTime}m
               </span>
             </div>
           </div>
