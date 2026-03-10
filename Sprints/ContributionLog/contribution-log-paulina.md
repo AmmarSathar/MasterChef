@@ -20,5 +20,13 @@
 | 2026-02-13 | User Customization Tracking                | Added isCustomized boolean flag to user model to track onboarding completion. Exposed createdAt and updatedAt timestamps in the user API response. Updated UserResponse type and toUserResponse()                                                                                                                                                                                                                      | 0.5h       |
 | 2026-02-25 | Recipe Search & Filter API (Stories 5 & 6) | Implemented GET /api/recipes/search?q= with case-insensitive regex search across recipe title, description, and ingredients. Extended GET /api/recipes with max_time, difficulty, and dietary_tags filter params. Updated RecipeQueryInput type, recipe service, controller, and routes. Updated FatSecret OAuth 2.0 credentials in .env and exposed them in config.                                                   | 1.5h       |
 | 2026-02-25 | Meeting Minutes                            | Wrote meeting minutes for three Sprint 2 meetings: Feb 13 in-person TA sync, Feb 20 in-person TA sync, and Feb 22 sprint planning session for Stories 5 & 6.                                                                                                                                                                                                                                                           | 0.5h       |
+| 2026-02-27 | BetterAuth Migration (Full-Stack)          | Migrated auth from manual bcrypt/localStorage to BetterAuth (session-based). Backend: MongoDB adapter, email/password + Google/GitHub OAuth, account linking, requireSession middleware, setPassword endpoint for OAuth-only users, ObjectId query fix, removed phantom Mongoose `users` collection. Frontend: BetterAuth React client, session via useSession(), OAuth sign-in flows, Change/Set Password UI with strength validation. | 4-5h       |
 
-**Total Time:** 11.5h
+**Total Time:** 16.5h
+
+## Sprint 3
+
+| Date | Task | Description | Time Spent |
+| ---------- | ---- | ----------- | ---------- |
+
+**Total Time:** 0h
