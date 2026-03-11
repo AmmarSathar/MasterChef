@@ -22,3 +22,12 @@ export type { SkillLevelValue, SkillLevelLabel } from "./skill-levels.js";
 
 // ── Food Helpers ───────────────────────────────────────
 export { getAllergens, hasAllergenConflict, hasDietaryConflict, hasAnyConflict } from "./food-helpers.js";
+
+// ── Meal Planning ──────────────────────────────────────
+export {
+  DAYS_OF_WEEK,
+  dayOfWeekValues,
+  MEAL_TYPES,
+  mealTypeValues,
+} from "./meal-planning.js";
+export type { DayOfWeek, DayOfWeekLabel, MealType, MealTypeLabel } from "./meal-planning.js";
