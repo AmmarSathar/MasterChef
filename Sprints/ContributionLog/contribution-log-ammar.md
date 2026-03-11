@@ -22,3 +22,9 @@
 | 2026-02-26 | Merge & Conflict Resolution | Merged all features to main and resolved merge conflicts | 3h |
 
 **Total Time:** 10h
+
+## Sprint 3
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+
+**Total Time:** 0h
