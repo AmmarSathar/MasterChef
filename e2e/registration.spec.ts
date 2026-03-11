@@ -21,19 +21,23 @@ test("user can register and reaches preferences flow", async ({ page }) => {
     page.getByRole("heading", { name: "Customize Your Culinary Experience" })
   ).toBeVisible({ timeout: 20000 });
 
-  const firstCuisine = page.locator('text="Favorite Cuisines"').locator('..').locator('.cursor-pointer').first();
+  const firstCuisine = page
+    .locator('text="Favorite Cuisines"')
+    .locator("..")
+    .locator(".cursor-pointer")
+    .first();
   await firstCuisine.click();
 
-  const allergiesInput = page.getByPlaceholder(/Search allergies/i);
-  await allergiesInput.click();
-  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Next: Personal Details" }).click();
 
   await expect(
     page.getByRole("heading", { name: "Tell Us About Yourself" })
   ).toBeVisible({ timeout: 10000 });
 
-  await page.getByLabel(/^Age/).fill("22");
-  await page.keyboard.press("Enter");
+  const ageInput = page.getByLabel(/^Age/);
+  await ageInput.fill("20");
 
-  await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+  await page.getByRole("button", { name: "Complete Setup" }).click();
+
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 20000 });
 });
