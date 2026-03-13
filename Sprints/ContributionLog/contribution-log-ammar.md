@@ -26,5 +26,8 @@
 ## Sprint 3
 | Date | Task | Description | Time Spent |
 |------|------|-------------|------------|
+| 2026-02-06 | Sprint Planning | Served as Scrum Master and created the Sprint 3 plan | 2h |
+| 2026-03-13 | Issue Tracking | Created GitHub issues for Sprint 3 stories and tasks | 2h |
+| 2026-03-13 | UI Development | Built the Meals dashboard UI and navigation updates | 3h |
 
-**Total Time:** 0h
+**Total Time:** 7h
