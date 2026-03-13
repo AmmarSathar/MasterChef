@@ -187,12 +187,13 @@ export function RecipeContent() {
       ingredients: data.ingredients,
       steps: data.steps,
       cookingTime: data.cookingTime,
+      prepTime: data.prepingTime,
       servings: data.servings,
       skillLevel: data.skillLevel,
       dietaryTags: data.dietaryTags,
     };
 
-    console.log(recipePayload)
+    console.log(recipePayload);
 
     if (editingRecipe) {
       (async () => {
@@ -211,7 +212,7 @@ export function RecipeContent() {
           const updated = json?.data;
           const updatedAt = updated?.updatedAt ?? new Date();
 
-          console.log(updated)
+          console.log(updated);
 
           setRecipes((prev) =>
             prev.map((r) =>
@@ -554,7 +555,8 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
-    if (recipes.length === 0) setExampleRecipes();
+    /*if (recipes.length === 0) */ setExampleRecipes();
+    
   }, [recipes.length]);
 
   const getRecipeIdFromHash = () => {

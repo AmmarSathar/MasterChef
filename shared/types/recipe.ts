@@ -21,6 +21,7 @@ export interface RecipeBase {
   ingredients: Ingredient[];
   steps: string[];
   cookingTime: number;
+  prepTime: number;
   servings: number;
   skillLevel: SkillLevelValue;
   cuisine?: CuisineOption;

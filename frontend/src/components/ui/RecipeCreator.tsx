@@ -43,8 +43,9 @@ const INITIAL_FORM_DATA: Recipe = {
   description: "",
   prepingTime: 0,
   cookingTime: 0,
-  servings: 4,
-  skillLevel: SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
+  servings: 0,
+  skillLevel:
+    SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as DietaryOption[],
 };
 
@@ -92,6 +93,9 @@ export default function RecipeCreator({
   const [coverImage, setCoverImage] = useState<string>(
     initialData?.imageUrl ?? "",
   );
+  const [diataryTags, setDietaryTags] = useState<DietaryOption[]>(
+    initialData?.dietaryTags ?? [],
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ingredientContainerRef = useRef<HTMLDivElement>(null);
@@ -108,19 +112,23 @@ export default function RecipeCreator({
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+  const [selectedDietaryTags, setSelectedDietaryTags] = useState<DietaryOption[]>(
+    initialData?.dietaryTags ?? []
+  );
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      dietaryTags: selectedDietaryTags,
+    }));
+  }, [selectedDietaryTags]);
 
   const toggleDietaryTag = (tag: DietaryOption, checked: boolean) => {
-    setFormData((prev) => {
-      const prevTags: DietaryOption[] = Array.isArray(prev.dietaryTags)
-        ? prev.dietaryTags
-        : [];
-      return {
-        ...prev,
-        dietaryTags: checked
-          ? Array.from(new Set([...prevTags, tag]))
-          : prevTags.filter((t) => t !== tag),
-      };
-    });
+    setSelectedDietaryTags((prevTags) =>
+      checked
+        ? Array.from(new Set([...prevTags, tag]))
+        : prevTags.filter((t) => t !== tag)
+    );
   };
 
   const addIngredient = () => {
@@ -283,7 +291,7 @@ export default function RecipeCreator({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between p-6 pb-4">
-            <div>
+            <div className="pr-2">
               <input
                 type="text"
                 id="rc-title"
@@ -359,7 +367,7 @@ export default function RecipeCreator({
                 />
               </div>
 
-              <div className="flex gap-1 flex-col justify-between h-full">
+              <div className="flex gap-10 flex-col justify-between h-full">
                 <div className="cook-prep-container flex-1 flex gap-4">
                   <div className="flex flex-col gap-1.5 relative h-20">
                     <Label
@@ -504,7 +512,7 @@ export default function RecipeCreator({
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 pt-5">
               <div className="flex items-center justify-between">
                 <span className="text-base font-semibold text-foreground">
                   Ingredients
@@ -544,7 +552,11 @@ export default function RecipeCreator({
                         value={ingredient.foodItem}
                         onChange={(e) =>
                           !formDisabled &&
-                          updateIngredient(ingredient.id, "foodItem", e.target.value)
+                          updateIngredient(
+                            ingredient.id,
+                            "foodItem",
+                            e.target.value,
+                          )
                         }
                         className={`h-8 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/30 transition-all duration-200`}
                       />
@@ -648,7 +660,7 @@ export default function RecipeCreator({
                       {ingredients.length > 1 && (
                         <button
                           type="button"
-                            disabled={formDisabled}
+                          disabled={formDisabled}
                           onClick={() => removeIngredient(ingredient.id)}
                           className="text-foreground/30 hover:text-destructive bg-none hover:bg-accent/10 transition-all shrink-0 absolute top-2 right-5 cursor-pointer p-3 rounded-full"
                         >
@@ -707,6 +719,66 @@ export default function RecipeCreator({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="recipe-servings flex flex-col gap-1.5 relative h-20 w-full -my-4">
+              <div className="flex flex-col gap-3 relative h-20 w-60">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-semibold text-foreground">
+                    Servings
+                  </span>
+                </div>
+
+                <div className="recipe-servings relative z-0 h-full w-full">
+                  <div className="input-increm-decrem w-full h-full flex absolute items-center justify-between px-2 z-10">
+                    <Button
+                      type="button"
+                      disabled={formDisabled}
+                      onClick={() =>
+                        handleFormChange(
+                          "servings",
+                          Math.max(0, Number(formData.servings || 0) - 1),
+                        )
+                      }
+                      className="text-foreground/40 hover:text-foreground transition-all p-1 bg-none selection:bg-none dark:bg-none rounded-xl relative flex"
+                    >
+                      <Minus size={16} />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      disabled={formDisabled}
+                      onClick={() =>
+                        handleFormChange(
+                          "servings",
+                          Number(formData.servings || 0) + 1,
+                        )
+                      }
+                      className="text-foreground/40 hover:text-foreground transition-all p-1 bg-none rounded-xl relative flex"
+                    >
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+                  <Input
+                    id="rc-cook"
+                    type="text"
+                    min="0"
+                    placeholder="45"
+                    value={formData.servings}
+                    onChange={(e) =>
+                      !formDisabled &&
+                      handleFormChange(
+                        "servings",
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      )
+                    }
+                    className="bg-input/40 border-border/50 rounded-xl px-15 h-full w-full pl-20"
+                  />
+                  <span className="absolute right-15 top-1/2 -translate-y-1/2 text-xs text-foreground/40 font-medium pointer-events-none">
+                    SERVINGS
+                  </span>
+                </div>
               </div>
             </div>
 
