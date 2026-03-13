@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   MoreHorizontal,
+  UtensilsCrossed,
 } from "lucide-react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -113,6 +114,28 @@ export default function Navbar() {
                 >
                   <FileText
                     className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                  />
+                </button>
+                <button
+                  disabled={!userConnected}
+                  onClick={() => {
+                    if (!userConnected) {
+                      navigate("/login");
+                      return;
+                    }
+                    navigate("/dashboard");
+                    window.location.hash = "meals";
+                    setSelectedBtn("nav-meals");
+                    setIsMoreOpen(false);
+                  }}
+                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-meals" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                    selectedBtn === "nav-meals"
+                      ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
+                      : "bg-secondary hover:bg-muted"
+                  }`}
+                >
+                  <UtensilsCrossed
+                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
                   />
                 </button>
 
@@ -256,6 +279,27 @@ export default function Navbar() {
             >
               <FileText
                 className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+              />
+            </button>
+            <button
+              disabled={!userConnected}
+              onClick={() => {
+                if (!userConnected) {
+                  navigate("/login");
+                  return;
+                }
+                navigate("/dashboard");
+                window.location.hash = "meals";
+                setSelectedBtn("nav-meals");
+              }}
+              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-meals" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                selectedBtn === "nav-meals"
+                  ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
+                  : "bg-secondary hover:bg-muted"
+              }`}
+            >
+              <UtensilsCrossed
+                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
               />
             </button>
 
