@@ -1,15 +1,14 @@
 import { test, expect } from "@playwright/test";
 
-test("user can log in, stay logged in, and log out", async ({ page, request }) => {
-  const email = `login+${Date.now()}@test.com`;
+test("user can edit dietary preferences and allergies and see them after reload", async ({ page }) => {
+  const email = `prefs+${Date.now()}@test.com`;
   const password = "Password1!";
 
-  // Create a non-customized user via BetterAuth API
   const registerRes = await page.request.post("http://localhost:4000/api/auth/sign-up/email", {
     data: {
       email,
       password,
-      name: "Login User",
+      name: "Preferences User",
     },
   });
   expect(registerRes.ok()).toBeTruthy();
@@ -24,7 +23,6 @@ test("user can log in, stay logged in, and log out", async ({ page, request }) =
     content: `* { transition-duration: 0s !important; animation-duration: 0s !important; }`,
   });
 
-  // Wait explicitly for both email and password fields to guarantee they're rendered before interaction
   await page.waitForSelector('input[name="email"]', { timeout: 15000 });
   await page.waitForSelector('input[name="password"]', { timeout: 15000 });
 
@@ -56,28 +54,41 @@ test("user can log in, stay logged in, and log out", async ({ page, request }) =
 
     const ageInput = page.getByLabel(/^Age/);
     await ageInput.fill("20");
-
     await page.getByRole("button", { name: "Complete Setup" }).click();
   }
 
-  // Verify user is in /dashboard
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 30000 });
 
-  await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
+  await page.waitForURL(/\/dashboard/, { timeout: 30000 });
+  await page.locator(".header-account").click();
+  await page.locator(".user-card").waitFor({ state: "visible", timeout: 10000 });
+  await page.getByTitle("Options").click({ force: true });
+  await page.getByRole("button", { name: "Preferences" }).click();
+  await expect(page.getByText("Dietary Preferences")).toBeVisible();
 
-  // Navigate to home page
-  await page.goto("/");
-  await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
-  
-  await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
+  await page.getByRole("button", { name: "Vegan" }).click();
 
-  // Click logout button in navbar
-  await page.getByRole("button", { name: "Logout" }).click();
-  
-  // Should redirect to login or home
-  await page.waitForURL(/\/(login|)$/ , { timeout: 5000 });
+  const allergyInput = page.getByPlaceholder(/Search allergies/i);
+  await allergyInput.click();
+  await allergyInput.fill("pea");
+  await page.getByRole("button", { name: "Peanuts" }).click();
 
-  await page.goto("/dashboard");
-  await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
-  await expect(page.getByRole("button", { name: "Log In" })).toBeVisible();
+  const save = page.getByRole("button", { name: "Save Changes" });
+  await expect(save).toBeVisible({ timeout: 5000 });
+  const waitSave = page.waitForResponse((res) =>
+    res.url().includes("/api/user/profile") && res.request().method() === "PUT"
+  );
+  await save.click();
+  await waitSave;
+
+  await page.waitForURL(/\/dashboard/, { timeout: 30000 });
+  await page.locator(".header-account").click();
+  await page.locator(".user-card").waitFor({ state: "visible", timeout: 10000 });
+  await page.getByTitle("Options").click({ force: true });
+  await page.getByRole("button", { name: "Preferences" }).click();
+
+  const veganButton = page.getByRole("button", { name: "Vegan" });
+  await expect(veganButton).toHaveClass(/bg-accent/);
+
+  await expect(page.getByText("Peanuts")).toBeVisible();
 });

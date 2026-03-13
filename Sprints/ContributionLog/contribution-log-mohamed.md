@@ -25,3 +25,16 @@
 | 2026-02-17 | Global State & Testing | Implemented global user context for state management and heavily modified tests to fully complete customization flow testing for user registration/login | 4.5h |
 
 **Total Time:** 27h
+| 2026-01-30 | Example of Task | description of task | time spent |
+| 2026-01-30 | Example of Task | description of task | time spent |
+| 2026-01-30 | | | |
+
+**Total Time:** 0h
+
+## Sprint 3
+
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+
+**Total Time:** 0h
+| 2026-01-30 | | | |

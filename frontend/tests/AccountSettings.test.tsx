@@ -61,7 +61,8 @@ describe("AccountSettings password flows", () => {
       expect(mockListAccounts).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Set up" }));
+    const setupButton = await screen.findByRole("button", { name: "Set up" });
+    fireEvent.click(setupButton);
 
     fireEvent.change(screen.getByPlaceholderText("At least 8 characters"), {
       target: { value: "Password1!" },
@@ -90,7 +91,8 @@ describe("AccountSettings password flows", () => {
       expect(mockListAccounts).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
+    const updateButton = await screen.findByRole("button", { name: "Update" });
+    fireEvent.click(updateButton);
 
     fireEvent.change(screen.getByPlaceholderText("Current password"), {
       target: { value: "OldPass1!" },
