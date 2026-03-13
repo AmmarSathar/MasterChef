@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@context/UserContext";
+import { Recipe } from "@masterchef/shared";
 
 import {
   ArrowLeft,
@@ -145,6 +146,21 @@ export default function Dashboard() {
       window.location.hash = dashboard;
     }
     setUserPressed(false);
+  };
+
+  const handleSearchClose = (recipe?: Recipe) => {
+    setSearchOpen(false);
+
+    if (!recipe) return;
+
+    const goToRecipe = () => {
+      if (window.location.pathname !== "/dashboard") {
+        navigate("/dashboard");
+      }
+      window.location.hash = `recipe?id=${encodeURIComponent(recipe.id)}`;
+    };
+
+    setTimeout(goToRecipe, 150);
   };
 
   return (
@@ -352,7 +368,7 @@ export default function Dashboard() {
                 transition={{ duration: 0.2 }}
                 className="search-modal fixed pointer-events-auto inset-0 w-screen h-screen bg-background/60 z-55 flex items-center justify-center p-5"
               >
-                <SearchContainer onClose={() => setSearchOpen(false)}/>
+                <SearchContainer onClose={handleSearchClose} />
               </motion.div>
             )}
           </AnimatePresence>,
