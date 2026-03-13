@@ -555,8 +555,7 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
-    /*if (recipes.length === 0) */ setExampleRecipes();
-    
+    if (recipes.length === 0) setExampleRecipes();
   }, [recipes.length]);
 
   const getRecipeIdFromHash = () => {
