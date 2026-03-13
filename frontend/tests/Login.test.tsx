@@ -1,5 +1,19 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  beforeAll,
+  afterEach,
+} from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { UserProvider } from "@context/UserContext";
 
@@ -7,15 +21,19 @@ vi.stubEnv("VITE_BASE_API_URL", "http://localhost:4000/api");
 
 const mockNavigate = vi.fn();
 
-const { mockSignInEmail, mockSignUpEmail, mockSignInSocial, mockUseSession } = vi.hoisted(() => ({
-  mockSignInEmail: vi.fn(),
-  mockSignUpEmail: vi.fn(),
-  mockSignInSocial: vi.fn(),
-  mockUseSession: vi.fn(),
-}));
+const { mockSignInEmail, mockSignUpEmail, mockSignInSocial, mockUseSession } =
+  vi.hoisted(() => ({
+    mockSignInEmail: vi.fn(),
+    mockSignUpEmail: vi.fn(),
+    mockSignInSocial: vi.fn(),
+    mockUseSession: vi.fn(),
+  }));
 
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  const actual =
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -92,7 +110,11 @@ describe("Login/Register UI", () => {
     vi.clearAllMocks();
     mockNavigate.mockReset();
     // Default: no active session, not loading
-    mockUseSession.mockReturnValue({ data: null, isPending: false, refetch: vi.fn() });
+    mockUseSession.mockReturnValue({
+      data: null,
+      isPending: false,
+      refetch: vi.fn(),
+    });
     setUrl("/login");
   });
 
@@ -111,7 +133,9 @@ describe("Login/Register UI", () => {
     renderLogin();
 
     fireEvent.click(screen.getByRole("button", { name: "Sign-Up" }));
-    expect(screen.getByRole("button", { name: "Create Account" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Create Account" }),
+    ).toBeInTheDocument();
     expect(window.location.search).toContain("register=true");
 
     act(() => {
@@ -127,9 +151,15 @@ describe("Login/Register UI", () => {
     setUrl("/login?register=true");
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Alice" } });
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
+    fireEvent.change(screen.getByLabelText("Full Name"), {
+      target: { value: "Alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "short" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
 
@@ -148,9 +178,15 @@ describe("Login/Register UI", () => {
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Alice" } });
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Abcdef1!" } });
+    fireEvent.change(screen.getByLabelText("Full Name"), {
+      target: { value: "Alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Abcdef1!" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
 
@@ -177,9 +213,15 @@ describe("Login/Register UI", () => {
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Alice" } });
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Abcdef1!" } });
+    fireEvent.change(screen.getByLabelText("Full Name"), {
+      target: { value: "Alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Abcdef1!" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
 
@@ -200,9 +242,15 @@ describe("Login/Register UI", () => {
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: "Alice" } });
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Abcdef1!" } });
+    fireEvent.change(screen.getByLabelText("Full Name"), {
+      target: { value: "Alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Abcdef1!" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
 
@@ -220,8 +268,12 @@ describe("Login/Register UI", () => {
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Password1!" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password1!" },
+    });
 
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
@@ -241,15 +293,20 @@ describe("Login/Register UI", () => {
   it("redirects to dashboard when login user is already customized", async () => {
     setUrl("/login?register=false");
     mockSignInEmail.mockResolvedValue({
-      data: { user: { id: "u1", email: "a@b.com", name: "Alice", isCustomized: true } },
+      data: {
+        user: { id: "u1", email: "a@b.com", name: "Alice", isCustomized: true },
+      },
       error: null,
     });
-  });
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Password1!" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password1!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
@@ -261,14 +318,25 @@ describe("Login/Register UI", () => {
     vi.useFakeTimers();
     setUrl("/login?register=false");
     mockSignInEmail.mockResolvedValue({
-      data: { user: { id: "u1", email: "a@b.com", name: "Alice", isCustomized: false } },
+      data: {
+        user: {
+          id: "u1",
+          email: "a@b.com",
+          name: "Alice",
+          isCustomized: false,
+        },
+      },
       error: null,
     });
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Password1!" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password1!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await act(async () => {
@@ -297,8 +365,12 @@ describe("Login/Register UI", () => {
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Wrong1!" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Wrong1!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
@@ -315,8 +387,12 @@ describe("Login/Register UI", () => {
 
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Password1!" } });
+    fireEvent.change(screen.getByLabelText("Email Address"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password1!" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
