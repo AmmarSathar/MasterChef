@@ -32,5 +32,7 @@ export {
   dayOfWeekValues,
   MEAL_TYPES,
   mealTypeValues,
+  MONTH_NAMES,
+  monthNameValues
 } from "./meal-planning.js";
 export type { DayOfWeek, DayOfWeekLabel, MealType, MealTypeLabel } from "./meal-planning.js";

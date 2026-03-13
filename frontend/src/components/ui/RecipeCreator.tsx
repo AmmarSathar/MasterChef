@@ -114,7 +114,7 @@ export default function RecipeCreator({
 
   const handleFormChange = (
     field: keyof typeof formData,
-    value: string | number | string[],
+    value: string | number | string[] | boolean,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -256,6 +256,7 @@ export default function RecipeCreator({
       id: initialData?.id ?? "",
       createdAt: new Date(),
       createdBy: user?.id ?? "system",
+      updatedAt: new Date(),
     });
   };
 
@@ -337,7 +338,7 @@ export default function RecipeCreator({
                 value={formData.title}
                 onChange={(e) => handleFormChange("title", e.target.value)}
                 rows={1}
-                className="outline-none transition-all duration-200 rounded-xl min-h-20 p-2 w-full bg-none text-4xl leading-tight font-bold text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden break-words whitespace-pre-wrap"
+                className="outline-none transition-all duration-200 rounded-xl min-h-20 p-2 w-full bg-none text-4xl leading-tight font-bold text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden warp-break-word whitespace-pre-wrap"
               />
 
               <p className="text-sm text-accent/70 mt-0.5">
@@ -868,7 +869,7 @@ export default function RecipeCreator({
                   type="button"
                   disabled={formDisabled}
                   onClick={() =>
-                    handleFormChange("isShared", !Boolean(formData.isShared))
+                    handleFormChange("isShared", !formData.isShared)
                   }
                   className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
                     formData.isShared ? "bg-primary" : "bg-secondary"

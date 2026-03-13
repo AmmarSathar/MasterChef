@@ -1,6 +1,7 @@
 import type { FoodTag } from "../constants/foods.js";
 import type { SkillLevelValue } from "../constants/skill-levels.js";
 import type { CuisineOption } from "../constants/cuisines.js";
+import { DietaryOption } from "../constants/dietary.js";
 
 /**
  * A single ingredient in a recipe.
@@ -24,13 +25,14 @@ export interface Recipe {
   ingredients: Ingredient[];
   steps: string[];
   cookingTime: number;
+  prepingTime: number;
   servings: number;
   skillLevel: SkillLevelValue;
   cuisine?: CuisineOption;
   imageUrl?: string;
 
   /** Union of all ingredients' FoodTag[] — computed on create/update */
-  dietaryTags: FoodTag[];
+  dietaryTags: DietaryOption[];
   /** Union of all ingredients' contains[] — computed on create/update */
   containsAllergens: string[];
   isShared?: boolean;

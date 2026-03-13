@@ -39,8 +39,8 @@ export default function RecipeView({
 }: RecipeViewProps) {
   const { user, loading } = useUser();
 
-  const totalTime =
-    (recipe.prepingTime ?? 0) + (recipe.cookingTime ?? recipe.cookingTime ?? 0);
+  // const totalTime =
+  //   (recipe.prepingTime ?? 0) + (recipe.cookingTime ?? recipe.cookingTime ?? 0);
 
   useEffect(() => {
     if (loading) return;

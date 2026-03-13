@@ -29,7 +29,7 @@ import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
 import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
 import Margherita from "@/lib/images/margherita.webp";
 
-import { Recipe, RecipeBase } from "@masterchef/shared";
+import { Recipe } from "@masterchef/shared";
 
 import { useUser } from "@/context/UserContext";
 
@@ -64,7 +64,6 @@ function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
     prepingTime: recipe.prepingTime ?? 0,
     cookingTime: recipe.cookingTime ?? 0,
     servings: recipe.servings ?? 1,
-    cost: 0,
     skillLevel: recipe.skillLevel ?? "beginner",
     dietaryTags: recipe.dietaryTags ?? [],
     isShared: recipe.isShared ?? true,
@@ -193,7 +192,7 @@ export function RecipeContent() {
       return;
     }
 
-    const recipePayload: RecipeBase & {
+    const recipePayload: Partial<Recipe> & {
       dietaryTags?: string[];
       isShared?: boolean;
     } = {
@@ -202,7 +201,7 @@ export function RecipeContent() {
       ingredients: data.ingredients,
       steps: data.steps,
       cookingTime: data.cookingTime,
-      prepTime: data.prepingTime,
+      prepingTime: data.prepingTime,
       servings: data.servings,
       skillLevel: data.skillLevel,
       isShared: data.isShared ?? true,
@@ -253,7 +252,7 @@ export function RecipeContent() {
                     isShared:
                       typeof updated?.isShared === "boolean"
                         ? updated.isShared
-                        : data.isShared ?? r.isShared,
+                        : (data.isShared ?? r.isShared),
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
                     steps: updated?.steps ?? recipePayload.steps,
@@ -307,7 +306,7 @@ export function RecipeContent() {
           isShared:
             typeof created?.isShared === "boolean"
               ? created.isShared
-              : data.isShared ?? true,
+              : (data.isShared ?? true),
           ingredients: created.ingredients ?? [],
           steps: created.steps ?? [],
           containsAllergens: [],
@@ -650,7 +649,9 @@ export function RecipeContent() {
       }
 
       try {
-        const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
+        const res = await fetch(
+          `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
+        );
         const json = await res.json();
         if (!res.ok) {
           throw new Error(json?.message || "Failed to load recipe");
@@ -868,7 +869,9 @@ export function RecipeContent() {
               </span>
               <div className="flex items-center gap-2">
                 {SKILL_LEVELS.map((level, index) => {
-                  const isActive = activeFilters.skillLevel.includes(level.value);
+                  const isActive = activeFilters.skillLevel.includes(
+                    level.value,
+                  );
                   return (
                     <button
                       key={level.value}
@@ -964,6 +967,9 @@ export function RecipeContent() {
                     imageUrl: editingRecipe.imageUrl,
                     ingredients: editingRecipe.ingredients,
                     steps: editingRecipe.steps,
+                    updatedAt: editingRecipe.updatedAt,
+                    createdByName: editingRecipe.createdByName,
+                    cuisine: editingRecipe.cuisine,
                   }
                 : null
             }
