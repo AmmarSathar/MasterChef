@@ -58,6 +58,14 @@ export default function Dashboard() {
   const ActiveTitle = dashboardRoutes[activeDashboard].Title;
   const ActiveContent = dashboardRoutes[activeDashboard].Content;
 
+  const parseHashRoute = (hashValue: string): DashboardRouteKey => {
+    const raw = hashValue.startsWith("#") ? hashValue.slice(1) : hashValue;
+    const route = raw.split("?")[0];
+    if (route === "main" || route === "settings" || route === "recipe")
+      return route as DashboardRouteKey;
+    return "main";
+  };
+
   useEffect(() => {
     // if you remove this check, it freaks out because user isn't loaded
     if (loading) {
@@ -85,18 +93,10 @@ export default function Dashboard() {
   }, [navigate, user, logout, loading]);
 
   useEffect(() => {
-    const hash = window.location.hash.substring(1);
-    if (hash === "main" || hash === "settings" || hash === "recipe") {
-      handleDashboardChange(hash as DashboardRouteKey);
-    } else {
-      handleDashboardChange("main");
-    }
+    setActiveDashboard(parseHashRoute(window.location.hash));
 
     const handleHashChange = () => {
-      const newHash = window.location.hash.substring(1);
-      if (newHash === "main" || newHash === "settings" || newHash === "recipe") {
-        handleDashboardChange(newHash as DashboardRouteKey);
-      }
+      setActiveDashboard(parseHashRoute(window.location.hash));
     };
 
     window.addEventListener("hashchange", handleHashChange);
@@ -139,7 +139,11 @@ export default function Dashboard() {
 
   const handleDashboardChange = (dashboard: DashboardRouteKey) => {
     setActiveDashboard(dashboard);
-    window.location.hash = dashboard;
+    if (parseHashRoute(window.location.hash) !== dashboard) {
+      window.location.hash = dashboard;
+    } else if (window.location.hash !== `#${dashboard}`) {
+      window.location.hash = dashboard;
+    }
     setUserPressed(false);
   };
 
@@ -239,11 +243,11 @@ export default function Dashboard() {
               <motion.div
                 ref={userCardRef}
                 initial={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
-                animate={{ opacity: 1, y: 0, backdropFilter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, backdropFilter: "blur(7px)" }}
                 exit={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
                 transition={{ duration: 0.2 }}
                 tabIndex={0}
-                className="user-card absolute pointer-events-auto w-90 min-h-100 py-10 bg-linear-to-br from-primary/30 via-primary/20 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
+                className="user-card absolute pointer-events-auto w-90 min-h-100 py-10 bg-linear-to-br from-primary/60 via-primary/50 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
               >
                 <div className="user-pfp relative flex w-30 h-30 rounded-full overflow-hidden border-3 border-ring shadow-sm shadow-ring/50 items-center justify-center bg-linear-to-tr from-ring to-secondary">
                   {user?.pfp ? (

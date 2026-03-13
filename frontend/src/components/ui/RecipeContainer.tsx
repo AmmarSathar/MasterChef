@@ -13,12 +13,14 @@ import {
 
 import { Recipe } from "@masterchef/shared";
 
+import { AnimatePresence, motion } from "framer-motion";
+
 export interface RecipeContainerProps {
   recipes: Recipe[];
   currentUserId: string;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipeId: string) => void;
-  onSelect?: (recipe: Recipe) => void;
+  onSelect: (recipe: Recipe) => void;
   type: ViewMode;
 }
 
@@ -29,19 +31,22 @@ function StandardCard({
   isOwner,
   onEdit,
   onDelete,
-  onSelect,
+  onRecipeSelect,
 }: {
   recipe: Recipe;
   isOwner: boolean;
   onEdit: (r: Recipe) => void;
   onDelete: (id: string) => void;
+  onRecipeSelect: (recipe: Recipe) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div
+    <motion.div
+      whileTap={{ scale: 0.94, opacity: 0.7 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onRecipeSelect(recipe)}
       className="recipe-standard-view rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300 pointer-events-auto cursor-pointer"
     >
       {recipe.imageUrl ? (
@@ -52,14 +57,17 @@ function StandardCard({
         />
       ) : (
         <div
-          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} flex items-center justify-center duration-300 ease-out-cubic transition-all`}
-        > 
-          <CookieIcon size={48} className={`transition-all duration-300 ${isHovered ? "text-foreground/80" : "text-foreground/30"}`} />
+          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} flex items-center justify-center duration-300 ease-out-cubic transition-all pointer-events-none`}
+        >
+          <CookieIcon
+            size={48}
+            className={`transition-all duration-300 ${isHovered ? "text-foreground/80" : "text-foreground/30"}`}
+          />
         </div>
       )}
 
       <div
-        className={`flex flex-col gap-2 px-3 py-3 ${isHovered ? "-mb-4" : "mb-0"} transition-all duration-300 ease-out-cubic`}
+        className={`flex flex-col gap-2 px-3 py-3 ${isHovered ? "-mb-4" : "mb-0"} transition-all duration-300 ease-out-cubic pointer-events-none`}
       >
         <span className="font-semibold text-foreground text-sm truncate">
           {recipe.title.length > 25
@@ -90,12 +98,15 @@ function StandardCard({
         </div>
 
         <div
-          className={`recipe-options flex items-center justify-between w-full ${isHovered ? "pt-0" : "pt-2"} px-0.5 duration-300 ease-out-cubic transition-all`}
+          className={`recipe-options flex items-center justify-between w-full ${isHovered ? "pt-0" : "pt-2"} px-0.5 duration-300 ease-out-cubic transition-all pointer-events-auto`}
         >
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
               className="p-2 h-auto w-auto rounded-full"
             >
               <Share2 size={13} />
@@ -104,7 +115,10 @@ function StandardCard({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onEdit(recipe)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(recipe);
+                }}
                 className="p-2 h-auto w-auto rounded-full"
               >
                 <Pencil size={13} />
@@ -115,7 +129,10 @@ function StandardCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onDelete(recipe.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(recipe.id);
+              }}
               className="p-2 h-auto w-auto rounded-full hover:bg-destructive/60"
             >
               <Trash2 size={13} />
@@ -123,7 +140,7 @@ function StandardCard({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -132,11 +149,13 @@ function TiltedRecipeCard({
   isOwner,
   onEdit,
   onDelete,
+  onRecipeSelect,
 }: {
   recipe: Recipe;
   isOwner: boolean;
   onEdit: (r: Recipe) => void;
   onDelete: (id: string) => void;
+  onRecipeSelect: (recipe: Recipe) => void;
 }) {
   return (
     <TiltedCard
@@ -184,6 +203,9 @@ function TiltedRecipeCard({
               <Button
                 variant="ghost"
                 size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
                 className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-white/20"
               >
                 <Share2 size={13} />
@@ -192,7 +214,10 @@ function TiltedRecipeCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onEdit(recipe)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(recipe);
+                }}
                   className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-white/20"
                 >
                   <Pencil size={13} />
@@ -203,7 +228,10 @@ function TiltedRecipeCard({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onDelete(recipe.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(recipe.id);
+              }}
                 className="p-1.5 h-auto w-auto rounded-full text-foreground hover:bg-destructive/70"
               >
                 <Trash2 size={13} />
@@ -221,6 +249,7 @@ export function RecipeContainer({
   currentUserId,
   onEdit,
   onDelete,
+  onSelect,
   type,
 }: RecipeContainerProps) {
   const [viewMode] = useState<ViewMode>(type || "standard");
@@ -240,31 +269,35 @@ export function RecipeContainer({
   return (
     <div className="flex flex-col gap-4 w-full flex-1 overflow-y-auto overflow-x-hidden min-h-0 pb-6">
       <div className="recipe-container grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-4 w-full pt-10">
-        {recipes.map((recipe) => {
-          const isOwner = recipe.createdBy === currentUserId;
+        <AnimatePresence>
+          {recipes.map((recipe) => {
+            const isOwner = recipe.createdBy === currentUserId;
 
-          if (effectiveMode === "standard") {
+            if (effectiveMode === "standard") {
+              return (
+                <StandardCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  isOwner={isOwner}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onRecipeSelect={(r) => onSelect(r)}
+                />
+              );
+            }
+
             return (
-              <StandardCard
+              <TiltedRecipeCard
                 key={recipe.id}
                 recipe={recipe}
                 isOwner={isOwner}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onRecipeSelect={(r) => onSelect(r)}
               />
             );
-          }
-
-          return (
-            <TiltedRecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              isOwner={isOwner}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          );
-        })}
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Plus, Minus, Camera } from "lucide-react";
+import { X, Plus, Minus, Camera, ChefHat } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ export default function RecipeCreator({
   const isEditing = !!initialData?.title;
 
   const [busy, setBusy] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [isIngredientClicked, setIsIngredientClicked] = useState("");
 
@@ -98,6 +99,8 @@ export default function RecipeCreator({
   useEffect(() => {
     if (!loading) setBusy(false);
   }, [loading, user]);
+
+  const formDisabled = busy || submitting;
 
   const handleFormChange = (
     field: keyof typeof formData,
@@ -210,6 +213,8 @@ export default function RecipeCreator({
       return;
     }
 
+    setSubmitting(true);
+
     onFinish({
       title: formData.title.trim(),
       description: formData.description.trim(),
@@ -296,6 +301,7 @@ export default function RecipeCreator({
             </div>
             <Button
               onClick={onClose}
+              disabled={formDisabled}
               className="p-2 h-10 w-10 rounded-full bg-transparent hover:bg-secondary text-foreground opacity-55 hover:opacity-100 transition-all duration-300 cursor-pointer"
             >
               <X size={20} />
@@ -316,6 +322,7 @@ export default function RecipeCreator({
                 </span>
                 <Button
                   type="button"
+                  disabled={formDisabled}
                   onClick={() => fileInputRef.current?.click()}
                   className="w-44 h-full rounded-xl border-2 border-dashed border-border/50 hover:border-accent/50 bg-input/20 hover:bg-input/40 flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground/60 transition-all duration-200 overflow-hidden"
                 >
@@ -340,6 +347,7 @@ export default function RecipeCreator({
                   accept="image/*"
                   className="hidden"
                   onChange={(e) => {
+                    if (formDisabled) return;
                     const file = e.target.files?.[0];
                     if (file) {
                       const reader = new FileReader();
@@ -364,6 +372,7 @@ export default function RecipeCreator({
                       <div className="input-increm-decrem w-full h-full flex absolute items-center justify-between px-2 z-10">
                         <Button
                           type="button"
+                          disabled={formDisabled}
                           onClick={() =>
                             handleFormChange(
                               "prepingTime",
@@ -380,6 +389,7 @@ export default function RecipeCreator({
 
                         <Button
                           type="button"
+                          disabled={formDisabled}
                           onClick={() =>
                             handleFormChange(
                               "prepingTime",
@@ -398,6 +408,7 @@ export default function RecipeCreator({
                         placeholder="45"
                         value={formData.prepingTime}
                         onChange={(e) =>
+                          !formDisabled &&
                           handleFormChange(
                             "prepingTime",
                             e.target.value === "" ? "" : Number(e.target.value),
@@ -421,6 +432,7 @@ export default function RecipeCreator({
                       <div className="input-increm-decrem w-full h-full flex absolute items-center justify-between px-2 z-10">
                         <Button
                           type="button"
+                          disabled={formDisabled}
                           onClick={() =>
                             handleFormChange(
                               "cookingTime",
@@ -437,6 +449,7 @@ export default function RecipeCreator({
 
                         <Button
                           type="button"
+                          disabled={formDisabled}
                           onClick={() =>
                             handleFormChange(
                               "cookingTime",
@@ -455,6 +468,7 @@ export default function RecipeCreator({
                         placeholder="45"
                         value={formData.cookingTime}
                         onChange={(e) =>
+                          !formDisabled &&
                           handleFormChange(
                             "cookingTime",
                             e.target.value === "" ? "" : Number(e.target.value),
@@ -481,6 +495,7 @@ export default function RecipeCreator({
                     placeholder="Write a short description of your recipe..."
                     value={formData.description}
                     onChange={(e) =>
+                      !formDisabled &&
                       handleFormChange("description", e.target.value)
                     }
                     className="w-full rounded-xl bg-input/40 border border-border/50 px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/60 resize-none min-h-30 "
@@ -496,8 +511,9 @@ export default function RecipeCreator({
                 </span>
                 <Button
                   type="button"
+                  disabled={formDisabled}
                   onClick={addIngredient}
-                  className="text-sm text-accent hover:text-accent/80 font-semibold flex items-center gap-1 transition-colors"
+                  className="text-sm text-accent hover:text-accent/80 font-semibold flex items-center gap-1 transition-all"
                 >
                   <Plus size={14} />
                   Add Ingredient
@@ -527,11 +543,8 @@ export default function RecipeCreator({
                         list="rc-food-list"
                         value={ingredient.foodItem}
                         onChange={(e) =>
-                          updateIngredient(
-                            ingredient.id,
-                            "foodItem",
-                            e.target.value,
-                          )
+                          !formDisabled &&
+                          updateIngredient(ingredient.id, "foodItem", e.target.value)
                         }
                         className={`h-8 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground/30 transition-all duration-200`}
                       />
@@ -563,6 +576,7 @@ export default function RecipeCreator({
 
                           <button
                             type="button"
+                            disabled={formDisabled}
                             onClick={() =>
                               setIngredients((prev) =>
                                 prev.map((ing) =>
@@ -585,6 +599,7 @@ export default function RecipeCreator({
 
                           <button
                             type="button"
+                            disabled={formDisabled}
                             onClick={() =>
                               setIngredients((prev) =>
                                 prev.map((ing) =>
@@ -611,6 +626,7 @@ export default function RecipeCreator({
                             value={ingredient.unit}
                             className="ml-auto mr-2"
                             onValueChange={(val) => {
+                              if (formDisabled) return;
                               if (val)
                                 updateIngredient(ingredient.id, "unit", val);
                             }}
@@ -632,6 +648,7 @@ export default function RecipeCreator({
                       {ingredients.length > 1 && (
                         <button
                           type="button"
+                            disabled={formDisabled}
                           onClick={() => removeIngredient(ingredient.id)}
                           className="text-foreground/30 hover:text-destructive bg-none hover:bg-accent/10 transition-all shrink-0 absolute top-2 right-5 cursor-pointer p-3 rounded-full"
                         >
@@ -651,8 +668,9 @@ export default function RecipeCreator({
                 </span>
                 <Button
                   type="button"
+                  disabled={formDisabled}
                   onClick={addStep}
-                  className="text-sm text-accent hover:text-accent/80 font-semibold flex items-center gap-1 transition-colors"
+                  className="text-sm text-accent hover:text-accent/80 font-semibold flex items-center gap-1 transition-all"
                 >
                   <Plus size={14} />
                   Add Step
@@ -671,12 +689,15 @@ export default function RecipeCreator({
                       <textarea
                         placeholder="Step-by-step preparation guide..."
                         value={step.content}
-                        onChange={(e) => updateStep(step.id, e.target.value)}
+                        onChange={(e) =>
+                          !formDisabled && updateStep(step.id, e.target.value)
+                        }
                         className="flex-1 bg-transparent text-sm text-foreground pr-17 outline-none resize-none placeholder:text-foreground/30 min-h-10"
                       />
                       {steps.length > 1 && (
                         <button
                           type="button"
+                          disabled={formDisabled}
                           onClick={() => removeStep(step.id)}
                           className="text-foreground/30 hover:text-destructive bg-none hover:bg-accent/10 transition-all shrink-0 absolute top-3 right-5 cursor-pointer p-3 rounded-full"
                         >
@@ -685,6 +706,33 @@ export default function RecipeCreator({
                       )}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base font-semibold text-foreground">
+                  Skill Level
+                </span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {SKILL_LEVELS.map(({ label, value }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={formDisabled}
+                    onClick={() => handleFormChange("skillLevel", value)}
+                    className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl transition-all duration-300 ${
+                      formData.skillLevel === value
+                        ? "bg-accent text-card shadow-md"
+                        : "bg-input/80 text-foreground/60 hover:bg-input"
+                    }`}
+                  >
+                    <span className="pointer-events-none text-xs font-semibold uppercase tracking-wide">
+                      {label}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -699,6 +747,7 @@ export default function RecipeCreator({
                   <button
                     key={tag}
                     type="button"
+                    disabled={formDisabled}
                     onClick={() =>
                       toggleDietaryTag(tag, !formData.dietaryTags.includes(tag))
                     }
@@ -719,16 +768,26 @@ export default function RecipeCreator({
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/30">
               <Button
                 type="button"
+                disabled={formDisabled}
                 onClick={onClose}
-                className="px-5 py-2.5 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors"
+                className="px-5 py-5 text-sm font-medium text-foreground/60 hover:text-foreground transition-all rounded-lg"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2"
+                disabled={formDisabled}
+                className="px-6 py-5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2"
               >
-                <Plus size={15} />
+                {submitting ? (
+                  <Spinner
+                    size={18}
+                    className="text-primary-foreground"
+                    variant="infinite"
+                  />
+                ) : (
+                  <Plus size={15} />
+                )}
                 {isEditing ? "Save Changes" : "Save Recipe"}
               </Button>
             </div>

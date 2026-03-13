@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { RecipeContainer } from "@/components/ui/RecipeContainer";
 import RecipeCreator from "@/components/ui/RecipeCreator";
+import RecipeView from "@/components/ui/RecipeView";
 
 import {
   Plus,
@@ -74,12 +75,18 @@ export function RecipeContent() {
   const [pendingDeleteRecipeId, setPendingDeleteRecipeId] = useState<
     string | null
   >(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [recipeCreateOpen, setRecipeCreateOpen] = useState(false);
 
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
-  const [searchInput] = useState<string>("");
+  const [debouncedSearch] = useState<string>("");
+  // const [searchInput] = useState<string>("");
 
   const [filterOpen, setFilterOpen] = useState(false);
+  const [openedRecipe, setOpenedRecipe] = useState<Recipe | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [pendingEditRecipe, setPendingEditRecipe] = useState<Recipe | null>(
+    null,
+  );
+
   const [activeFilters, setActiveFilters] = useState<{
     mealType: string[];
     skillLevel: string[];
@@ -101,13 +108,13 @@ export function RecipeContent() {
     }
   }, []);
 
-  useEffect(() => {
-    const timeout = window.setTimeout(
-      () => setDebouncedSearch(searchInput.trim()),
-      300,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  // useEffect(() => {
+  //   const timeout = window.setTimeout(
+  //     () => setDebouncedSearch(searchInput.trim()),
+  //     300,
+  //   );
+  //   return () => window.clearTimeout(timeout);
+  // }, [searchInput]);
 
   useEffect(() => {
     async function load() {
@@ -132,7 +139,7 @@ export function RecipeContent() {
           title: recip.title,
           description: recip.description,
           imageUrl: recip.imageUrl ?? "",
-          prepingTime: 0,
+          prepingTime: recip.prepingTime ?? 0,
           cookingTime: recip.cookingTime ?? 0,
           servings: recip.servings ?? 1,
           cost: 0,
@@ -154,18 +161,18 @@ export function RecipeContent() {
 
   const openCreateModal = () => {
     setEditingRecipe(null);
-    setModalOpen(true);
+    setRecipeCreateOpen(true);
   };
 
   const closeModal = () => {
-    setModalOpen(false);
+    setRecipeCreateOpen(false);
     setEditingRecipe(null);
   };
 
   const handleStartEdit = (recipe: Recipe) => {
     if (!currentUserId || recipe.createdBy !== currentUserId) return;
     setEditingRecipe(recipe);
-    setModalOpen(true);
+    setRecipeCreateOpen(true);
   };
 
   const handleCreatorFinish = (data: Recipe) => {
@@ -174,15 +181,18 @@ export function RecipeContent() {
       return;
     }
 
-    const recipePayload: RecipeBase = {
+    const recipePayload: RecipeBase & { dietaryTags?: string[] } = {
       title: data.title,
       description: data.description,
       ingredients: data.ingredients,
       steps: data.steps,
-      cookingTime: data.prepingTime + data.cookingTime,
+      cookingTime: data.cookingTime,
       servings: data.servings,
       skillLevel: data.skillLevel,
+      dietaryTags: data.dietaryTags,
     };
+
+    console.log(recipePayload)
 
     if (editingRecipe) {
       (async () => {
@@ -201,6 +211,8 @@ export function RecipeContent() {
           const updated = json?.data;
           const updatedAt = updated?.updatedAt ?? new Date();
 
+          console.log(updated)
+
           setRecipes((prev) =>
             prev.map((r) =>
               r.id === editingRecipe.id
@@ -209,14 +221,18 @@ export function RecipeContent() {
                     title: updated?.title ?? recipePayload.title,
                     description:
                       updated?.description ?? recipePayload.description,
+                    prepingTime:
+                      typeof updated?.prepingTime === "number"
+                        ? updated.prepingTime
+                        : data.prepingTime,
                     cookingTime:
                       typeof updated?.cookingTime === "number"
                         ? updated.cookingTime
-                        : recipePayload.cookingTime,
+                        : data.cookingTime,
                     servings: updated?.servings ?? recipePayload.servings,
                     skillLevel: updated?.skillLevel ?? recipePayload.skillLevel,
                     dietaryTags:
-                      updated?.dietaryTags ?? r.dietaryTags,
+                      updated?.dietaryTags ?? data.dietaryTags ?? r.dietaryTags,
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
                     steps: updated?.steps ?? recipePayload.steps,
@@ -229,6 +245,10 @@ export function RecipeContent() {
 
           toast.success("Recipe updated successfully!");
           closeModal();
+
+          if (window.location.hash.startsWith("#recipe")) {
+            window.location.hash = "recipe";
+          }
         } catch (err: unknown) {
           const msg =
             err instanceof Error ? err.message : "Could not update recipe";
@@ -258,11 +278,11 @@ export function RecipeContent() {
           title: created.title,
           description: created.description,
           imageUrl: data.imageUrl || created.imageUrl || "",
-          prepingTime: 0,
-          cookingTime: created.cookingTime ?? 0,
+          prepingTime: created.prepingTime ?? data.prepingTime,
+          cookingTime: created.cookingTime ?? data.cookingTime,
           servings: created.servings ?? 1,
           skillLevel: created.skillLevel,
-          dietaryTags: created.dietaryTags ?? [],
+          dietaryTags: created.dietaryTags ?? data.dietaryTags ?? [],
           ingredients: created.ingredients ?? [],
           steps: created.steps ?? [],
           containsAllergens: [],
@@ -537,6 +557,37 @@ export function RecipeContent() {
     if (recipes.length === 0) setExampleRecipes();
   }, [recipes.length]);
 
+  const getRecipeIdFromHash = () => {
+    const raw = window.location.hash.startsWith("#")
+      ? window.location.hash.slice(1)
+      : window.location.hash;
+    if (!raw.startsWith("recipe")) return null;
+    const query = raw.split("?")[1] ?? "";
+    const params = new URLSearchParams(query);
+    const id = params.get("id");
+    return id || null;
+  };
+
+  useEffect(() => {
+    const openFromHash = () => {
+      const id = getRecipeIdFromHash();
+      if (!id) return;
+
+      const found = recipes.find((r) => r.id === id);
+      if (!found) return;
+
+      setRecipeCreateOpen(false);
+      setEditingRecipe(null);
+      setOpenedRecipe(found);
+      window.setTimeout(() => setViewOpen(true), 120);
+    };
+
+    openFromHash();
+    const onHash = () => openFromHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [recipes]);
+
   const filteredRecipes = recipes.filter((recipe) => {
     if (
       activeFilters.skillLevel.length > 0 &&
@@ -589,6 +640,32 @@ export function RecipeContent() {
     }
 
     return true;
+  });
+
+  const onRecipeSelect = (recipe: Recipe) => {
+    setRecipeCreateOpen(false);
+    setOpenedRecipe(recipe);
+    window.location.hash = `recipe?id=${encodeURIComponent(recipe.id)}`;
+    window.setTimeout(() => setViewOpen(true), 120);
+  };
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setRecipeCreateOpen(false);
+        setEditingRecipe(null);
+        setViewOpen(false);
+        setOpenedRecipe(null);
+        setPendingDeleteRecipeId(null);
+        setFilterOpen(false);
+
+        if (window.location.hash.startsWith("#recipe")) {
+          window.location.hash = "recipe";
+        }
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   });
 
   return (
@@ -753,14 +830,14 @@ export function RecipeContent() {
             currentUserId={currentUserId}
             onEdit={handleStartEdit}
             onDelete={handleRequestDelete}
+            onSelect={onRecipeSelect}
             type="standard"
           />
         )}
       </div>
-
       {/* Recipe Creator modal */}
       <AnimatePresence>
-        {modalOpen && (
+        {recipeCreateOpen && (
           <RecipeCreator
             key="recipe-creator"
             initialData={
@@ -788,36 +865,75 @@ export function RecipeContent() {
           />
         )}
       </AnimatePresence>
-
+      {/* Recipe view modal */}
+      <AnimatePresence
+        onExitComplete={() => {
+          if (pendingEditRecipe) {
+            handleStartEdit(pendingEditRecipe);
+            setPendingEditRecipe(null);
+          }
+        }}
+      >
+        {openedRecipe && viewOpen && (
+          <RecipeView
+            key={`recipe-view-${openedRecipe.id}`}
+            recipe={openedRecipe}
+            isOwner={openedRecipe.createdBy === currentUserId}
+            onClose={() => {
+              setViewOpen(false);
+              setOpenedRecipe(null);
+              if (window.location.hash.startsWith("#recipe")) {
+                window.location.hash = "recipe";
+              }
+            }}
+            onEdit={(r) => {
+              setPendingEditRecipe(r);
+              setViewOpen(false);
+              setOpenedRecipe(null);
+              if (window.location.hash.startsWith("#recipe")) {
+                window.location.hash = "recipe";
+              }
+            }}
+            onDelete={(id) => handleRequestDelete(id)}
+          />
+        )}
+      </AnimatePresence>
       {/* Delete confirm */}
-      {pendingDeleteRecipeId && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
-            <h4 className="text-base font-semibold text-accent/90">
-              Confirm Delete
-            </h4>
-            <p className="mt-2 text-sm text-foreground/75">
-              Are you sure you want to delete this recipe?
-            </p>
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setPendingDeleteRecipeId(null)}
-              >
-                No
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleConfirmDelete}
-              >
-                Yes
-              </Button>
+      <AnimatePresence>
+        {pendingDeleteRecipeId && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: "blur(0px)", y: 2 }}
+            animate={{ opacity: 1, backdropFilter: "blur(4px)", y: 0 }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)", y: 2 }}
+            className="fixed inset-0 z-100 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
+              <h4 className="text-base font-semibold text-accent/90">
+                Confirm Delete
+              </h4>
+              <p className="mt-2 text-sm text-foreground/75">
+                Are you sure you want to delete this recipe?
+              </p>
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setPendingDeleteRecipeId(null)}
+                >
+                  No
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleConfirmDelete}
+                >
+                  Yes
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
