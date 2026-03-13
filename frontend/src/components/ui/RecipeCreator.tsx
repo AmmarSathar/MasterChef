@@ -44,7 +44,7 @@ const INITIAL_FORM_DATA: Recipe = {
   prepingTime: 0,
   cookingTime: 0,
   servings: 4,
-  skillLevel: "beginner" as (typeof SKILL_LEVELS)[number]["value"],
+  skillLevel: SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as DietaryOption[],
 };
 

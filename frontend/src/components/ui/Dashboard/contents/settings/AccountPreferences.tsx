@@ -40,8 +40,8 @@ export default function AccountPreferences() {
   const allergyDropdownRef = useRef<HTMLDivElement>(null);
   const allergySearchRef = useRef<HTMLInputElement>(null);
   const [skillLevel, setSkillLevel] = useState<
-    "beginner" | "intermediate" | "advanced" | "expert"
-  >(user?.skill_level || "beginner");
+    typeof SKILL_LEVELS[number]["value"]
+  >(user?.skill_level || SKILL_LEVELS[0].value);
   const [cuisinePreferences, setCuisinePreferences] = useState<string[]>(
     user?.cuisines_pref || [],
   );

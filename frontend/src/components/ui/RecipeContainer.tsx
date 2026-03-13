@@ -8,6 +8,7 @@ import {
   Share2,
   Pencil,
   Trash2,
+  CookieIcon,
 } from "lucide-react";
 
 import { Recipe } from "@masterchef/shared";
@@ -17,6 +18,7 @@ export interface RecipeContainerProps {
   currentUserId: string;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipeId: string) => void;
+  onSelect?: (recipe: Recipe) => void;
   type: ViewMode;
 }
 
@@ -27,6 +29,7 @@ function StandardCard({
   isOwner,
   onEdit,
   onDelete,
+  onSelect,
 }: {
   recipe: Recipe;
   isOwner: boolean;
@@ -39,14 +42,25 @@ function StandardCard({
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="recipe-standard-view rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300"
+      className="recipe-standard-view rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300 pointer-events-auto cursor-pointer"
     >
-      <img
-        src={recipe.imageUrl}
-        alt={recipe.title}
-        className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} object-cover duration-300 ease-out-cubic transition-all`}
-      />
-      <div className={`flex flex-col gap-2 px-3 py-3 ${isHovered ? "-mb-4" : "mb-0"} transition-all duration-300 ease-out-cubic`}>
+      {recipe.imageUrl ? (
+        <img
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} object-cover duration-300 ease-out-cubic transition-all pointer-events-none`}
+        />
+      ) : (
+        <div
+          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} flex items-center justify-center duration-300 ease-out-cubic transition-all`}
+        > 
+          <CookieIcon size={48} className={`transition-all duration-300 ${isHovered ? "text-foreground/80" : "text-foreground/30"}`} />
+        </div>
+      )}
+
+      <div
+        className={`flex flex-col gap-2 px-3 py-3 ${isHovered ? "-mb-4" : "mb-0"} transition-all duration-300 ease-out-cubic`}
+      >
         <span className="font-semibold text-foreground text-sm truncate">
           {recipe.title.length > 25
             ? recipe.title.slice(0, 25) + ".."
@@ -75,7 +89,9 @@ function StandardCard({
           </div>
         </div>
 
-        <div className={`recipe-options flex items-center justify-between w-full ${isHovered ? "pt-0" : "pt-2"} px-0.5 duration-300 ease-out-cubic transition-all`}>
+        <div
+          className={`recipe-options flex items-center justify-between w-full ${isHovered ? "pt-0" : "pt-2"} px-0.5 duration-300 ease-out-cubic transition-all`}
+        >
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"

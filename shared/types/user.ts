@@ -1,3 +1,5 @@
+import { SkillLevelValue } from "../constants";
+
 export interface User {
   id: string;
   email: string;
@@ -10,7 +12,7 @@ export interface User {
   bio?: string;
   dietary_restric?: string[];
   allergies?: string[];
-  skill_level?: "beginner" | "intermediate" | "advanced" | "expert";
+  skill_level?: SkillLevelValue;
   cuisines_pref: string[]; //ex: indian, mexican, ect
   createdAt?: Date;
   updatedAt?: Date;
