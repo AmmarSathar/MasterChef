@@ -4,6 +4,7 @@ import { updateUserProfile } from "../services/auth.service.js";
 import { UpdateProfileInput } from "../types/index.js";
 import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import { getAuth } from "../lib/auth.js";
+import { sanitizeProfileUpdate } from "../utils/profile.js";
 
 export async function setPassword(
   req: Request,
@@ -37,31 +38,6 @@ export async function setPassword(
   }
 }
 
-export async function getSession(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const user = await resolveSessionUser(req);
-
-    if (!user) {
-      res.status(200).json({
-        success: true,
-        user: null,
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      user: toUserResponse(user),
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
 export async function logout(
   req: Request,
   res: Response,
@@ -82,7 +58,13 @@ export async function updateProfile(
 ): Promise<void> {
   try {
     const { session } = req as AuthenticatedRequest;
-    const profileData = req.body as Omit<UpdateProfileInput, "userId">;
+    const rawProfileData = req.body as Omit<UpdateProfileInput, "userId"> & {
+      userId?: string;
+    };
+    const profileData = sanitizeProfileUpdate(rawProfileData) as Omit<
+      UpdateProfileInput,
+      "userId"
+    >;
 
     console.log("updateProfile request - userId:", session.user.id, "fields:", Object.keys(profileData));
 

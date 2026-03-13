@@ -26,3 +26,11 @@ export { getAllergens, hasAllergenConflict, hasDietaryConflict, hasAnyConflict }
 // ── UI Strings ─────────────────────────────────────────
 export { SAD_KAOMOJIS } from "./ui-strings.js";
 export type { NoResultsKaomoji } from "./ui-strings.js";
+// ── Meal Planning ──────────────────────────────────────
+export {
+  DAYS_OF_WEEK,
+  dayOfWeekValues,
+  MEAL_TYPES,
+  mealTypeValues,
+} from "./meal-planning.js";
+export type { DayOfWeek, DayOfWeekLabel, MealType, MealTypeLabel } from "./meal-planning.js";

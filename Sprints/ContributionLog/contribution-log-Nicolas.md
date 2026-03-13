@@ -10,3 +10,10 @@
 | 2026-01-30 | | | |
 
 **Total Time:** 0h
+
+## Sprint 3
+
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+
+**Total Time:** 0h

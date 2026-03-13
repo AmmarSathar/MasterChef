@@ -223,7 +223,7 @@ describe("Login/Register UI", () => {
     fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "a@b.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Password1!" } });
 
-    fireEvent.click(await screen.findByRole("button", { name: "Log In" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log In" }));
 
     await waitFor(() => {
       expect(mockSignInEmail).toHaveBeenCalledWith({
@@ -244,6 +244,7 @@ describe("Login/Register UI", () => {
       data: { user: { id: "u1", email: "a@b.com", name: "Alice", isCustomized: true } },
       error: null,
     });
+  });
 
     renderLogin();
 
