@@ -27,33 +27,38 @@ describe("MealPlan model", () => {
     await mongoServer.stop();
   });
 
-  // Set up a valid user and meal plan for testing
-  it("creates a meal plan successfully", async () => {
-    
-    // Create user document
+  it("associates a meal plan with the correct user", async () => {
     const user = await User.create({
-      email: "mealplan1@example.com",
-      name: "Meal Planner",
+      email: "owner@example.com",
+      name: "Owner User",
       passwordHash: "hashed-password",
     });
 
-    // Create Date object
-    const weekStartDate = new Date("2026-03-09T00:00:00.000Z");
-
-    // Create MealPlan document
-    const mealPlan = await MealPlan.create({
-      userId: user._id,
-      weekStartDate,
+    const otherUser = await User.create({
+      email: "other@example.com",
+      name: "Other User",
+      passwordHash: "hashed-password",
     });
 
-    // Verify meal plan was created correctly
-    expect(mealPlan).toBeDefined();
-    expect(mealPlan.userId.toString()).toBe(user._id.toString());
-    expect(new Date(mealPlan.weekStartDate).toISOString()).toBe(
-      weekStartDate.toISOString()
-    );
-    expect(mealPlan).toHaveProperty("createdAt");
-    expect(mealPlan).toHaveProperty("updatedAt");
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    const foundForOwner = await MealPlan.findOne({
+      _id: mealPlan._id,
+      userId: user._id,
+    });
+
+    const foundForOtherUser = await MealPlan.findOne({
+      _id: mealPlan._id,
+      userId: otherUser._id,
+    });
+
+    expect(foundForOwner).not.toBeNull();
+    expect(foundForOwner?.userId.toString()).toBe(user._id.toString());
+
+    expect(foundForOtherUser).toBeNull();
   });
 
 });
