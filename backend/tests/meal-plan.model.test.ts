@@ -49,7 +49,7 @@ describe("MealPlan model", () => {
     // Mock recipe ID; MealPlanEntry requires a recipeId, but the actual recipe is not relevant to this test
     const recipeId = new mongoose.Types.ObjectId();
 
-    // Create a meal plan entry (one meal slot in the weekly plan)
+    // Create an entry for this meal plan (one meal slot in the weekly plan)
     await MealPlanEntry.create({
       mealPlanId: mealPlan._id,
       dayOfWeek: "Monday",
@@ -67,10 +67,50 @@ describe("MealPlan model", () => {
 
     expect(foundEntry).not.toBeNull(); // Check that the entry exists
     expect(foundEntry?.mealPlanId.toString()).toBe(mealPlan._id.toString()); // Check that the retrieved entry belongs to the correct meal plan
-    expect(foundEntry?.dayOfWeek).toBe("Monday"); // Check that the meal plan entry was stored correctly
+    
+    // Check that the meal plan entry was stored correctly
+    expect(foundEntry?.dayOfWeek).toBe("Monday");
     expect(foundEntry?.mealType).toBe("breakfast");
     expect(foundEntry?.recipeId.toString()).toBe(recipeId.toString());
     expect(foundEntry?.notes).toBe("Oatmeal with berries");
+  });
+
+  it("prevents duplicate meal plan entries with the same composite ID { mealPlanId, dayOfWeek, mealType }", async () => {
+    
+    // Create a user
+    const user = await User.create({
+      email: "duplicateentry@example.com",
+      name: "Duplicate Entry User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for this user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Create an entry for this meal plan
+    await MealPlanEntry.create({
+      mealPlanId: mealPlan._id,
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: new mongoose.Types.ObjectId(),
+      notes: "First breakfast entry",
+    });
+
+    // Attempt to create a duplicate entry with the same composite ID
+    await expect(
+      MealPlanEntry.create({
+        mealPlanId: mealPlan._id,
+        dayOfWeek: "Monday",
+        mealType: "breakfast",
+        recipeId: new mongoose.Types.ObjectId(),
+        notes: "Duplicate breakfast entry",
+      })
+    ).rejects.toMatchObject({
+      code: 11000, // MongoDB duplicate key error code
+    });
   });
 
 });
