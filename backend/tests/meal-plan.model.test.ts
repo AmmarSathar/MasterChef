@@ -117,8 +117,8 @@ describe("MealPlan model", () => {
 
     // Create two users
     const user = await User.create({
-      email: "owner@example.com",
-      name: "Owner User",
+      email: "fetchmealplan@example.com",
+      name: "Fetch Meal Plan User",
       passwordHash: "hashed-password",
     });
 
