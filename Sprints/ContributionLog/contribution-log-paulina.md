@@ -30,5 +30,6 @@
 | ---------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | 2026-03-11 | Meal Plan Schema (Story 7) | Designed and implemented MealPlan and MealPlanEntry Mongoose models with unique indexes for duplicate prevention (one plan per user per week, one recipe per day/meal slot). Added dayOfWeek and mealType enums to shared/constants following the existing skill-levels pattern. | 1.5h       |
 | 2026-03-11 | Sprint 3 Meeting Minutes   | Wrote meeting minutes for the March 6 Sprint 3 planning session.                                                                                                                                                                                                                 | 0.25h      |
+| 2026-03-15 | Meal Plan Read API (Story 8) | Implemented GET /api/meal-plans/:id endpoint. Created service, controller, and route module. Service validates ObjectId, fetches the meal plan, populates entries with recipe title via Mongoose populate, and builds a deterministic 7-day × 4-meal-type nested response (null for empty slots). Added MealSlot and MealPlanResponse types. Registered route in the main router. | 1h         |
 
-**Total Time:** 1.75h
+**Total Time:** 3h

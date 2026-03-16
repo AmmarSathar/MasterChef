@@ -140,3 +140,19 @@ export interface RecommendationResult {
   totalIngredients: number;
   missingIngredients: string[];
 }
+
+// ── Meal Plan types ────────────────────────────────────────────
+
+import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
+
+export interface MealSlot {
+  recipeId: string;
+  title: string;
+  notes: string;
+}
+
+export interface MealPlanResponse {
+  id: string;
+  weekStartDate: Date;
+  days: Record<DayOfWeek, Record<MealType, MealSlot | null>>;
+}
