@@ -113,4 +113,44 @@ describe("MealPlan model", () => {
     });
   });
 
+  it("associates a meal plan with the correct user", async () => {
+
+    // Create two users
+    const user = await User.create({
+      email: "owner@example.com",
+      name: "Owner User",
+      passwordHash: "hashed-password",
+    });
+
+    const otherUser = await User.create({
+      email: "other@example.com",
+      name: "Other User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for the first user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Search the database for one meal plan matching the query conditions
+
+    // Check if the meal plan exists for the first user
+    const foundForOwner = await MealPlan.findOne({
+      _id: mealPlan._id,
+      userId: user._id,
+    });
+
+    // Check if the meal plan exists for the second user
+    const foundForOtherUser = await MealPlan.findOne({
+      _id: mealPlan._id,
+      userId: otherUser._id,
+    });
+
+    expect(foundForOwner).not.toBeNull(); // Check that the meal plan was successfully retrieved when queried by the first user
+    expect(foundForOwner?.userId.toString()).toBe(user._id.toString()); // Check that the retrieved meal plan belongs to the first user
+    expect(foundForOtherUser).toBeNull(); // Check that the meal plan was not retrieved when queried by the second user
+  });
+
 });
