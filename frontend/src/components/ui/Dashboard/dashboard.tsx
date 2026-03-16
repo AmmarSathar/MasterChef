@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,15 +16,17 @@ import {
   Settings,
   House,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 import {
   MainDashboardTitle,
   MainDashboardContent,
 } from "./contents/DashboardMain";
 import { SettingsTitle, SettingsContent } from "./contents/Settings";
+// import { RecipeTitle, RecipeContent } from "./contents/RecipeForm";
+import { MealsTitle, MealsContent } from "./contents/Meals";
+// import SearchContainer from "./SearchModal";
 
-type DashboardRouteKey = "main" | "settings";
+type DashboardRouteKey = "main" | "settings" | "meals";
 
 const dashboardRoutes: Record<
   DashboardRouteKey,
@@ -37,6 +40,10 @@ const dashboardRoutes: Record<
     Title: SettingsTitle,
     Content: SettingsContent,
   },
+  meals: {
+    Title: MealsTitle,
+    Content: MealsContent,
+  },
 };
 
 export default function Dashboard() {
@@ -45,6 +52,7 @@ export default function Dashboard() {
   const { user, logout, loading } = useUser();
   const [lastPage, setLastPage] = useState<string>("/");
   const [userPressed, setUserPressed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [activeDashboard, setActiveDashboard] =
     useState<DashboardRouteKey>("main");
 
@@ -53,17 +61,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     // if you remove this check, it freaks out because user isn't loaded
-    if(loading) {
+    if (loading) {
       console.log("Loading user data...");
       return;
     }
 
     if (!user) {
-      console.log("User is false!!!")
+      console.log("User is false!!!");
       navigate("/login");
       return;
     }
-    
+
     if (!user.isCustomized) {
       toast.error("An error has occured, please login again.");
       // logout();
@@ -79,7 +87,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const hash = window.location.hash.substring(1);
-    if (hash === "main" || hash === "settings") {
+    if (hash === "main" || hash === "settings" || hash === "meals") {
       handleDashboardChange(hash as DashboardRouteKey);
     } else {
       handleDashboardChange("main");
@@ -87,7 +95,7 @@ export default function Dashboard() {
 
     const handleHashChange = () => {
       const newHash = window.location.hash.substring(1);
-      if (newHash === "main" || newHash === "settings") {
+      if (newHash === "main" || newHash === "settings" || newHash === "meals") {
         handleDashboardChange(newHash as DashboardRouteKey);
       }
     };
@@ -98,16 +106,37 @@ export default function Dashboard() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userCardRef.current && !userCardRef.current.contains(event.target as Node)) {
+      if (
+        userCardRef.current &&
+        !userCardRef.current.contains(event.target as Node)
+      ) {
         setUserPressed(false);
       }
     };
 
     if (userPressed) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [userPressed]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleDashboardChange = (dashboard: DashboardRouteKey) => {
     setActiveDashboard(dashboard);
@@ -123,12 +152,12 @@ export default function Dashboard() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5">
+      <div className="dashboard-container w-full h-full bg-card/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-0 px-5 ml-25 gap-5 max-md:px-3 relative max-md:h-auto max-md:py-5 max-md:ml-0">
         <div className="dashboard-header w-full h-40 flex justify-between items-center p-1 px-3 relative">
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings") {
+                if (activeDashboard === "settings" || activeDashboard === "meals") {
                   handleDashboardChange("main");
                   return;
                 } else if (activeDashboard === "main") {
@@ -159,15 +188,27 @@ export default function Dashboard() {
             </AnimatePresence>
           </div>
           <div className="dashboard-header-right w-full h-full flex items-center justify-end relative gap-4">
-            <div className="relative">
+            <div
+              className="search-button relative flex items-center justify-center pointer-events-auto cursor-pointer text-muted-foreground/70 font-semibold hover:text-muted-foreground/90 hover:brightness-110 transition-all duration-300 "
+              onClick={() => setSearchOpen(true)}
+            >
               <Search
                 size={18}
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
               />
-              <Input
-                placeholder="Search..."
-                className="w-60 bg-input border-border/50 shadow-sm shadow-border/60 rounded-full h-12 pl-11 pr-5"
-              />
+              <div className="w-60 bg-input border-border/50 shadow-sm shadow-border/60 rounded-full h-12 pl-11 pr-5 pointer-events-none flex items-center justify-between">
+                <span className="text-sm text-muted-foreground pointer-events-none font-semibold font-body">
+                  Search...
+                </span>
+                <div className="flex justify-center items-center relative gap-1.5 text-sm tracking-wider select-none px-1">
+                  <kbd className="px-2 py-1 rounded-md ring-2 ring-border bg-background/60">
+                    Ctrl
+                  </kbd>
+                  <kbd className="px-2 py-1 rounded-md ring-2 ring-border bg-background/60">
+                    K
+                  </kbd>
+                </div>
+              </div>
             </div>
             <button className="header-add w-12 h-12 rounded-full bg-input/80 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-input hover:border-border/60 transition-all duration-300 cursor-pointer">
               <Plus size={20} className="text-accent/60 pointer-events-none" />
@@ -225,7 +266,10 @@ export default function Dashboard() {
                     {user?.name || "Unknown User"}
                   </span>
                   <span className="user-cooking-level font-semibold text-sm text-foreground">
-                    {user?.skill_level?.charAt(0).toUpperCase().concat(user?.skill_level.substring(1)) || "Beginner"}
+                    {user?.skill_level
+                      ?.charAt(0)
+                      .toUpperCase()
+                      .concat(user?.skill_level.substring(1)) || "Beginner"}
                   </span>
                 </div>
 
@@ -294,6 +338,25 @@ export default function Dashboard() {
             <ActiveContent />
           </motion.div>
         </AnimatePresence>
+
+        {/*
+        {createPortal(
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
+                animate={{ opacity: 1, y: 0, backdropFilter: "blur(2px)" }}
+                exit={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
+                transition={{ duration: 0.2 }}
+                className="search-modal fixed pointer-events-auto inset-0 w-screen h-screen bg-background/60 z-55 flex items-center justify-center p-5"
+              >
+                <SearchContainer onClose={() => setSearchOpen(false)}/>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+        */}
       </div>
     </motion.div>
   );
