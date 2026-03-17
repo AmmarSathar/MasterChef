@@ -2,6 +2,7 @@ import { Router } from "express";
 import authRoutes from "./auth.js";
 import userRoutes from "./user.js";
 import recipeRoutes from "./recipes.js";
+import mealPlanRoutes from "./meal-plans.js";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.get("/health", (_req, res) => {
 router.use("/api/auth", authRoutes);
 router.use("/api/user", userRoutes);   // profile update lives here, outside /api/auth/*
 router.use("/api/recipes", recipeRoutes);
+router.use("/api/meal-plans", mealPlanRoutes);
 
 export default router;
