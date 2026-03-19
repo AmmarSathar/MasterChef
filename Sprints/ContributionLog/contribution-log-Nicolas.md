@@ -9,11 +9,12 @@
 | 2026-01-30 | | | |
 | 2026-01-30 | | | |
 
-**Total Time:** 0h
+**Total Time:** 6h
 
 ## Sprint 3
 
 | Date | Task | Description | Time Spent |
 |------|------|-------------|------------|
+| 2026-03-13 | Create unit tests — Get Meal Plan| Created a unit test for the CreateMealPlan API under backend/tests| 2 hours|
 
 **Total Time:** 0h
