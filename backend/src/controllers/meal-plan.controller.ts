@@ -1,7 +1,28 @@
 import { Request, Response, NextFunction } from "express";
-import { getMealPlanById as getMealPlanByIdService, createMealPlanEntry as createMealPlanEntryService } from "../services/meal-plan.service.js";
+import { createMealPlan as createMealPlanService, getMealPlanById as getMealPlanByIdService, createMealPlanEntry as createMealPlanEntryService } from "../services/meal-plan.service.js";
 import type { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
+
+export async function createMealPlan(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { week_start_date } = req.body as { week_start_date: string };
+    const userId = (req as AuthenticatedRequest).session.user.id;
+
+    if (!week_start_date) {
+      res.status(400).json({ success: false, error: "week_start_date is required" });
+      return;
+    }
+
+    const result = await createMealPlanService({ userId, weekStartDate: week_start_date });
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
 
 export async function getMealPlanById(
   req: Request,
