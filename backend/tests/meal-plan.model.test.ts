@@ -5,6 +5,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { User } from "../src/models/user.model.js";
 import { MealPlan } from "../src/models/meal-plan.model.js";
 import { MealPlanEntry } from "../src/models/meal-plan-entry.model.js";
+import { assertMealPlanAccess } from "../src/services/meal-plan.service.js";
 
 describe("MealPlan model", () => {
   let mongoServer: MongoMemoryServer;
@@ -134,23 +135,15 @@ describe("MealPlan model", () => {
       weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
     });
 
-    // Search the database for one meal plan matching the query conditions
-
-    // Check if the meal plan exists for the first user
-    const foundForOwner = await MealPlan.findOne({
-      _id: mealPlan._id,
-      userId: user._id,
+    // Check if the meal plan exists for the first user (should be found) & second user (should not be found)
+    await expect(
+      assertMealPlanAccess(
+        mealPlan._id.toString(),
+        otherUser._id.toString()
+      )
+    ).rejects.toMatchObject({
+      statusCode: 403,
     });
-
-    // Check if the meal plan exists for the second user
-    const foundForOtherUser = await MealPlan.findOne({
-      _id: mealPlan._id,
-      userId: otherUser._id,
-    });
-
-    expect(foundForOwner).not.toBeNull(); // Check that the meal plan was successfully retrieved when queried by the first user
-    expect(foundForOwner?.userId.toString()).toBe(user._id.toString()); // Check that the retrieved meal plan belongs to the first user
-    expect(foundForOtherUser).toBeNull(); // Check that the meal plan was not retrieved when queried by the second user
   });
 
   it("handles an empty meal plan with no entries", async () => {
@@ -186,23 +179,17 @@ describe("MealPlan model", () => {
       passwordHash: "hashed-password",
     });
 
-    // Create a meal plan for this user
-    await MealPlan.create({
-      userId: user._id,
-      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
-    });
-
     // Create a new ObjectId that is not in the database to simulate a non-existent meal plan ID
     const nonExistentMealPlanId = new mongoose.Types.ObjectId();
 
-    // Attempt to find a meal plan entry using the non-existent meal plan ID
-    const foundEntry = await MealPlanEntry.findOne({
-      mealPlanId: nonExistentMealPlanId,
-      dayOfWeek: "Monday",
-      mealType: "breakfast",
+    // Attempt to find a meal plan entry using the non-existent meal plan ID (should throw 403 error)
+    await expect(
+      assertMealPlanAccess(
+        nonExistentMealPlanId.toString(),
+        user._id.toString()
+      )
+    ).rejects.toMatchObject({
+      statusCode: 403,
     });
-
-    expect(foundEntry).toBeNull(); // Check that no entry is found for the non-existent meal plan ID (result should be null)
   });
-  
 });
