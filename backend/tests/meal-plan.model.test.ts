@@ -153,4 +153,56 @@ describe("MealPlan model", () => {
     expect(foundForOtherUser).toBeNull(); // Check that the meal plan was not retrieved when queried by the second user
   });
 
+  it("handles an empty meal plan with no entries", async () => {
+
+    // Create a user
+    const user = await User.create({
+      email: "emptyplan@example.com",
+      name: "Empty Plan User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for this user without adding any entries
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    const foundMealPlan = await MealPlan.findById(mealPlan._id); // Fetch the meal plan from the database
+    const entries = await MealPlanEntry.find({ mealPlanId: mealPlan._id }); // Fetch all entries associated with this meal plan
+
+    expect(foundMealPlan).not.toBeNull(); // Check that the meal plan was successfully retrieved
+    expect(foundMealPlan?.userId.toString()).toBe(user._id.toString()); // Check that the retrieved meal plan belongs to the correct user
+    expect(entries).toEqual([]); // Check that no entries are found for the empty meal plan
+    expect(entries).toHaveLength(0); // Explicitly check that the length is 0
+  });
+
+  it("handles a non-existent meal plan ID when looking up an entry by composite ID", async () => {
+
+    // Create a user
+    const user = await User.create({
+      email: "missingplan@example.com",
+      name: "Missing Plan User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for this user
+    await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Create a new ObjectId that is not in the database to simulate a non-existent meal plan ID
+    const nonExistentMealPlanId = new mongoose.Types.ObjectId();
+
+    // Attempt to find a meal plan entry using the non-existent meal plan ID
+    const foundEntry = await MealPlanEntry.findOne({
+      mealPlanId: nonExistentMealPlanId,
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+    });
+
+    expect(foundEntry).toBeNull(); // Check that no entry is found for the non-existent meal plan ID (result should be null)
+  });
+  
 });
