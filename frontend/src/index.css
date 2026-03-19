@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Outfit:wght@300;400;500;600;700;800&amp;display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 @import "tailwindcss";
 @import "./styles/cursors.css";
@@ -92,9 +93,9 @@
   --shadow-green-3d:
     0 10px 25px -5px rgba(110, 142, 108, 0.3),
     0 8px 10px -6px rgba(110, 142, 108, 0.3); /* ===== Grainient Background Colors ===== */
-  --grain-color-1: #c9b5d9; /* primary violet */
-  --grain-color-2: #ffcca3; /* brand secondary peach */
-  --grain-color-3: #e8dfd2; /* background beige */
+  --grain-color-1: #d49cd8; /* primary violet */
+  --grain-color-2: #f8e8a6; /* brand secondary peach */
+  --grain-color-3: #d3d3d3; /* background beige */
 }
 
 [data-theme="dark"] {
@@ -269,6 +270,12 @@
   /* ===== Typography ===== */
   --font-family-display: "Outfit", sans-serif;
   --font-family-body: "Plus Jakarta Sans", sans-serif;
+  --font-family-monospace: "Courier Prime", monospace;
+
+  /* ===== Tailwind Font Utilities ===== */
+  --font-display: "Outfit", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-monospace: "Courier Prime", monospace;
 
   /* ===== Spacing ===== */
   --radius: var(--radius);
@@ -408,8 +415,10 @@
   width: 8px;
 }
 
-* {
-  font-family: var(--font-family-body);
+@layer base {
+  * {
+    font-family: var(--font-family-body);
+  }
 }
 
 @keyframes fade-in {

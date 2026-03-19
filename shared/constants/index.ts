@@ -23,6 +23,9 @@ export type { SkillLevelValue, SkillLevelLabel } from "./skill-levels.js";
 // ── Food Helpers ───────────────────────────────────────
 export { getAllergens, hasAllergenConflict, hasDietaryConflict, hasAnyConflict } from "./food-helpers.js";
 
+// ── UI Strings ─────────────────────────────────────────
+export { SAD_KAOMOJIS } from "./ui-strings.js";
+export type { NoResultsKaomoji } from "./ui-strings.js";
 // ── Meal Planning ──────────────────────────────────────
 export {
   DAYS_OF_WEEK,

@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@context/UserContext";
+import { Recipe } from "@masterchef/shared";
 
 import {
   ArrowLeft,
@@ -22,11 +23,11 @@ import {
   MainDashboardContent,
 } from "./contents/DashboardMain";
 import { SettingsTitle, SettingsContent } from "./contents/Settings";
-// import { RecipeTitle, RecipeContent } from "./contents/RecipeForm";
+import { RecipeTitle, RecipeContent } from "./contents/RecipeForm";
+import SearchContainer from "./SearchModal";
 import { MealsTitle, MealsContent } from "./contents/Meals";
-// import SearchContainer from "./SearchModal";
 
-type DashboardRouteKey = "main" | "settings" | "meals";
+type DashboardRouteKey = "main" | "settings" | "meals" | "recipe";
 
 const dashboardRoutes: Record<
   DashboardRouteKey,
@@ -44,7 +45,11 @@ const dashboardRoutes: Record<
     Title: MealsTitle,
     Content: MealsContent,
   },
-};
+  recipe: {
+    Title: RecipeTitle,
+    Content: RecipeContent,
+  },
+}; 
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -58,6 +63,14 @@ export default function Dashboard() {
 
   const ActiveTitle = dashboardRoutes[activeDashboard].Title;
   const ActiveContent = dashboardRoutes[activeDashboard].Content;
+
+  const parseHashRoute = (hashValue: string): DashboardRouteKey => {
+    const raw = hashValue.startsWith("#") ? hashValue.slice(1) : hashValue;
+    const route = raw.split("?")[0];
+    if (route === "main" || route === "settings" || route === "recipe" || route === "meals")
+      return route as DashboardRouteKey;
+    return "main";
+  };
 
   useEffect(() => {
     // if you remove this check, it freaks out because user isn't loaded
@@ -86,18 +99,10 @@ export default function Dashboard() {
   }, [navigate, user, logout, loading]);
 
   useEffect(() => {
-    const hash = window.location.hash.substring(1);
-    if (hash === "main" || hash === "settings" || hash === "meals") {
-      handleDashboardChange(hash as DashboardRouteKey);
-    } else {
-      handleDashboardChange("main");
-    }
+    setActiveDashboard(parseHashRoute(window.location.hash));
 
     const handleHashChange = () => {
-      const newHash = window.location.hash.substring(1);
-      if (newHash === "main" || newHash === "settings" || newHash === "meals") {
-        handleDashboardChange(newHash as DashboardRouteKey);
-      }
+      setActiveDashboard(parseHashRoute(window.location.hash));
     };
 
     window.addEventListener("hashchange", handleHashChange);
@@ -140,8 +145,27 @@ export default function Dashboard() {
 
   const handleDashboardChange = (dashboard: DashboardRouteKey) => {
     setActiveDashboard(dashboard);
-    window.location.hash = dashboard;
+    if (parseHashRoute(window.location.hash) !== dashboard) {
+      window.location.hash = dashboard;
+    } else if (window.location.hash !== `#${dashboard}`) {
+      window.location.hash = dashboard;
+    }
     setUserPressed(false);
+  };
+
+  const handleSearchClose = (recipe?: Recipe) => {
+    setSearchOpen(false);
+
+    if (!recipe) return;
+
+    const goToRecipe = () => {
+      if (window.location.pathname !== "/dashboard") {
+        navigate("/dashboard");
+      }
+      window.location.hash = `recipe?id=${encodeURIComponent(recipe.id)}`;
+    };
+
+    setTimeout(goToRecipe, 150);
   };
 
   return (
@@ -157,7 +181,7 @@ export default function Dashboard() {
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings" || activeDashboard === "meals") {
+                if (activeDashboard === "settings" || activeDashboard === "meals" || activeDashboard === "recipe") {
                   handleDashboardChange("main");
                   return;
                 } else if (activeDashboard === "main") {
@@ -240,11 +264,11 @@ export default function Dashboard() {
               <motion.div
                 ref={userCardRef}
                 initial={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
-                animate={{ opacity: 1, y: 0, backdropFilter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, backdropFilter: "blur(7px)" }}
                 exit={{ opacity: 0, y: -10, backdropFilter: "blur(0px)" }}
                 transition={{ duration: 0.2 }}
                 tabIndex={0}
-                className="user-card absolute pointer-events-auto w-90 min-h-100 py-10 bg-linear-to-br from-primary/30 via-primary/20 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
+                className="user-card absolute pointer-events-auto w-90 min-h-100 py-10 bg-linear-to-br from-primary/60 via-primary/50 to-background z-80 rounded-4xl top-40 right-0 shadow-lg shadow-border/50 border-border/70 border-2 p-3 flex flex-col items-center justify-center gap-2"
               >
                 <div className="user-pfp relative flex w-30 h-30 rounded-full overflow-hidden border-3 border-ring shadow-sm shadow-ring/50 items-center justify-center bg-linear-to-tr from-ring to-secondary">
                   {user?.pfp ? (
@@ -339,7 +363,6 @@ export default function Dashboard() {
           </motion.div>
         </AnimatePresence>
 
-        {/*
         {createPortal(
           <AnimatePresence>
             {searchOpen && (
@@ -350,13 +373,12 @@ export default function Dashboard() {
                 transition={{ duration: 0.2 }}
                 className="search-modal fixed pointer-events-auto inset-0 w-screen h-screen bg-background/60 z-55 flex items-center justify-center p-5"
               >
-                <SearchContainer onClose={() => setSearchOpen(false)}/>
+                <SearchContainer onClose={handleSearchClose} />
               </motion.div>
             )}
           </AnimatePresence>,
           document.body
         )}
-        */}
       </div>
     </motion.div>
   );

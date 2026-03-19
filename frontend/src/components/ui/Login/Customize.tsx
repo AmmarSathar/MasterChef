@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useUser } from "@context/UserContext";
 
@@ -97,9 +97,24 @@ export default function Customize({ ready }: CustomizeProps) {
     scrollFormToTop();
 
     setStep2Data(data);
+    const activeUser = (() => {
+      try {
+        const raw = localStorage.getItem("user");
+        return raw ? (JSON.parse(raw) as User) : contextUser;
+      } catch {
+        return contextUser;
+      }
+    })();
+    const resolvedUserId = activeUser?.id;
+
+    if (!resolvedUserId) {
+      toast.dismiss(loadingToast);
+      toast.error("Session not found. Please log in again.");
+      return;
+    }
 
     const profilePayload = {
-      userId: contextUser?.id,
+      userId: resolvedUserId,
       dietary_restric: step1Data.dietaryRestrictions,
       allergies: step1Data.allergies,
       skill_level: step1Data.skillLevel || undefined,
