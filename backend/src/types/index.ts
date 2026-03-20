@@ -151,6 +151,11 @@ export interface MealSlot {
   notes: string;
 }
 
+export interface CreateMealPlanInput {
+  userId: string;
+  weekStartDate: string;
+}
+
 export interface MealPlanResponse {
   id: string;
   weekStartDate: Date;

@@ -4,7 +4,44 @@ import { MealPlanEntry } from "../models/meal-plan-entry.model.js";
 import { Recipe } from "../models/recipe.model.js";
 import { dayOfWeekValues, mealTypeValues } from "@masterchef/shared/constants";
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
-import type { ApiError, MealPlanResponse, CreateMealPlanEntryInput, MealPlanEntryResponse } from "../types/index.js";
+import type { ApiError, CreateMealPlanInput, MealPlanResponse, CreateMealPlanEntryInput, MealPlanEntryResponse } from "../types/index.js";
+
+export async function createMealPlan(input: CreateMealPlanInput): Promise<MealPlanResponse> {
+  const { userId, weekStartDate: weekStartDateStr } = input;
+
+  const weekStartDate = new Date(weekStartDateStr);
+  if (isNaN(weekStartDate.getTime())) {
+    const error: ApiError = new Error("Invalid week_start_date");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (weekStartDate.getUTCDay() !== 1) {
+    const error: ApiError = new Error("week_start_date must be a Monday");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Normalize to midnight UTC
+  weekStartDate.setUTCHours(0, 0, 0, 0);
+
+  const existing = await MealPlan.findOne({
+    userId: new mongoose.Types.ObjectId(userId),
+    weekStartDate,
+  });
+  if (existing) {
+    const error: ApiError = new Error("A meal plan for this week already exists");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const mealPlan = await MealPlan.create({
+    userId: new mongoose.Types.ObjectId(userId),
+    weekStartDate,
+  });
+
+  return getMealPlanById(mealPlan._id.toString());
+}
 
 export async function getMealPlanById(id: string): Promise<MealPlanResponse> {
   if (!mongoose.Types.ObjectId.isValid(id)) {
