@@ -33,10 +33,7 @@ export default function RecipeView({
   onDelete,
 }: RecipeViewProps) {
   const { user, loading } = useUser();
-
-  const totalTime =
-    (recipe.prepingTime ?? 0) + (recipe.cookingTime ?? recipe.cookingTime ?? 0);
-
+  
   useEffect(() => {
     if (loading) return;
   });

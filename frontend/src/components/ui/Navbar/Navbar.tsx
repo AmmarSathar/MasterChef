@@ -103,17 +103,23 @@ export default function Navbar() {
                 <button
                   disabled={!userConnected}
                   onClick={() => {
-                    setSelectedBtn("nav-upload");
+                    if (!userConnected) {
+                      navigate("/login");
+                      return;
+                    }
+                    navigate("/dashboard");
+                    window.location.hash = "recipe";
+                    setSelectedBtn("nav-recipe");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-upload" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-upload"
+                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-recipe" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                    selectedBtn === "nav-recipe"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
                 >
                   <FileText
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipe" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
                   />
                 </button>
                 <button
@@ -269,16 +275,16 @@ export default function Navbar() {
             <button
               disabled={!userConnected}
               onClick={() => {
-                setSelectedBtn("nav-upload");
+                setSelectedBtn("nav-recipe");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-upload" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
-                selectedBtn === "nav-upload"
+              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-recipe" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                selectedBtn === "nav-recipe"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
             >
               <FileText
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipe" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
               />
             </button>
             <button
