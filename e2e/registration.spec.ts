@@ -22,7 +22,7 @@ test("user can register and reaches preferences flow", async ({ page }) => {
   ).toBeVisible({ timeout: 20000 });
 
   const firstCuisine = page
-    .locator('text="Favorite Cuisines"')
+    .locator('text=Favorite Cuisines')
     .locator("..")
     .locator(".cursor-pointer")
     .first();
