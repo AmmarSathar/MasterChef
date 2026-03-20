@@ -21,6 +21,7 @@ export interface IRecipe extends Document {
   dietaryTags: string[];
   containsAllergens: string[];
   createdBy: mongoose.Types.ObjectId;
+  isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -109,6 +110,7 @@ const recipeSchema = new Schema<IRecipe>(
       required: [true, "Creator user ID is required"],
       index: true,
     },
+    isPublic: { type: Boolean, default: false },
   },
   {
     timestamps: true,
