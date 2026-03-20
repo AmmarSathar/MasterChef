@@ -61,12 +61,14 @@ interface RecipeCreatorProps {
   onFinish: (data: Recipe) => void;
   onClose: () => void;
   initialData?: Recipe | null;
+  scheduledDate?: Date | null;
 }
 
 export default function RecipeCreator({
   onFinish,
   onClose,
   initialData,
+  scheduledDate,
 }: RecipeCreatorProps) {
   const { user, loading } = useUser();
 
@@ -121,6 +123,10 @@ export default function RecipeCreator({
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<DietaryOption[]>(
     initialData?.dietaryTags ?? []
   );
+  const [mealDate, setMealDate] = useState<string>(
+    scheduledDate ? scheduledDate.toISOString().split('T')[0] : ""
+  );
+  const [mealType, setMealType] = useState<string>("Breakfast");
 
   useEffect(() => {
     setFormData((prev) => ({
