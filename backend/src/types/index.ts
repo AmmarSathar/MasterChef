@@ -156,3 +156,22 @@ export interface MealPlanResponse {
   weekStartDate: Date;
   days: Record<DayOfWeek, Record<MealType, MealSlot | null>>;
 }
+
+export interface CreateMealPlanEntryInput {
+  mealPlanId: string;
+  userId: string;
+  dayOfWeek: DayOfWeek;
+  mealType: MealType;
+  recipeId: string;
+  notes?: string;
+}
+
+export interface MealPlanEntryResponse {
+  id: string;
+  mealPlanId: string;
+  dayOfWeek: string;
+  mealType: string;
+  recipeId: string;
+  notes?: string;
+  createdAt: string;
+}
