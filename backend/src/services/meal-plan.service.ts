@@ -165,3 +165,38 @@ export async function createMealPlanEntry(
     throw err;
   }
 }
+
+export async function deleteMealPlanEntry(input: {
+  entryId: string;
+  userId: string;
+}): Promise<void> {
+  const { entryId, userId } = input;
+
+  if (!mongoose.Types.ObjectId.isValid(entryId)) {
+    const error: ApiError = new Error("Invalid meal plan entry ID");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const entry = await MealPlanEntry.findById(entryId);
+  if (!entry) {
+    const error: ApiError = new Error("Meal plan entry not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const mealPlan = await MealPlan.findById(entry.mealPlanId);
+  if (!mealPlan) {
+    const error: ApiError = new Error("Meal plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (mealPlan.userId.toString() !== userId) {
+    const error: ApiError = new Error("You do not own this meal plan");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  await MealPlanEntry.findByIdAndDelete(entryId);
+}

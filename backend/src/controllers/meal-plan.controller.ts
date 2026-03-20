@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { createMealPlan as createMealPlanService, getMealPlanById as getMealPlanByIdService, createMealPlanEntry as createMealPlanEntryService } from "../services/meal-plan.service.js";
+import { createMealPlan as createMealPlanService, getMealPlanById as getMealPlanByIdService, createMealPlanEntry as createMealPlanEntryService, deleteMealPlanEntry as deleteMealPlanEntryService } from "../services/meal-plan.service.js";
 import type { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
 
@@ -63,6 +63,22 @@ export async function createMealPlanEntry(
     });
 
     res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteMealPlanEntry(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const entryId = req.params.id as string;
+    const userId = (req as AuthenticatedRequest).session.user.id;
+
+    await deleteMealPlanEntryService({ entryId, userId });
+    res.status(204).send();
   } catch (error) {
     next(error);
   }
