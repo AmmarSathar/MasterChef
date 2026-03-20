@@ -131,6 +131,22 @@ export async function createMealPlanEntry(
     throw error;
   }
 
+  const duplicateRecipe = await MealPlanEntry.findOne({
+    mealPlanId,
+    recipeId,
+    mealType: { $ne: mealType },
+  });
+  if (duplicateRecipe) {
+    const error: ApiError = new Error(
+      `This recipe is already assigned to ${duplicateRecipe.dayOfWeek}, ${duplicateRecipe.mealType} this week.`
+    );
+    error.statusCode = 409;
+    (error as ApiError & { details?: { existingMealType?: string } }).details = {
+      existingMealType: duplicateRecipe.mealType,
+    };
+    throw error;
+  }
+
   try {
     const entry = await MealPlanEntry.create({
       mealPlanId,
