@@ -105,9 +105,8 @@ describe("MealPlan model", () => {
     expect(error).toBeTruthy();
     expect(error?.errors.weekStartDate?.name).toBe("CastError");
   });
-});
 
-it("fetches a meal plan entry by composite ID { mealPlanId, dayOfWeek, mealType }", async () => {
+  it("fetches a meal plan entry by composite ID { mealPlanId, dayOfWeek, mealType }", async () => {
     
     // Create a user (user._id, user.email, user.name)
     const user = await User.create({
@@ -149,121 +148,123 @@ it("fetches a meal plan entry by composite ID { mealPlanId, dayOfWeek, mealType 
     expect(foundEntry?.mealType).toBe("breakfast");
     expect(foundEntry?.recipeId.toString()).toBe(recipeId.toString());
     expect(foundEntry?.notes).toBe("Oatmeal with berries");
-});
+  });
 
-it("prevents duplicate meal plan entries with the same composite ID { mealPlanId, dayOfWeek, mealType }", async () => {
+  it("prevents duplicate meal plan entries with the same composite ID { mealPlanId, dayOfWeek, mealType }", async () => {
     
-  // Create a user
-  const user = await User.create({
-    email: "duplicateentry@example.com",
-    name: "Duplicate Entry User",
-    passwordHash: "hashed-password",
-  });
+    // Create a user
+    const user = await User.create({
+      email: "duplicateentry@example.com",
+      name: "Duplicate Entry User",
+      passwordHash: "hashed-password",
+    });
 
-  // Create a meal plan for this user
-  const mealPlan = await MealPlan.create({
-    userId: user._id,
-    weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
-  });
+    // Create a meal plan for this user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
 
-  // Create an entry for this meal plan
-  await MealPlanEntry.create({
-    mealPlanId: mealPlan._id,
-    dayOfWeek: "Monday",
-    mealType: "breakfast",
-    recipeId: new mongoose.Types.ObjectId(),
-    notes: "First breakfast entry",
-  });
-
-  // Attempt to create a duplicate entry with the same composite ID
-  await expect(
-    MealPlanEntry.create({
+    // Create an entry for this meal plan
+    await MealPlanEntry.create({
       mealPlanId: mealPlan._id,
       dayOfWeek: "Monday",
       mealType: "breakfast",
       recipeId: new mongoose.Types.ObjectId(),
-     notes: "Duplicate breakfast entry",
-    })
-  ).rejects.toMatchObject({
-    code: 11000, // MongoDB duplicate key error code
-  });
-});
+      notes: "First breakfast entry",
+    });
 
-it("associates a meal plan with the correct user", async () => {
-
-  // Create two users
-  const user = await User.create({
-    email: "owner@example.com",
-    name: "Owner User",
-    passwordHash: "hashed-password",
-  });
-
-  const otherUser = await User.create({
-    email: "other@example.com",
-    name: "Other User",
-    passwordHash: "hashed-password",
+    // Attempt to create a duplicate entry with the same composite ID
+    await expect(
+      MealPlanEntry.create({
+        mealPlanId: mealPlan._id,
+        dayOfWeek: "Monday",
+        mealType: "breakfast",
+        recipeId: new mongoose.Types.ObjectId(),
+        notes: "Duplicate breakfast entry",
+      })
+    ).rejects.toMatchObject({
+      code: 11000, // MongoDB duplicate key error code
+    });
   });
 
-  // Create a meal plan for the first user
-  const mealPlan = await MealPlan.create({
-    userId: user._id,
-    weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+  it("associates a meal plan with the correct user", async () => {
+
+    // Create two users
+    const user = await User.create({
+      email: "owner@example.com",
+      name: "Owner User",
+      passwordHash: "hashed-password",
+    });
+
+    const otherUser = await User.create({
+      email: "other@example.com",
+      name: "Other User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for the first user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Check if the meal plan exists for the first user (should be found) & second user (should not be found)
+    await expect(
+      assertMealPlanAccess(
+        mealPlan._id.toString(),
+        otherUser._id.toString()
+      )
+    ).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 
-  // Check if the meal plan exists for the first user (should be found) & second user (should not be found)
-  await expect(
-    assertMealPlanAccess(
-      mealPlan._id.toString(),
-      otherUser._id.toString()
-    )
-  ).rejects.toMatchObject({
-   statusCode: 403,
-  });
-});
+  it("handles an empty meal plan with no entries", async () => {
 
-it("handles an empty meal plan with no entries", async () => {
+    // Create a user
+    const user = await User.create({
+      email: "emptyplan@example.com",
+      name: "Empty Plan User",
+      passwordHash: "hashed-password",
+    });
 
-  // Create a user
-  const user = await User.create({
-    email: "emptyplan@example.com",
-    name: "Empty Plan User",
-    passwordHash: "hashed-password",
-  });
+    // Create a meal plan for this user without adding any entries
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
 
-  // Create a meal plan for this user without adding any entries
-  const mealPlan = await MealPlan.create({
-    userId: user._id,
-    weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    const foundMealPlan = await MealPlan.findById(mealPlan._id); // Fetch the meal plan from the database
+    const entries = await MealPlanEntry.find({ mealPlanId: mealPlan._id }); // Fetch all entries associated with this meal plan
+
+    expect(foundMealPlan).not.toBeNull(); // Check that the meal plan was successfully retrieved
+    expect(foundMealPlan?.userId.toString()).toBe(user._id.toString()); // Check that the retrieved meal plan belongs to the correct user
+    expect(entries).toEqual([]); // Check that no entries are found for the empty meal plan
+    expect(entries).toHaveLength(0); // Explicitly check that the length is 0
   });
 
-  const foundMealPlan = await MealPlan.findById(mealPlan._id); // Fetch the meal plan from the database
-  const entries = await MealPlanEntry.find({ mealPlanId: mealPlan._id }); // Fetch all entries associated with this meal plan
+  it("handles a non-existent meal plan ID when looking up an entry by composite ID", async () => {
 
-  expect(foundMealPlan).not.toBeNull(); // Check that the meal plan was successfully retrieved
-  expect(foundMealPlan?.userId.toString()).toBe(user._id.toString()); // Check that the retrieved meal plan belongs to the correct user
-  expect(entries).toEqual([]); // Check that no entries are found for the empty meal plan
-  expect(entries).toHaveLength(0); // Explicitly check that the length is 0
-});
+    // Create a user
+    const user = await User.create({
+      email: "missingplan@example.com",
+      name: "Missing Plan User",
+      passwordHash: "hashed-password",
+    });
 
-it("handles a non-existent meal plan ID when looking up an entry by composite ID", async () => {
+    // Create a new ObjectId that is not in the database to simulate a non-existent meal plan ID
+    const nonExistentMealPlanId = new mongoose.Types.ObjectId();
 
-  // Create a user
-  const user = await User.create({
-    email: "missingplan@example.com",
-    name: "Missing Plan User",
-    passwordHash: "hashed-password",
+    // Attempt to find a meal plan entry using the non-existent meal plan ID (should throw 403 error)
+    await expect(
+      assertMealPlanAccess(
+        nonExistentMealPlanId.toString(),
+        user._id.toString()
+      )
+    ).rejects.toMatchObject({
+      statusCode: 403,
+    });
   });
 
-  // Create a new ObjectId that is not in the database to simulate a non-existent meal plan ID
-  const nonExistentMealPlanId = new mongoose.Types.ObjectId();
-
-  // Attempt to find a meal plan entry using the non-existent meal plan ID (should throw 403 error)
-  await expect(
-    assertMealPlanAccess(
-      nonExistentMealPlanId.toString(),
-      user._id.toString()
-    )
-  ).rejects.toMatchObject({
-    statusCode: 403,
-  });
 });
