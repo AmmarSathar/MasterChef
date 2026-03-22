@@ -263,7 +263,7 @@ describe("MealPlan model", () => {
         user._id.toString()
       )
     ).rejects.toMatchObject({
-      statusCode: 403,
+      statusCode: 404,
     });
   });
 
