@@ -165,3 +165,36 @@ export async function createMealPlanEntry(
     throw err;
   }
 }
+
+export async function assertMealPlanAccess(mealPlanId: string, userId: string) {
+  try {
+    const mealPlan = await MealPlan.findById(mealPlanId);
+
+    // 404: meal plan does not exist
+    if (!mealPlan) {
+      throw Object.assign(new Error("Meal plan not found"), {
+        statusCode: 404,
+      });
+    }
+
+    // 403: user is not the owner
+    if (mealPlan.userId.toString() !== userId) {
+      throw Object.assign(new Error("Forbidden"), {
+        statusCode: 403,
+      });
+    }
+
+    return mealPlan;
+  } catch (error) {
+
+    // If already one of our custom errors, rethrow it
+    if (error && typeof error === "object" && "statusCode" in error) {
+      throw error;
+    }
+    
+    // Otherwise, treat as an unexpected server error
+    throw Object.assign(new Error("Internal server error"), {
+      statusCode: 500,
+    });
+  }
+}
