@@ -4,7 +4,7 @@ import { MealPlanEntry } from "../models/meal-plan-entry.model.js";
 import { Recipe } from "../models/recipe.model.js";
 import { dayOfWeekValues, mealTypeValues } from "@masterchef/shared/constants";
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
-import type { ApiError, CreateMealPlanInput, MealPlanResponse, CreateMealPlanEntryInput, MealPlanEntryResponse } from "../types/index.js";
+import type { ApiError, CreateMealPlanInput, MealPlanResponse, CreateMealPlanEntryInput, MealPlanEntryResponse, UpdateMealPlanEntryInput } from "../types/index.js";
 
 export async function createMealPlan(input: CreateMealPlanInput): Promise<MealPlanResponse> {
   const { userId, weekStartDate: weekStartDateStr } = input;
@@ -164,6 +164,60 @@ export async function createMealPlanEntry(
     }
     throw err;
   }
+}
+
+export async function updateMealPlanEntry(
+  input: UpdateMealPlanEntryInput
+): Promise<MealPlanEntryResponse> {
+  const { entryId, userId, recipeId, notes } = input;
+
+  if (!mongoose.Types.ObjectId.isValid(entryId)) {
+    const error: ApiError = new Error("Invalid entry ID");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(recipeId)) {
+    const error: ApiError = new Error("Invalid recipe ID");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const entry = await MealPlanEntry.findById(entryId);
+  if (!entry) {
+    const error: ApiError = new Error("Meal plan entry not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await assertMealPlanAccess(entry.mealPlanId.toString(), userId);
+
+  const recipe = await Recipe.findById(recipeId);
+  if (!recipe) {
+    const error: ApiError = new Error("Recipe not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (recipe.createdBy.toString() !== userId && !recipe.isPublic) {
+    const error: ApiError = new Error("You do not have access to this recipe");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  entry.recipeId = new mongoose.Types.ObjectId(recipeId);
+  entry.notes = notes;
+  await entry.save();
+
+  return {
+    id: entry._id.toString(),
+    mealPlanId: entry.mealPlanId.toString(),
+    dayOfWeek: entry.dayOfWeek,
+    mealType: entry.mealType,
+    recipeId: entry.recipeId.toString(),
+    notes: entry.notes,
+    createdAt: entry.createdAt.toISOString(),
+  };
 }
 
 export async function assertMealPlanAccess(mealPlanId: string, userId: string) {
