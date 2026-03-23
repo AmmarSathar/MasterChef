@@ -6,6 +6,7 @@ import { User } from "../src/models/user.model.js";
 import { MealPlan } from "../src/models/meal-plan.model.js";
 import { MealPlanEntry } from "../src/models/meal-plan-entry.model.js";
 import { assertMealPlanAccess } from "../src/services/meal-plan.service.js";
+import { getMealPlanById } from "../src/services/meal-plan.service.js";
 
 describe("MealPlan model", () => {
   let mongoServer: MongoMemoryServer;
@@ -265,6 +266,30 @@ describe("MealPlan model", () => {
     ).rejects.toMatchObject({
       statusCode: 404,
     });
+  });
+
+  it("returns 404 for a non-existent meal plan ID", async () => {                           
+    await expect(getMealPlanById(new mongoose.Types.ObjectId().toString()))                 
+      .rejects.toMatchObject({ statusCode: 404 });
+  });                                                                                       
+                                                                                         
+  it("returns null slots when meal plan has no entries", async () => {
+    
+    // Create a user
+    const user = await User.create({
+      email: "nullslots@example.com",
+      name: "Null Slots User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for this user without adding any entries
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    const result = await getMealPlanById(mealPlan._id.toString()); // Fetch meal plan using service function (should return null for all meal slots)
+    expect(result.days.Monday.breakfast).toBeNull(); // Check that breakfast slot for Monday is null
   });
 
 });
