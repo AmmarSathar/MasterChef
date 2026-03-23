@@ -55,6 +55,25 @@ describe("MealPlanEntry service", () => {
     );
   });
 
+  // Helper function to create a test recipe
+  async function createTestRecipe(userId: mongoose.Types.ObjectId, overrides: Partial<Record<string, unknown>> = {} ) {
+    return Recipe.create({
+      title: "Test Recipe",
+      description: "A simple recipe for testing",
+      ingredients: [
+        { foodItem: "eggs", amount: 2, unit: "" },
+        { foodItem: "bread", amount: 1, unit: "slice" }
+      ],
+      steps: ["Crack eggs", "Cook eggs", "Serve"],
+      cookingTime: 15,
+      servings: 2,
+      skillLevel: "beginner",
+      createdBy: userId,
+      isPublic: false,
+      ...overrides,
+    });
+  }
+
   it("successfully assigns a recipe to a meal plan slot", async () => {
     
     // Create a user
@@ -71,10 +90,8 @@ describe("MealPlanEntry service", () => {
     });
 
     // Create a recipe for that user
-    const recipe = await Recipe.create({
-      title: "Avocado Toast",
-      createdBy: user._id,
-      isPublic: false,
+    const recipe = await createTestRecipe(user._id, {
+      title: "Test Recipe",
     });
 
     // Attempt to assign the recipe to a meal plan slot
@@ -119,13 +136,13 @@ describe("MealPlanEntry service", () => {
 
     // Create two recipes for that user
     const recipe1 = await Recipe.create({
-      title: "Pancakes",
+      title: "Test Recipe 1",
       createdBy: user._id,
       isPublic: false,
     });
 
     const recipe2 = await Recipe.create({
-      title: "Egg Sandwich",
+      title: "Test Recipe 2",
       createdBy: user._id,
       isPublic: false,
     });
@@ -156,7 +173,7 @@ describe("MealPlanEntry service", () => {
     });
   });
 
-  it("validates ownership: user can only assign to their own meal plan", async () => {
+  it("user can only assign to their own meal plan", async () => {
     
     // Create two users
     const owner = await User.create({
@@ -178,9 +195,8 @@ describe("MealPlanEntry service", () => {
     });
 
     // Create a recipe for the other user
-    const recipe = await Recipe.create({
-      title: "Omelette",
-      createdBy: otherUser._id,
+    const recipe = await createTestRecipe(otherUser._id, {
+      title: "Test Recipe",
       isPublic: true,
     });
 
