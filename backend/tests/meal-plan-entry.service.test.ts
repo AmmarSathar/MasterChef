@@ -16,12 +16,14 @@ describe("MealPlanEntry service", () => {
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
     await User.init();
+    await Recipe.init();
     await MealPlan.init();
     await MealPlanEntry.init();
   });
 
   beforeEach(async () => {
     await User.deleteMany({});
+    await Recipe.deleteMany({});
     await MealPlan.deleteMany({});
     await MealPlanEntry.deleteMany({});
   });
@@ -34,6 +36,7 @@ describe("MealPlanEntry service", () => {
   afterEach(async () => {
     await MealPlanEntry.deleteMany({});
     await MealPlan.deleteMany({});
+    await Recipe.deleteMany({});
     await User.deleteMany({});
   });
 
@@ -61,7 +64,7 @@ describe("MealPlanEntry service", () => {
       title: "Test Recipe",
       description: "A simple recipe for testing",
       ingredients: [
-        { foodItem: "eggs", amount: 2, unit: "" },
+        { foodItem: "eggs", amount: 2, unit: "unit" },
         { foodItem: "bread", amount: 1, unit: "slice" }
       ],
       steps: ["Crack eggs", "Cook eggs", "Serve"],
@@ -135,16 +138,12 @@ describe("MealPlanEntry service", () => {
     });
 
     // Create two recipes for that user
-    const recipe1 = await Recipe.create({
+    const recipe1 = await createTestRecipe(user._id, {
       title: "Test Recipe 1",
-      createdBy: user._id,
-      isPublic: false,
     });
 
-    const recipe2 = await Recipe.create({
+    const recipe2 = await createTestRecipe(user._id, {
       title: "Test Recipe 2",
-      createdBy: user._id,
-      isPublic: false,
     });
 
     // Assign the first recipe to Monday breakfast
