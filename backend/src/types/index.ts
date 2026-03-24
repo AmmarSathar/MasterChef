@@ -180,3 +180,10 @@ export interface MealPlanEntryResponse {
   notes?: string;
   createdAt: string;
 }
+
+export interface UpdateMealPlanEntryInput {
+  entryId: string;
+  userId: string;
+  recipeId: string;
+  notes?: string;
+}
