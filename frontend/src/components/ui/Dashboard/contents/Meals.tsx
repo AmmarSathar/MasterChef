@@ -1,271 +1,109 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { AlertCircle, ChevronLeft, ChevronRight, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Clock4, Flame, MoreHorizontal, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useUser } from "@context/UserContext";
+import { DAYS_OF_WEEK, MEAL_TYPES } from "@masterchef/shared/constants";
+import type { Recipe } from "@masterchef/shared/types/recipe";
+import toast from "react-hot-toast";
 
-const FALLBACK_IMAGES = {
-  beefTacos:
-    "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=300&q=80",
-  caesarSalad:
-    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=300&q=80",
-  carbonara:
-    "https://images.unsplash.com/photo-1588013273468-315fd88ea34c?auto=format&fit=crop&w=300&q=80",
-  chickenStirFry:
-    "https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=300&q=80",
-  chocolateCookie:
-    "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=300&q=80",
-  margherita:
-    "https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&w=300&q=80",
-};
+type DayOfWeek = (typeof DAYS_OF_WEEK)[number]["value"];
+type MealType = (typeof MEAL_TYPES)[number]["value"];
 
-type MealItem = {
-  id: string;
+type MealSlot = {
+  entryId: string;
+  recipeId: string;
   title: string;
-  description: string;
-  time: string;
-  calories: string;
-  image: string;
+  notes: string;
 };
 
-type MealGroup = {
+type MealPlan = {
   id: string;
-  label: string;
-  accentClass: string;
-  items: MealItem[];
+  weekStartDate: string;
+  days: Record<DayOfWeek, Record<MealType, MealSlot | null>>;
 };
 
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+type AssignState = {
+  dayOfWeek: DayOfWeek;
+  mealType: MealType;
+};
 
-const MEALS: MealGroup[] = [
-  {
-    id: "breakfast",
-    label: "Breakfast",
-    accentClass: "bg-accent/30 text-accent",
-    items: [
-      {
-        id: "b1",
-        title: "Morning Smoothie",
-        description: "Berry blend with oats and chia.",
-        time: "10 min",
-        calories: "240 kcal",
-        image: FALLBACK_IMAGES.chocolateCookie,
-      },
-      {
-        id: "b2",
-        title: "Avocado Toast",
-        description: "Sourdough, feta, lemon zest.",
-        time: "12 min",
-        calories: "320 kcal",
-        image: FALLBACK_IMAGES.margherita,
-      },
-      {
-        id: "b3",
-        title: "Greek Yogurt Bowl",
-        description: "Granola, honey, fresh berries.",
-        time: "8 min",
-        calories: "210 kcal",
-        image: FALLBACK_IMAGES.caesarSalad,
-      },
-    ],
-  },
-  {
-    id: "lunch",
-    label: "Lunch",
-    accentClass: "bg-primary/40 text-primary-foreground",
-    items: [
-      {
-        id: "l1",
-        title: "Chicken Stir Fry",
-        description: "Ginger garlic glaze, crisp veggies.",
-        time: "25 min",
-        calories: "540 kcal",
-        image: FALLBACK_IMAGES.chickenStirFry,
-      },
-      {
-        id: "l2",
-        title: "Caesar Salad",
-        description: "Romaine, parmesan, crunchy croutons.",
-        time: "15 min",
-        calories: "430 kcal",
-        image: FALLBACK_IMAGES.caesarSalad,
-      },
-      {
-        id: "l3",
-        title: "Beef Tacos",
-        description: "Spiced beef, fresh toppings.",
-        time: "20 min",
-        calories: "610 kcal",
-        image: FALLBACK_IMAGES.beefTacos,
-      },
-    ],
-  },
-  {
-    id: "dinner",
-    label: "Dinner",
-    accentClass: "bg-secondary/40 text-foreground",
-    items: [
-      {
-        id: "d1",
-        title: "Carbonara",
-        description: "Creamy pasta with pancetta.",
-        time: "30 min",
-        calories: "690 kcal",
-        image: FALLBACK_IMAGES.carbonara,
-      },
-      {
-        id: "d2",
-        title: "Margherita Pizza",
-        description: "Tomato, basil, fresh mozzarella.",
-        time: "28 min",
-        calories: "720 kcal",
-        image: FALLBACK_IMAGES.margherita,
-      },
-    ],
-  },
-];
-
-function MealCard({
-  item,
-  isMenuOpen,
-  onToggleMenu,
-  onCloseMenu,
-  onSeeRecipe,
-  draggable,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-  isDragging,
-}: {
-  item: MealItem;
-  isMenuOpen: boolean;
-  onToggleMenu: () => void;
-  onCloseMenu: () => void;
-  onSeeRecipe: (item: MealItem) => void;
-  draggable: boolean;
-  onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDragEnd: () => void;
-  isDragging: boolean;
-}) {
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isMenuOpen) return;
-    const handleClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        onCloseMenu();
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [isMenuOpen, onCloseMenu]);
-
-  return (
-    <motion.div
-      layout
-      transition={{ type: "spring", stiffness: 320, damping: 34 }}
-      draggable={draggable}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      className={`relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/70 p-4 pt-10 shadow-sm transition-all duration-300 hover:shadow-md ${
-        isDragging ? "opacity-60 ring-2 ring-accent/40" : ""
-      }`}
-    >
-      <div className="absolute top-4 right-4" ref={menuRef}>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="h-8 w-8 rounded-full text-foreground/60 hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleMenu();
-          }}
-        >
-          <MoreHorizontal size={16} />
-        </Button>
-        {isMenuOpen && (
-          <div className="absolute right-0 mt-2 w-44 rounded-xl border border-border/60 bg-popover/95 shadow-lg backdrop-blur-sm">
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
-            >
-              Add to shopping list
-            </button>
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
-            >
-              Mark as cooked
-            </button>
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
-            >
-              Replace meal
-            </button>
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-destructive/80 hover:bg-destructive/10 transition-colors"
-            >
-              Remove
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="absolute -top-6 left-4 h-14 w-14 rounded-full border-4 border-card bg-secondary shadow-md">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="h-full w-full rounded-full object-cover"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5 pt-2">
-        <h3 className="text-base font-semibold text-foreground">
-          {item.title}
-        </h3>
-        <p className="text-sm text-muted-foreground">{item.description}</p>
-      </div>
-      <div className="flex items-center gap-4 text-xs text-foreground/60">
-        <span className="flex items-center gap-1">
-          <Clock4 size={14} />
-          {item.time}
-        </span>
-        <span className="flex items-center gap-1">
-          <Flame size={14} />
-          {item.calories}
-        </span>
-      </div>
-      <div className="pt-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="rounded-full px-4"
-          onClick={() => onSeeRecipe(item)}
-        >
-          See recipe
-        </Button>
-      </div>
-    </motion.div>
-  );
+function getMonday(date: Date) {
+  const value = new Date(date);
+  const day = value.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  value.setDate(value.getDate() + diff);
+  value.setHours(0, 0, 0, 0);
+  return value;
 }
 
-function AddMealCard({ onClick }: { onClick?: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-full min-h-48 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/60 bg-card/40 text-foreground/60 transition-all duration-300 hover:border-accent/60 hover:text-foreground"
-    >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/60">
-        <Plus size={20} />
-      </div>
-      <span className="text-sm font-semibold">Add item</span>
-    </button>
-  );
+function formatWeekStart(date: Date) {
+  return date.toLocaleString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatWeekStartApi(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T00:00:00.000Z`;
+}
+
+async function readJson(response: Response) {
+  const data = await response.json().catch(() => undefined);
+  return data as
+    | {
+        success?: boolean;
+        data?: unknown;
+        error?: string;
+        message?: string;
+      }
+    | undefined;
+}
+
+async function getMealPlan(weekStartDate: Date) {
+  const params = new URLSearchParams({
+    week_start_date: formatWeekStartApi(weekStartDate),
+  });
+  const response = await fetch(`/api/meal-plans?${params.toString()}`, {
+    credentials: "include",
+  });
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    const message = payload?.error || payload?.message || "Failed to load meal plan";
+    throw Object.assign(new Error(message), { status: response.status });
+  }
+
+  return payload?.data as MealPlan;
+}
+
+async function createMealPlan(weekStartDate: Date) {
+  const response = await fetch("/api/meal-plans", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      week_start_date: formatWeekStartApi(weekStartDate),
+    }),
+  });
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    const message = payload?.error || payload?.message || "Failed to create meal plan";
+    throw Object.assign(new Error(message), { status: response.status });
+  }
+
+  return payload?.data as MealPlan;
+}
+
+async function ensureMealPlan(weekStartDate: Date) {
+  try {
+    return await getMealPlan(weekStartDate);
+  } catch (error) {
+    if ((error as { status?: number }).status !== 404) {
+      throw error;
+    }
+  }
+
+  return createMealPlan(weekStartDate);
 }
 
 export function MealsTitle() {
@@ -273,49 +111,234 @@ export function MealsTitle() {
 }
 
 export function MealsContent() {
-  const [activeDay, setActiveDay] = useState(2);
-  const [weekStart, setWeekStart] = useState(() => {
-    const today = new Date();
-    const day = today.getDay(); // 0 (Sun) - 6 (Sat)
-    const diff = day === 0 ? -6 : 1 - day; // Monday as start of week
-    const start = new Date(today);
-    start.setDate(today.getDate() + diff);
-    start.setHours(0, 0, 0, 0);
-    return start;
-  });
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [selectedRecipe, setSelectedRecipe] = useState<MealItem | null>(null);
-  const [dragOverTarget, setDragOverTarget] = useState<{
-    groupId: string;
-    itemId: string;
-    position: "before" | "after";
-  } | null>(null);
+  const { user } = useUser();
+  const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
+  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [isLoadingPlan, setIsLoadingPlan] = useState(true);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [pickerState, setPickerState] = useState<AssignState | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [assigningRecipeId, setAssigningRecipeId] = useState<string | null>(null);
 
-  const [mealGroups, setMealGroups] = useState<MealGroup[]>(MEALS);
-  const [dragging, setDragging] = useState<{ groupId: string; itemId: string } | null>(null);
+  useEffect(() => {
+    let active = true;
+
+    async function loadRecipes() {
+      if (!user?.id) {
+        if (active) {
+          setRecipes([]);
+          setIsLoadingRecipes(false);
+        }
+        return;
+      }
+
+      setIsLoadingRecipes(true);
+      try {
+        const params = new URLSearchParams({
+          createdBy: user.id,
+          limit: "100",
+        });
+        const response = await fetch(`/api/recipes?${params.toString()}`, {
+          credentials: "include",
+        });
+        const payload = await readJson(response);
+        if (!response.ok) {
+          throw new Error(payload?.error || payload?.message || "Failed to load recipes");
+        }
+
+        const nextRecipes = ((payload?.data as { recipes?: Recipe[] } | undefined)?.recipes ?? []) as Recipe[];
+        if (active) {
+          setRecipes(nextRecipes);
+        }
+      } catch (error) {
+        if (active) {
+          setRecipes([]);
+          toast.error((error as Error).message || "Failed to load recipes");
+        }
+      } finally {
+        if (active) {
+          setIsLoadingRecipes(false);
+        }
+      }
+    }
+
+    void loadRecipes();
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadMealPlan() {
+      setIsLoadingPlan(true);
+      setLoadError(null);
+
+      try {
+        const plan = await ensureMealPlan(weekStart);
+        if (active) {
+          setMealPlan(plan);
+        }
+      } catch (error) {
+        if (active) {
+          setMealPlan(null);
+          setLoadError((error as Error).message || "Failed to load meal plan");
+        }
+      } finally {
+        if (active) {
+          setIsLoadingPlan(false);
+        }
+      }
+    }
+
+    void loadMealPlan();
+
+    return () => {
+      active = false;
+    };
+  }, [weekStart]);
+
   const days = useMemo(() => {
-    return DAY_LABELS.map((label, index) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + index);
+    return DAYS_OF_WEEK.map((day, index) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + index);
       return {
-        id: `day-${index}`,
-        label,
-        date: d.getDate().toString(),
-        dateValue: d,
+        ...day,
+        shortLabel: day.label.slice(0, 3),
+        date,
       };
     });
   }, [weekStart]);
 
+  const filteredRecipes = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) {
+      return recipes;
+    }
+
+    return recipes.filter((recipe) => {
+      return [recipe.title, recipe.description]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query));
+    });
+  }, [recipes, searchTerm]);
+
+  const selectedSlot = pickerState
+    ? mealPlan?.days[pickerState.dayOfWeek]?.[pickerState.mealType] ?? null
+    : null;
+  const assignedRecipeCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    if (!mealPlan) {
+      return counts;
+    }
+
+    for (const day of DAYS_OF_WEEK) {
+      for (const mealType of MEAL_TYPES) {
+        const slot = mealPlan.days[day.value][mealType.value];
+        if (!slot?.recipeId) {
+          continue;
+        }
+
+        counts.set(slot.recipeId, (counts.get(slot.recipeId) ?? 0) + 1);
+      }
+    }
+
+    return counts;
+  }, [mealPlan]);
+
+  async function handleAssignRecipe(recipe: Recipe) {
+    if (!mealPlan || !pickerState) {
+      return;
+    }
+
+    setAssigningRecipeId(recipe.id);
+    setAssignmentError(null);
+
+    const existingSlot = mealPlan.days[pickerState.dayOfWeek][pickerState.mealType];
+    const isUpdate = Boolean(existingSlot?.entryId);
+    const endpoint = isUpdate
+      ? `/api/meal-plans/entries/${existingSlot?.entryId}`
+      : `/api/meal-plans/${mealPlan.id}/entries`;
+    const method = isUpdate ? "PUT" : "POST";
+    const body = isUpdate
+      ? { recipe_id: recipe.id }
+      : {
+          day_of_week: pickerState.dayOfWeek,
+          meal_type: pickerState.mealType,
+          recipe_id: recipe.id,
+        };
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const payload = await readJson(response);
+
+      if (!response.ok) {
+        const message = payload?.error || payload?.message || "Failed to assign recipe";
+        if (response.status === 409) {
+          setAssignmentError(message);
+          toast.error(message);
+        } else {
+          throw new Error(message);
+        }
+        return;
+      }
+
+      const entry = payload?.data as
+        | { id: string; recipeId: string; notes?: string }
+        | undefined;
+
+      setMealPlan((current) => {
+        if (!current || !pickerState) {
+          return current;
+        }
+
+        return {
+          ...current,
+          days: {
+            ...current.days,
+            [pickerState.dayOfWeek]: {
+              ...current.days[pickerState.dayOfWeek],
+              [pickerState.mealType]: {
+                entryId: existingSlot?.entryId ?? entry?.id ?? "",
+                recipeId: recipe.id,
+                title: recipe.title,
+                notes: entry?.notes ?? existingSlot?.notes ?? "",
+              },
+            },
+          },
+        };
+      });
+
+      setPickerState(null);
+      setSearchTerm("");
+    } catch (error) {
+      const message = (error as Error).message || "Failed to assign recipe";
+      setAssignmentError(message);
+      toast.error(message);
+    } finally {
+      setAssigningRecipeId(null);
+    }
+  }
+
   return (
-    <div className="flex h-full w-full flex-col gap-8 overflow-y-auto pb-4 pr-1">
+    <div className="flex h-full w-full flex-col gap-6 overflow-y-auto pb-4 pr-1">
       <div className="sticky top-0 z-20">
-        <div className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4">
+        <div className="rounded-2xl border border-border/50 bg-card/70 p-4 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-3 pb-3">
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
-              <span className="font-semibold">
-                Week of {days[0]?.dateValue.toLocaleString("en-US", { month: "short", day: "numeric" })}
-              </span>
-            </div>
+            <span className="text-sm font-semibold text-foreground/70">
+              Week of {formatWeekStart(weekStart)}
+            </span>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -323,8 +346,8 @@ export function MealsContent() {
                 className="h-8 w-8 rounded-full text-foreground/60 hover:text-foreground"
                 onClick={() => {
                   const prev = new Date(weekStart);
-                  prev.setDate(weekStart.getDate() - 7);
-                  setWeekStart(prev);
+                  prev.setDate(prev.getDate() - 7);
+                  setWeekStart(getMonday(prev));
                 }}
               >
                 <ChevronLeft size={16} />
@@ -335,189 +358,203 @@ export function MealsContent() {
                 className="h-8 w-8 rounded-full text-foreground/60 hover:text-foreground"
                 onClick={() => {
                   const next = new Date(weekStart);
-                  next.setDate(weekStart.getDate() + 7);
-                  setWeekStart(next);
+                  next.setDate(next.getDate() + 7);
+                  setWeekStart(getMonday(next));
                 }}
               >
                 <ChevronRight size={16} />
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-3 overflow-x-auto pb-1 noScrollbar">
-            {days.map((day, index) => {
-              const isActive = index === activeDay;
-              return (
-                <button
-                  key={day.id}
-                  type="button"
-                  onClick={() => setActiveDay(index)}
-                  className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border text-xs font-semibold transition-all duration-300 ${
-                    isActive
-                      ? "border-accent bg-accent/20 text-accent shadow-sm"
-                      : "border-border/50 bg-card text-foreground/70 hover:border-accent/50 hover:text-foreground"
-                  }`}
-                >
-                  <span className="text-[11px] uppercase tracking-wide">
-                    {day.label}
-                  </span>
-                  <span className="text-base">{day.date}</span>
-                </button>
-              );
-            })}
+
+          <div className="grid grid-cols-7 gap-3">
+            {days.map((day) => (
+              <div
+                key={day.value}
+                className="rounded-2xl border border-border/50 bg-background/60 px-3 py-3 text-center"
+              >
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground/50">
+                  {day.shortLabel}
+                </div>
+                <div className="mt-1 text-base font-semibold text-foreground">
+                  {day.date.getDate()}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
-        {mealGroups.map((group) => (
-          <div
-            key={group.id}
-            className="grid grid-cols-[70px_1fr] gap-4"
-          >
-            <div className="flex items-stretch">
-              <div
-                className={`flex w-full items-center justify-center rounded-2xl ${group.accentClass}`}
-              >
-                <span className="text-xs font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
-                  {group.label}
+      {loadError ? (
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {loadError}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-4">
+        {MEAL_TYPES.map((mealType) => (
+          <div key={mealType.value} className="grid grid-cols-[110px_1fr] gap-4">
+            <div className="flex items-center">
+              <div className="w-full rounded-2xl border border-border/40 bg-card/60 px-4 py-6 text-center">
+                <span className="text-xs font-bold uppercase tracking-[0.24em] text-accent/80">
+                  {mealType.label}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {group.items.map((item) => (
-                <MealCard
-                  key={item.id}
-                  item={item}
-                  isMenuOpen={openMenuId === item.id}
-                  onToggleMenu={() =>
-                    setOpenMenuId((prev) => (prev === item.id ? null : item.id))
-                  }
-                  onCloseMenu={() => setOpenMenuId(null)}
-                  onSeeRecipe={(recipe) => setSelectedRecipe(recipe)}
-                  draggable
-                  isDragging={dragging?.itemId === item.id}
-                  onDragStart={(e) => {
-                    e.dataTransfer.effectAllowed = "move";
-                    e.dataTransfer.setData(
-                      "text/plain",
-                      `${group.id}:${item.id}`,
-                    );
-                    setDragging({ groupId: group.id, itemId: item.id });
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const position =
-                      e.clientX - rect.left < rect.width / 2 ? "before" : "after";
-                    setDragOverTarget({ groupId: group.id, itemId: item.id, position });
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const payload = e.dataTransfer.getData("text/plain");
-                    if (!payload) return;
-                    const [fromGroupId, fromItemId] = payload.split(":");
-                    const toIndex = group.items.findIndex((i) => i.id === item.id);
-                    if (!fromGroupId || !fromItemId || toIndex === -1) return;
-                    setMealGroups((prev) =>
-                      prev.map((g) => {
-                        if (fromGroupId === group.id && g.id === group.id) {
-                          const fromIndex = g.items.findIndex((i) => i.id === fromItemId);
-                          if (fromIndex === -1 || fromIndex === toIndex) return g;
-                          const nextItems = [...g.items];
-                          const [moved] = nextItems.splice(fromIndex, 1);
-                          const hoverPos = dragOverTarget?.position ?? "before";
-                          const baseIndex = hoverPos === "after" ? toIndex + 1 : toIndex;
-                          const insertAt = fromIndex < baseIndex ? baseIndex - 1 : baseIndex;
-                          nextItems.splice(insertAt, 0, moved);
-                          return { ...g, items: nextItems };
-                        }
-                        if (g.id === fromGroupId) {
-                          const nextItems = g.items.filter((i) => i.id !== fromItemId);
-                          return { ...g, items: nextItems };
-                        }
-                        if (g.id === group.id) {
-                          const sourceGroup = prev.find((grp) => grp.id === fromGroupId);
-                          const moved = sourceGroup?.items.find((i) => i.id === fromItemId);
-                          if (!moved) return g;
-                          const nextItems = [...g.items];
-                          const hoverPos = dragOverTarget?.position ?? "before";
-                          const insertAt = hoverPos === "after" ? toIndex + 1 : toIndex;
-                          nextItems.splice(insertAt, 0, moved);
-                          return { ...g, items: nextItems };
-                        }
-                        return g;
-                      }),
-                    );
-                    setDragging(null);
-                    setDragOverTarget(null);
-                  }}
-                  onDragEnd={() => {
-                    setDragging(null);
-                    setDragOverTarget(null);
-                  }}
-                />
-              ))}
-              <AddMealCard />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+              {days.map((day) => {
+                const slot = mealPlan?.days[day.value]?.[mealType.value] ?? null;
+                const isActive =
+                  pickerState?.dayOfWeek === day.value &&
+                  pickerState?.mealType === mealType.value;
+
+                return (
+                  <motion.button
+                    key={`${day.value}-${mealType.value}`}
+                    type="button"
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setPickerState({ dayOfWeek: day.value, mealType: mealType.value });
+                      setAssignmentError(null);
+                      setSearchTerm("");
+                    }}
+                    className={`group flex min-h-32 flex-col items-start justify-between rounded-3xl border p-4 text-left transition-all duration-200 ${
+                      isActive
+                        ? "border-accent/60 bg-accent/10 shadow-lg shadow-accent/10"
+                        : "border-border/50 bg-card/70 hover:border-accent/40 hover:bg-card"
+                    }`}
+                    disabled={isLoadingPlan}
+                  >
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground/45">
+                        {day.shortLabel}
+                      </span>
+                      <span className="rounded-full bg-secondary/70 p-2 text-foreground/55 transition-colors group-hover:text-accent">
+                        <Plus size={14} />
+                      </span>
+                    </div>
+
+                    <div className="w-full">
+                      {slot ? (
+                        <>
+                          <div className="text-sm font-semibold text-foreground">
+                            {slot.title}
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            Click to change recipe
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-sm font-semibold text-foreground/75">
+                            Add recipe
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            Choose from your saved recipes
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         ))}
       </div>
 
-      {selectedRecipe && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
+      {pickerState ? (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-3xl border border-border/60 bg-card p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="h-16 w-16 rounded-full border-4 border-card bg-secondary shadow-md shrink-0">
-                  <img
-                    src={selectedRecipe.image}
-                    alt={selectedRecipe.title}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {selectedRecipe.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedRecipe.description}
-                  </p>
-                  <div className="mt-2 flex items-center gap-4 text-xs text-foreground/60">
-                    <span className="flex items-center gap-1">
-                      <Clock4 size={14} />
-                      {selectedRecipe.time}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Flame size={14} />
-                      {selectedRecipe.calories}
-                    </span>
-                  </div>
-                </div>
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Select a recipe
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {pickerState.dayOfWeek} /{" "}
+                  {MEAL_TYPES.find((item) => item.value === pickerState.mealType)?.label}
+                  {selectedSlot ? ` / Replacing ${selectedSlot.title}` : ""}
+                </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="h-8 w-8 rounded-full text-foreground/60 hover:text-foreground"
-                onClick={() => setSelectedRecipe(null)}
-              >
-                <Plus className="rotate-45" size={16} />
+              <Button variant="secondary" onClick={() => setPickerState(null)}>
+                Close
               </Button>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setSelectedRecipe(null)}
-              >
-                Close
-              </Button>
-              <Button variant="default">View full recipe</Button>
+            <div className="relative mt-4">
+              <Search className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground" size={16} />
+              <Input
+                autoFocus
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search your recipes"
+                className="h-12 rounded-2xl pl-11"
+              />
+            </div>
+
+            {assignmentError ? (
+              <div className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {assignmentError}
+              </div>
+            ) : null}
+
+            <div className="mt-4 max-h-[26rem] space-y-3 overflow-y-auto pr-1">
+              {isLoadingRecipes ? (
+                <div className="rounded-2xl border border-border/50 bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
+                  Loading your recipes...
+                </div>
+              ) : filteredRecipes.length === 0 ? (
+                <div className="rounded-2xl border border-border/50 bg-background/50 px-4 py-8 text-center text-sm text-muted-foreground">
+                  {recipes.length === 0
+                    ? "You have no recipes to assign yet."
+                    : "No recipes match your search."}
+                </div>
+              ) : (
+                filteredRecipes.map((recipe) => {
+                  const isSubmitting = assigningRecipeId === recipe.id;
+                  const assignmentCount = assignedRecipeCounts.get(recipe.id) ?? 0;
+                  const isOnlyCurrentSlotAssignment =
+                    recipe.id === selectedSlot?.recipeId && assignmentCount === 1;
+                  const isAssignedThisWeek =
+                    assignmentCount > 0 && !isOnlyCurrentSlotAssignment;
+
+                  return (
+                    <button
+                      key={recipe.id}
+                      type="button"
+                      onClick={() => void handleAssignRecipe(recipe)}
+                      disabled={Boolean(assigningRecipeId)}
+                      className="flex w-full items-center justify-between gap-4 rounded-2xl border border-border/50 bg-background/60 px-4 py-4 text-left transition-colors hover:border-accent/40 hover:bg-accent/5 disabled:cursor-wait disabled:opacity-60"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div className="truncate text-sm font-semibold text-foreground">
+                            {recipe.title}
+                          </div>
+                          {isAssignedThisWeek ? (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+                              <AlertCircle size={12} />
+                              Used this week
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          {recipe.description}
+                        </div>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-accent/80">
+                        {isSubmitting ? "Saving" : "Assign"}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

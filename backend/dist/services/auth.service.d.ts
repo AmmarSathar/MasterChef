@@ -1,3 +1,3 @@
-import { CreateUserInput, UserResponse } from "../types/index.js";
-export declare function registerUser(input: CreateUserInput): Promise<UserResponse>;
+import { UpdateProfileInput } from "../types/index.js";
+export declare function updateUserProfile(input: UpdateProfileInput): Promise<Record<string, unknown>>;
 //# sourceMappingURL=auth.service.d.ts.map

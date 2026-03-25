@@ -3,51 +3,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerUser = registerUser;
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const user_model_js_1 = require("../models/user.model.js");
-const SALT_ROUNDS = 10;
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-async function registerUser(input) {
-    const { email, password, name } = input;
-    // Validation
-    if (!email || !password || !name) {
-        const error = new Error("Email, password, and name are required");
+exports.updateUserProfile = updateUserProfile;
+const mongoose_1 = __importDefault(require("mongoose"));
+const { ObjectId } = mongoose_1.default.Types;
+async function updateUserProfile(input) {
+    const { userId, ...profileData } = input;
+    if (!userId) {
+        const error = new Error("User ID is required");
         error.statusCode = 400;
         throw error;
     }
-    if (!isValidEmail(email)) {
-        const error = new Error("Invalid email format");
-        error.statusCode = 400;
+    const db = mongoose_1.default.connection.db;
+    if (!db) {
+        const error = new Error("Database not connected");
+        error.statusCode = 500;
         throw error;
     }
-    if (password.length < 8) {
-        const error = new Error("Password must be at least 8 characters");
-        error.statusCode = 400;
+    // BetterAuth generates IDs via new ObjectId().toString(), then stores them as
+    // actual ObjectId values in MongoDB. We must convert back to ObjectId to query.
+    const result = await db.collection("user").findOneAndUpdate({ _id: new ObjectId(userId) }, { $set: { ...profileData, updatedAt: new Date() } }, { returnDocument: "after" });
+    if (!result) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
         throw error;
     }
-    // Check for duplicate email
-    const existingUser = await user_model_js_1.User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-        const error = new Error("Email already registered");
-        error.statusCode = 409;
-        throw error;
-    }
-    // Hash password
-    const passwordHash = await bcrypt_1.default.hash(password, SALT_ROUNDS);
-    // Create user in database
-    const user = await user_model_js_1.User.create({
-        email,
-        name,
-        passwordHash,
-    });
-    return {
-        id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-    };
+    const { _id, ...user } = result;
+    void _id;
+    return user;
 }
 //# sourceMappingURL=auth.service.js.map

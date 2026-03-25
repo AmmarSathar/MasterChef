@@ -6,7 +6,7 @@ import { User } from "../src/models/user.model.js";
 import { Recipe } from "../src/models/recipe.model.js";
 import { MealPlan } from "../src/models/meal-plan.model.js";
 import { MealPlanEntry } from "../src/models/meal-plan-entry.model.js";
-import { createMealPlanEntry } from "../src/services/meal-plan.service.js";
+import { createMealPlanEntry, getMealPlanByWeek } from "../src/services/meal-plan.service.js";
 import { assertMealPlanAccess } from "../src/services/meal-plan.service.js";
 
 describe("MealPlanEntry service", () => {
@@ -277,6 +277,45 @@ describe("MealPlanEntry service", () => {
     ).rejects.toMatchObject({
       message: "Recipe not found",
       statusCode: 404,
+    });
+  });
+
+  it("returns the current week's meal plan with populated slot entry ids", async () => {
+    const user = await User.create({
+      email: "meal-plan-week@example.com",
+      name: "Meal Plan Week User",
+      passwordHash: "hashed-password",
+    });
+
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    const recipe = await createTestRecipe(user._id, {
+      title: "Week Lookup Recipe",
+    });
+
+    const createdEntry = await createMealPlanEntry({
+      mealPlanId: mealPlan._id.toString(),
+      userId: user._id.toString(),
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: recipe._id.toString(),
+      notes: "Loaded from week lookup",
+    });
+
+    const result = await getMealPlanByWeek(
+      user._id.toString(),
+      "2026-03-09T00:00:00.000Z"
+    );
+
+    expect(result.id).toBe(mealPlan._id.toString());
+    expect(result.days.Monday.breakfast).toMatchObject({
+      entryId: createdEntry.id,
+      recipeId: recipe._id.toString(),
+      title: "Week Lookup Recipe",
+      notes: "Loaded from week lookup",
     });
   });
 

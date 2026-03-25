@@ -146,6 +146,7 @@ export interface RecommendationResult {
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
 
 export interface MealSlot {
+  entryId: string;
   recipeId: string;
   title: string;
   notes: string;

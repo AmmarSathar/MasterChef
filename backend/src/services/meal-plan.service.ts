@@ -43,6 +43,39 @@ export async function createMealPlan(input: CreateMealPlanInput): Promise<MealPl
   return getMealPlanById(mealPlan._id.toString());
 }
 
+export async function getMealPlanByWeek(
+  userId: string,
+  weekStartDateStr: string
+): Promise<MealPlanResponse> {
+  const weekStartDate = new Date(weekStartDateStr);
+  if (isNaN(weekStartDate.getTime())) {
+    const error: ApiError = new Error("Invalid week_start_date");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (weekStartDate.getUTCDay() !== 1) {
+    const error: ApiError = new Error("week_start_date must be a Monday");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  weekStartDate.setUTCHours(0, 0, 0, 0);
+
+  const mealPlan = await MealPlan.findOne({
+    userId: new mongoose.Types.ObjectId(userId),
+    weekStartDate,
+  });
+
+  if (!mealPlan) {
+    const error: ApiError = new Error("Meal plan not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return getMealPlanById(mealPlan._id.toString());
+}
+
 export async function getMealPlanById(id: string): Promise<MealPlanResponse> {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error: ApiError = new Error("Invalid meal plan ID");
@@ -71,6 +104,7 @@ export async function getMealPlanById(id: string): Promise<MealPlanResponse> {
       );
       if (entry && entry.recipeId) {
         days[day][meal] = {
+          entryId: entry._id.toString(),
           recipeId: entry.recipeId._id.toString(),
           title: entry.recipeId.title,
           notes: entry.notes ?? "",

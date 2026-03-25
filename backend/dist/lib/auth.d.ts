@@ -1,0 +1,2 @@
+export declare function getAuth(): import("better-auth", { with: { "resolution-mode": "import" } }).Auth<import("better-auth", { with: { "resolution-mode": "import" } }).BetterAuthOptions>;
+//# sourceMappingURL=auth.d.ts.map

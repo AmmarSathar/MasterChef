@@ -5,6 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_js_1 = __importDefault(require("./auth.js"));
+const user_js_1 = __importDefault(require("./user.js"));
+const recipes_js_1 = __importDefault(require("./recipes.js"));
+const meal_plans_js_1 = __importDefault(require("./meal-plans.js"));
 const router = (0, express_1.Router)();
 // Health check endpoint
 router.get("/health", (_req, res) => {
@@ -12,5 +15,8 @@ router.get("/health", (_req, res) => {
 });
 // Mount route modules
 router.use("/api/auth", auth_js_1.default);
+router.use("/api/user", user_js_1.default); // profile update lives here, outside /api/auth/*
+router.use("/api/recipes", recipes_js_1.default);
+router.use("/api/meal-plans", meal_plans_js_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map
