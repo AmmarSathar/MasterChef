@@ -74,6 +74,8 @@ export default function Dashboard() {
     const route = raw.split("?")[0];
     if (route === "main" || route === "settings" || route === "recipe" || route === "meals" || route === "calendar")
       return route as DashboardRouteKey;
+
+    console.log("passed there")
     return "main";
   };
 
