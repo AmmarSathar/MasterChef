@@ -47,6 +47,7 @@ export default function RecipeView({
       animate={{ opacity: 1, backdropFilter: "blur(3px)" }}
       exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
       className="recipe-view-overlay w-full h-full py-10 fixed top-0 left-0 flex items-center justify-center z-90 bg-background/60"
+      onClick={onClose}
     >
       <motion.div
         initial={{ opacity: 0, y: 14, scale: 0.98 }}
@@ -54,6 +55,7 @@ export default function RecipeView({
         exit={{ opacity: 0, y: 14, scale: 0.98 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
         className="recipe-view-card w-full max-w-4xl max-h-full rounded-4xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/40 relative overflow-y-scroll overflow-x-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="fixed top-6 left-5 flex items-center gap-2 z-20">
           <button

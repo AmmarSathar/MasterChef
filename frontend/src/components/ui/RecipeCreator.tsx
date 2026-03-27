@@ -99,6 +99,7 @@ export default function RecipeCreator({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ingredientContainerRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading) setBusy(false);
@@ -262,6 +263,20 @@ export default function RecipeCreator({
     };
   }, []);
 
+  useEffect(() => {
+    const handleOutsideModalClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!modalContentRef.current) return;
+      if (modalContentRef.current.contains(target)) return;
+      onClose();
+    };
+
+    document.addEventListener("mousedown", handleOutsideModalClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideModalClick);
+    };
+  }, [onClose]);
+
   return (
     <motion.div
       initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
@@ -282,6 +297,7 @@ export default function RecipeCreator({
           </motion.div>
         )}
         <motion.div
+          ref={modalContentRef}
           key="creator"
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

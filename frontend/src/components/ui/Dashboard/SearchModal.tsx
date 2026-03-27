@@ -72,6 +72,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
   const [phraseIndex, setPhraseIndex] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filteredResults = results.filter((recipe) => {
@@ -150,10 +151,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose(undefined);
       }
     };
@@ -229,6 +227,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
       className="search-container w-full h-full flex items-center justify-center pointer-events-auto"
     >
       <div
+        ref={modalRef}
         className={`search-main w-160 h-140 flex flex-col items-center justify-baseline pointer-events-auto gap-2 rounded-xl z-20 shadow-lg shadow-black/0 transition-all duration-500 ${showResults ? "mb-0" : "-mb-80"}`}
       >
         <div className="search-params w-full h-10 flex gap-4 items-center justify-end">
