@@ -4,7 +4,14 @@ import { MealPlanEntry } from "../models/meal-plan-entry.model.js";
 import { Recipe } from "../models/recipe.model.js";
 import { dayOfWeekValues, mealTypeValues } from "@masterchef/shared/constants";
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
-import type { ApiError, CreateMealPlanInput, MealPlanResponse, CreateMealPlanEntryInput, MealPlanEntryResponse, UpdateMealPlanEntryInput } from "../types/index.js";
+import type {
+  ApiError,
+  CreateMealPlanInput,
+  MealPlanResponse,
+  CreateMealPlanEntryInput,
+  MealPlanEntryResponse,
+  UpdateMealPlanEntryInput,
+} from "../types/index.js";
 
 export async function createMealPlan(input: CreateMealPlanInput): Promise<MealPlanResponse> {
   const { userId, weekStartDate: weekStartDateStr } = input;
@@ -174,6 +181,21 @@ export async function deleteMealPlanEntry(input: {
 
   if (!mongoose.Types.ObjectId.isValid(entryId)) {
     const error: ApiError = new Error("Invalid meal plan entry ID");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const entry = await MealPlanEntry.findById(entryId);
+  if (!entry) {
+    const error: ApiError = new Error("Meal plan entry not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await assertMealPlanAccess(entry.mealPlanId.toString(), userId);
+  await MealPlanEntry.findByIdAndDelete(entryId);
+}
+
 export async function updateMealPlanEntry(
   input: UpdateMealPlanEntryInput
 ): Promise<MealPlanEntryResponse> {
@@ -198,9 +220,6 @@ export async function updateMealPlanEntry(
     throw error;
   }
 
-  const mealPlan = await MealPlan.findById(entry.mealPlanId);
-  if (!mealPlan) {
-    const error: ApiError = new Error("Meal plan not found");
   await assertMealPlanAccess(entry.mealPlanId.toString(), userId);
 
   const recipe = await Recipe.findById(recipeId);
@@ -210,18 +229,17 @@ export async function updateMealPlanEntry(
     throw error;
   }
 
-  if (mealPlan.userId.toString() !== userId) {
-    const error: ApiError = new Error("You do not own this meal plan");
   if (recipe.createdBy.toString() !== userId && !recipe.isPublic) {
     const error: ApiError = new Error("You do not have access to this recipe");
     error.statusCode = 403;
     throw error;
   }
 
-  await MealPlanEntry.findByIdAndDelete(entryId);
-}
   entry.recipeId = new mongoose.Types.ObjectId(recipeId);
-  entry.notes = notes;
+  if (notes !== undefined) {
+    entry.notes = notes;
+  }
+
   await entry.save();
 
   return {
@@ -255,12 +273,11 @@ export async function assertMealPlanAccess(mealPlanId: string, userId: string) {
 
     return mealPlan;
   } catch (error) {
-
     // If already one of our custom errors, rethrow it
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    
+
     // Otherwise, treat as an unexpected server error
     throw Object.assign(new Error("Internal server error"), {
       statusCode: 500,
