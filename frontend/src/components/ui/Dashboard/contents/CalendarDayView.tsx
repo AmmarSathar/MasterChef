@@ -4,8 +4,8 @@ import {
   MEAL_TYPES,
   MONTH_NAMES,
   type MealType,
-} from "@masterchef/shared/constants/";
-import type { Recipe } from "@masterchef/shared/types/";
+} from "@masterchef/shared/constants";
+import type { Recipe } from "@masterchef/shared/types";
 
 import { motion } from "framer-motion";
 
