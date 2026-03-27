@@ -296,65 +296,86 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
         </div>
 
         <div
-          className={`filter-row w-full transition-all duration-500 ease-out-cubic overflow-hidden ${filterOpen ? "max-h-20 opacity-100" : "max-h-0 opacity-0 pointer-events-none"}`}
+          className={`filter-row w-full transition-all duration-500 ease-out-cubic overflow-hidden ${filterOpen ? "max-h-48 opacity-100" : "max-h-0 opacity-0 pointer-events-none"}`}
         >
           <div
-            className="flex items-center gap-2 pb-1 py-2 px-1 overflow-x-auto"
+            className="flex items-start gap-3 pb-1 py-2 px-1 overflow-x-auto"
             style={{ scrollbarWidth: "none" }}
           >
-            {MEAL_TYPES.map(({ label, icon: Icon }) => {
-              const isActive = activeFilters.mealType.includes(label);
-              return (
-                <Button
-                  key={label}
-                  onClick={() => toggleFilter("mealType", label)}
-                  className={`filter-chip flex items-center relative overflow-hidden gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-500 cursor-pointer hover:brightness-105 ${isActive ? "text-accent ring-2 ring-accent/40" : "ring-2 ring-border/30 text-foreground/60 hover:text-accent"}`}
-                >
-                  <div
-                    className={`absolute w-full h-full pointer-events-none z-0 ${isActive ? "bg-accent/20" : "bg-linear-to-b from-secondary to-card"}`}
-                  />
-                  <Icon size={13} className="pointer-events-none z-2" />
-                  <span className="pointer-events-none z-2">{label}</span>
-                </Button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Meal Type
+              </span>
+              <div className="flex items-center gap-2">
+                {MEAL_TYPES.map(({ label, icon: Icon }) => {
+                  const isActive = activeFilters.mealType.includes(label);
+                  return (
+                    <Button
+                      key={label}
+                      onClick={() => toggleFilter("mealType", label)}
+                      className={`filter-chip flex items-center relative overflow-hidden gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-500 cursor-pointer hover:brightness-105 ${isActive ? "text-accent ring-2 ring-accent/40" : "ring-2 ring-border/30 text-foreground/60 hover:text-accent"}`}
+                    >
+                      <div
+                        className={`absolute w-full h-full pointer-events-none z-0 ${isActive ? "bg-accent/20" : "bg-linear-to-b from-secondary to-card"}`}
+                      />
+                      <Icon size={13} className="pointer-events-none z-2" />
+                      <span className="pointer-events-none z-2">{label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="w-px h-5 bg-border/40 shrink-0 mx-1" />
+            <div className="w-px h-14 bg-border/35 shrink-0 mt-4" />
 
-            {SKILL_LEVELS.map((level) => {
-              const isActive = activeFilters.skillLevel.includes(level.value);
-              return (
-                <Button
-                  key={level.value}
-                  onClick={() => toggleFilter("skillLevel", level.value)}
-                  className={`filter-chip flex items-center relative overflow-hidden gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-500 cursor-pointer hover:brightness-105 ${isActive ? "text-accent ring-2 ring-accent/40" : "ring-2 ring-border/30 text-foreground/60 hover:text-accent"}`}
-                >
-                  <div
-                    className={`absolute w-full h-full pointer-events-none z-0 ${isActive ? "bg-accent/20" : "bg-linear-to-b from-secondary to-card"}`}
-                  />
-                  <span className="pointer-events-none z-2">{level.label}</span>
-                </Button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Skill Level
+              </span>
+              <div className="flex items-center gap-2">
+                {SKILL_LEVELS.map((level) => {
+                  const isActive = activeFilters.skillLevel.includes(level.value);
+                  return (
+                    <Button
+                      key={level.value}
+                      onClick={() => toggleFilter("skillLevel", level.value)}
+                      className={`filter-chip flex items-center relative overflow-hidden gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-500 cursor-pointer hover:brightness-105 ${isActive ? "text-accent ring-2 ring-accent/40" : "ring-2 ring-border/30 text-foreground/60 hover:text-accent"}`}
+                    >
+                      <div
+                        className={`absolute w-full h-full pointer-events-none z-0 ${isActive ? "bg-accent/20" : "bg-linear-to-b from-secondary to-card"}`}
+                      />
+                      <span className="pointer-events-none z-2">{level.label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="w-px h-5 bg-border/40 shrink-0 mx-1" />
+            <div className="w-px h-14 bg-border/35 shrink-0 mt-4" />
 
-            {TIME_RANGES.map(({ label, value, icon: Icon }) => {
-              const isActive = activeFilters.cookingTime.includes(value);
-              return (
-                <Button
-                  key={value}
-                  onClick={() => toggleFilter("cookingTime", value)}
-                  className={`filter-chip flex items-center relative overflow-hidden gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-500 cursor-pointer hover:brightness-105 ${isActive ? "text-accent ring-2 ring-accent/40" : "ring-2 ring-border/30 text-foreground/60 hover:text-accent"}`}
-                >
-                  <div
-                    className={`absolute w-full h-full pointer-events-none z-0 ${isActive ? "bg-accent/20" : "bg-linear-to-b from-secondary to-card"}`}
-                  />
-                  <Icon size={13} className="pointer-events-none z-2" />
-                  <span className="pointer-events-none z-2">{label}</span>
-                </Button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Cooking Time
+              </span>
+              <div className="flex items-center gap-2">
+                {TIME_RANGES.map(({ label, value, icon: Icon }) => {
+                  const isActive = activeFilters.cookingTime.includes(value);
+                  return (
+                    <Button
+                      key={value}
+                      onClick={() => toggleFilter("cookingTime", value)}
+                      className={`filter-chip flex items-center relative overflow-hidden gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-500 cursor-pointer hover:brightness-105 ${isActive ? "text-accent ring-2 ring-accent/40" : "ring-2 ring-border/30 text-foreground/60 hover:text-accent"}`}
+                    >
+                      <div
+                        className={`absolute w-full h-full pointer-events-none z-0 ${isActive ? "bg-accent/20" : "bg-linear-to-b from-secondary to-card"}`}
+                      />
+                      <Icon size={13} className="pointer-events-none z-2" />
+                      <span className="pointer-events-none z-2">{label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

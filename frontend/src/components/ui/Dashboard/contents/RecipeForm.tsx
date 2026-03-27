@@ -748,66 +748,87 @@ export function RecipeContent() {
           </div>
 
           <div
-            className="filter-chips overflow-x-auto flex items-center gap-2 pb-1"
+            className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
             style={{ scrollbarWidth: "none" }}
           >
-            {MEAL_TYPES.map(({ label, icon: Icon }) => {
-              const isActive = activeFilters.mealType.includes(label);
-              return (
-                <button
-                  key={label}
-                  onClick={() => toggleFilter("mealType", label)}
-                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                  }`}
-                >
-                  <Icon size={15} className="pointer-events-none" />
-                  <span className="pointer-events-none">{label}</span>
-                </button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Meal Type
+              </span>
+              <div className="flex items-center gap-2">
+                {MEAL_TYPES.map(({ label, icon: Icon }) => {
+                  const isActive = activeFilters.mealType.includes(label);
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => toggleFilter("mealType", label)}
+                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                      }`}
+                    >
+                      <Icon size={15} className="pointer-events-none" />
+                      <span className="pointer-events-none">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="filter-divider w-px h-6 bg-border/40 shrink-0 mx-1" />
+            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            {SKILL_LEVELS.map((level, index) => {
-              const isActive = activeFilters.skillLevel.includes(level.value);
-              return (
-                <button
-                  key={level.value}
-                  onClick={() => toggleFilter("skillLevel", level.value)}
-                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                  }`}
-                >
-                  <SkillBars count={index + 1} />
-                  <span className="pointer-events-none">{level.label}</span>
-                </button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Skill Level
+              </span>
+              <div className="flex items-center gap-2">
+                {SKILL_LEVELS.map((level, index) => {
+                  const isActive = activeFilters.skillLevel.includes(level.value);
+                  return (
+                    <button
+                      key={level.value}
+                      onClick={() => toggleFilter("skillLevel", level.value)}
+                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                      }`}
+                    >
+                      <SkillBars count={index + 1} />
+                      <span className="pointer-events-none">{level.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="filter-divider w-px h-6 bg-border/40 shrink-0 mx-1" />
+            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            {TIME_RANGES.map(({ label, value, icon: Icon }) => {
-              const isActive = activeFilters.cookingTime.includes(value);
-              return (
-                <button
-                  key={value}
-                  onClick={() => toggleFilter("cookingTime", value)}
-                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                  }`}
-                >
-                  <Icon size={15} className="pointer-events-none" />
-                  <span className="pointer-events-none">{label}</span>
-                </button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Cooking Time
+              </span>
+              <div className="flex items-center gap-2">
+                {TIME_RANGES.map(({ label, value, icon: Icon }) => {
+                  const isActive = activeFilters.cookingTime.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => toggleFilter("cookingTime", value)}
+                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                      }`}
+                    >
+                      <Icon size={15} className="pointer-events-none" />
+                      <span className="pointer-events-none">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
