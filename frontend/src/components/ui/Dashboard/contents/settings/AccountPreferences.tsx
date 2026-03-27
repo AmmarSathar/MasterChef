@@ -39,6 +39,12 @@ export default function AccountPreferences() {
   const [allergyDropdownOpen, setAllergyDropdownOpen] = useState(false);
   const allergyDropdownRef = useRef<HTMLDivElement>(null);
   const allergySearchRef = useRef<HTMLInputElement>(null);
+  const hashRefreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const hashReopenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const [skillLevel, setSkillLevel] = useState<
     typeof SKILL_LEVELS[number]["value"]
   >(user?.skill_level || SKILL_LEVELS[0].value);
@@ -64,6 +70,20 @@ export default function AccountPreferences() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (hashRefreshTimeoutRef.current) {
+        clearTimeout(hashRefreshTimeoutRef.current);
+        hashRefreshTimeoutRef.current = null;
+      }
+      if (hashReopenTimeoutRef.current) {
+        clearTimeout(hashReopenTimeoutRef.current);
+        hashReopenTimeoutRef.current = null;
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (loading) {
@@ -133,10 +153,23 @@ export default function AccountPreferences() {
       toast.dismiss(loadingToast);
       toast.success("Successfully saved\nLet's start cooking!");
 
-      setTimeout(() => {
+      if (hashRefreshTimeoutRef.current) {
+        clearTimeout(hashRefreshTimeoutRef.current);
+      }
+      if (hashReopenTimeoutRef.current) {
+        clearTimeout(hashReopenTimeoutRef.current);
+      }
+
+      hashRefreshTimeoutRef.current = setTimeout(() => {
+        if (typeof window === "undefined") return;
+
         if (window.location.hash === "#settings") {
           window.location.hash = "main";
-          setTimeout(() => (window.location.hash = "#settings"), 300);
+          hashReopenTimeoutRef.current = setTimeout(() => {
+            if (typeof window !== "undefined") {
+              window.location.hash = "#settings";
+            }
+          }, 300);
         } else {
           window.location.hash = "#settings";
         }

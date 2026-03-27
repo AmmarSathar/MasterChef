@@ -59,12 +59,20 @@ test("user can edit dietary preferences and allergies and see them after reload"
 
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 30000 });
 
+  const openPreferences = async () => {
+    await page.locator(".header-account").click();
+    await page.locator(".user-card").waitFor({ state: "visible", timeout: 10000 });
+    await page.getByTitle("Options").click({ force: true });
+    await page.waitForURL(/\/dashboard#settings/, { timeout: 10000 });
+
+    const preferencesButton = page.getByRole("button", { name: "Preferences" });
+    await expect(preferencesButton).toBeVisible({ timeout: 10000 });
+    await preferencesButton.click({ force: true });
+    await expect(page.getByText("Dietary Preferences")).toBeVisible({ timeout: 10000 });
+  };
+
   await page.waitForURL(/\/dashboard/, { timeout: 30000 });
-  await page.locator(".header-account").click();
-  await page.locator(".user-card").waitFor({ state: "visible", timeout: 10000 });
-  await page.getByTitle("Options").click({ force: true });
-  await page.getByRole("button", { name: "Preferences" }).click();
-  await expect(page.getByText("Dietary Preferences")).toBeVisible();
+  await openPreferences();
 
   await page.getByRole("button", { name: "Vegan" }).click();
 
@@ -82,10 +90,7 @@ test("user can edit dietary preferences and allergies and see them after reload"
   await waitSave;
 
   await page.waitForURL(/\/dashboard/, { timeout: 30000 });
-  await page.locator(".header-account").click();
-  await page.locator(".user-card").waitFor({ state: "visible", timeout: 10000 });
-  await page.getByTitle("Options").click({ force: true });
-  await page.getByRole("button", { name: "Preferences" }).click();
+  await openPreferences();
 
   const veganButton = page.getByRole("button", { name: "Vegan" });
   await expect(veganButton).toHaveClass(/bg-accent/);
