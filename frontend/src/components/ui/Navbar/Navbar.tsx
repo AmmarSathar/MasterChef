@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import {
   Utensils,
   LayoutGrid,
-  Bookmark,
+  Calendar,
   FileText,
   Tv,
   BarChart3,
@@ -48,6 +48,17 @@ export default function Navbar() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const goToRecipePage = () => {
+    if (!userConnected) {
+      navigate("/login");
+      return;
+    }
+    navigate("/dashboard");
+    window.location.hash = "recipe";
+    setSelectedBtn("nav-upload");
+    setIsMoreOpen(false);
+  };
+
   return (
     <div className="navbar-parent-container w-screen h-screen flex items-center justify-baseline pointer-events-none absolute top-0 left-0">
       <nav className="md:h-full w-30 max-md:w-screen max-md:hidden max-md:h-10 flex relative max-md:left-0 max-md:my-10 max-md:mx-0 items-center pointer-events-auto justify-center p-3 m-0 text-foreground z-50">
@@ -70,15 +81,22 @@ export default function Navbar() {
                 window.location.hash = "main";
                 setSelectedBtn("nav-dashboard");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-dashboard" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-dashboard"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
+              title="Dashboard"
+              aria-label="Dashboard"
             >
               <LayoutGrid
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
+              <span
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Home
+              </span>
             </button>
 
             {!showMoreButton && (
@@ -89,32 +107,43 @@ export default function Navbar() {
                     setSelectedBtn("nav-saved");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-saved" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-saved"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="Calendar"
+                  aria-label="Calendar"
                 >
-                  <Bookmark
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                  <Calendar
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Calendar
+                  </span>
                 </button>
 
                 <button
                   disabled={!userConnected}
-                  onClick={() => {
-                    setSelectedBtn("nav-upload");
-                    setIsMoreOpen(false);
-                  }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-upload" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                  onClick={goToRecipePage}
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-upload"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="Recipes"
+                  aria-label="Recipes"
                 >
                   <FileText
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Recipes
+                  </span>
                 </button>
                 <button
                   disabled={!userConnected}
@@ -128,15 +157,22 @@ export default function Navbar() {
                     setSelectedBtn("nav-meals");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-meals" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-meals"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="Meals"
+                  aria-label="Meals"
                 >
                   <UtensilsCrossed
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Meals
+                  </span>
                 </button>
 
                 <button
@@ -145,15 +181,22 @@ export default function Navbar() {
                     setSelectedBtn("nav-tv");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-tv" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-tv"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="Media"
+                  aria-label="Media"
                 >
                   <Tv
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-tv" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-tv" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-tv" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Media
+                  </span>
                 </button>
 
                 <button
@@ -161,15 +204,22 @@ export default function Navbar() {
                     setSelectedBtn("nav-idk");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-idk" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-idk"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="Analytics"
+                  aria-label="Analytics"
                 >
                   <BarChart3
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-idk" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-idk" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-idk" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Stats
+                  </span>
                 </button>
               </>
             )}
@@ -182,27 +232,41 @@ export default function Navbar() {
                     setSelectedBtn("nav-saved");
                     setIsMoreOpen(false);
                   }}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-saved" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-saved"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="Calendar"
+                  aria-label="Calendar"
                 >
-                  <Bookmark
-                    className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                  <Calendar
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Calendar
+                  </span>
                 </button>
                 <button
                   onClick={() => setIsMoreOpen(!isMoreOpen)}
-                  className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 ${
+                  className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     isMoreOpen
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
+                  title="More"
+                  aria-label="More"
                 >
                   <MoreHorizontal
-                    className={`w-6 h-6 pointer-events-none ${isMoreOpen ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 pointer-events-none ${isMoreOpen ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
+                  <span
+                    className={`text-[9px] leading-none pointer-events-none ${isMoreOpen ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    More
+                  </span>
                 </button>
               </>
             )}
@@ -219,15 +283,22 @@ export default function Navbar() {
                 window.location.hash = "settings";
                 setSelectedBtn("nav-settings");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 ${
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-settings"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
+              title="Settings"
+              aria-label="Settings"
             >
               <Settings
-                className={`w-6 h-6 pointer-events-none ${selectedBtn === "nav-settings" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`w-5 h-5 pointer-events-none ${selectedBtn === "nav-settings" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
+              <span
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-settings" ? "text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Settings
+              </span>
             </button>
             <div className="flex w-12 h-12 items-center justify-center">
               <ThemeToggle />
@@ -249,11 +320,14 @@ export default function Navbar() {
                 logout();
               }}
               disabled={false}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
               aria-label="Logout"
               title="Logout"
             >
               <LogOut className="w-5 h-5 text-muted-foreground pointer-events-none" />
+              <span className="text-[9px] leading-none text-muted-foreground pointer-events-none">
+                Logout
+              </span>
             </button>
           </div>
         </div>
@@ -268,18 +342,23 @@ export default function Navbar() {
           <div className="py-8 p-4 bg-card/70 backdrop-blur-sm rounded-3xl flex flex-col items-center gap-6 shadow-xl border border-border">
             <button
               disabled={!userConnected}
-              onClick={() => {
-                setSelectedBtn("nav-upload");
-              }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-upload" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+              onClick={goToRecipePage}
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-upload"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
+              title="Recipes"
+              aria-label="Recipes"
             >
               <FileText
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
+              <span
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Recipes
+              </span>
             </button>
             <button
               disabled={!userConnected}
@@ -292,15 +371,22 @@ export default function Navbar() {
                 window.location.hash = "meals";
                 setSelectedBtn("nav-meals");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-meals" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-meals"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
+              title="Meals"
+              aria-label="Meals"
             >
               <UtensilsCrossed
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
+              <span
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-meals" ? "text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Meals
+              </span>
             </button>
 
             <button
@@ -308,30 +394,44 @@ export default function Navbar() {
               onClick={() => {
                 setSelectedBtn("nav-tv");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-tv" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-tv"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
+              title="Media"
+              aria-label="Media"
             >
               <Tv
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-tv" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-tv" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
+              <span
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-tv" ? "text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Media
+              </span>
             </button>
 
             <button
               onClick={() => {
                 setSelectedBtn("nav-idk");
               }}
-              className={`flex w-12 h-12 items-center justify-center cursor-pointer ${selectedBtn === "nav-idk" ? "h-15" : ""} rounded-xl transition-all duration-300 ${
+              className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-idk"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
+              title="Analytics"
+              aria-label="Analytics"
             >
               <BarChart3
-                className={`w-6 h-6 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-idk" ? "text-primary-foreground mb-3" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-idk" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
+              <span
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-idk" ? "text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Stats
+              </span>
             </button>
           </div>
         </div>

@@ -47,6 +47,7 @@ const INITIAL_FORM_DATA: Recipe = {
   skillLevel:
     SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as DietaryOption[],
+  isShared: true,
 };
 
 const INITIAL_INGREDIENTS: Ingredient[] = [
@@ -99,6 +100,11 @@ export default function RecipeCreator({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ingredientContainerRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const stepTextareaRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
+    {},
+  );
 
   useEffect(() => {
     if (!loading) setBusy(false);
@@ -180,6 +186,12 @@ export default function RecipeCreator({
     );
   };
 
+  const autoResizeTextarea = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
   const handleSubmit = (e: HTMLFormElement) => {
     e.preventDefault();
 
@@ -230,6 +242,7 @@ export default function RecipeCreator({
       cookingTime: Number(formData.cookingTime),
       servings: Number(formData.servings) || 1,
       skillLevel: formData.skillLevel,
+      isShared: Boolean(formData.isShared),
       dietaryTags: formData.dietaryTags,
       imageUrl: coverImage,
       ingredients: ingredients.map((ing) => ({
@@ -262,6 +275,30 @@ export default function RecipeCreator({
     };
   }, []);
 
+  useEffect(() => {
+    const handleOutsideModalClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!modalContentRef.current) return;
+      if (modalContentRef.current.contains(target)) return;
+      onClose();
+    };
+
+    document.addEventListener("mousedown", handleOutsideModalClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideModalClick);
+    };
+  }, [onClose]);
+
+  useEffect(() => {
+    autoResizeTextarea(titleRef.current);
+  }, [formData.title]);
+
+  useEffect(() => {
+    steps.forEach((step) => {
+      autoResizeTextarea(stepTextareaRefs.current[step.id] ?? null);
+    });
+  }, [steps]);
+
   return (
     <motion.div
       initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
@@ -282,6 +319,7 @@ export default function RecipeCreator({
           </motion.div>
         )}
         <motion.div
+          ref={modalContentRef}
           key="creator"
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -290,15 +328,16 @@ export default function RecipeCreator({
           className="recipeCreator-content bg-linear-to-br from-card/95 to-card/80 backdrop-blur-sm border border-border/50 rounded-2xl w-170 max-h-[90vh] py-2 px-2 overflow-y-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-start justify-between p-6 pb-4">
-            <div className="pr-2">
-              <input
-                type="text"
+          <div className="flex items-start justify-between gap-3 p-6 pb-4">
+            <div className="pr-2 flex-1 min-w-0">
+              <textarea
+                ref={titleRef}
                 id="rc-title"
                 placeholder="My new Recipe"
                 value={formData.title}
                 onChange={(e) => handleFormChange("title", e.target.value)}
-                className="outline-none transition-all duration-200 rounded-xl h-20 p-0 w-full bg-none text-4xl font-bold text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 focus:p-2"
+                rows={1}
+                className="outline-none transition-all duration-200 rounded-xl min-h-20 p-2 w-full bg-none text-4xl leading-tight font-bold text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden break-words whitespace-pre-wrap"
               />
 
               <p className="text-sm text-accent/70 mt-0.5">
@@ -310,7 +349,7 @@ export default function RecipeCreator({
             <Button
               onClick={onClose}
               disabled={formDisabled}
-              className="p-2 h-10 w-10 rounded-full bg-transparent hover:bg-secondary text-foreground opacity-55 hover:opacity-100 transition-all duration-300 cursor-pointer"
+              className="p-2 h-10 w-10 shrink-0 rounded-full bg-transparent hover:bg-secondary text-foreground opacity-55 hover:opacity-100 transition-all duration-300 cursor-pointer"
             >
               <X size={20} />
             </Button>
@@ -530,7 +569,7 @@ export default function RecipeCreator({
 
               <AnimatePresence initial={false}>
                 <div
-                  className="flex flex-col gap-2 transition-all duration-200 max-h-200"
+                  className="flex flex-col gap-2 transition-all duration-200"
                   ref={ingredientContainerRef}
                 >
                   {ingredients.map((ingredient) => (
@@ -543,7 +582,7 @@ export default function RecipeCreator({
                         e.preventDefault();
                         setIsIngredientClicked(ingredient.id);
                       }}
-                      className={`flex flex-col items-start justify-baseline relative gap-2 px-4 py-2.5  rounded-xl bg-input/30 border border-border/30 cursor-pointer group hover:bg-input/50 transition-all duration-200 ease-out-cubic delay-50 ${isIngredientClicked === ingredient.id ? "h-30" : "h-15"}`}
+                      className={`flex flex-col items-start justify-baseline relative gap-2 px-4 py-2.5 rounded-xl bg-input/30 border border-border/30 cursor-pointer group hover:bg-input/50 transition-all duration-200 ease-out-cubic delay-50 overflow-hidden ${isIngredientClicked === ingredient.id ? "min-h-30" : "min-h-15"}`}
                     >
                       <input
                         type="text"
@@ -699,12 +738,18 @@ export default function RecipeCreator({
                     </span>
                     <div className="flex-1 flex items-start gap-2 px-4 py-3 rounded-xl bg-input/30 border border-border/30">
                       <textarea
+                        ref={(el) => {
+                          stepTextareaRefs.current[step.id] = el;
+                        }}
                         placeholder="Step-by-step preparation guide..."
                         value={step.content}
-                        onChange={(e) =>
-                          !formDisabled && updateStep(step.id, e.target.value)
-                        }
-                        className="flex-1 bg-transparent text-sm text-foreground pr-17 outline-none resize-none placeholder:text-foreground/30 min-h-10"
+                        onChange={(e) => {
+                          if (formDisabled) return;
+                          updateStep(step.id, e.target.value);
+                          autoResizeTextarea(e.currentTarget);
+                        }}
+                        onInput={(e) => autoResizeTextarea(e.currentTarget)}
+                        className="flex-1 bg-transparent text-sm text-foreground pr-17 outline-none resize-none placeholder:text-foreground/30 min-h-10 overflow-hidden"
                       />
                       {steps.length > 1 && (
                         <button
@@ -810,58 +855,92 @@ export default function RecipeCreator({
             </div>
 
             <div className="flex flex-col gap-3">
-              <span className="text-base font-semibold text-foreground">
-                Dietary Tags
-              </span>
-
-              <div className="flex items-center gap-3 flex-wrap">
-                {dietaryOptions.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    disabled={formDisabled}
-                    onClick={() =>
-                      toggleDietaryTag(tag, !formData.dietaryTags.includes(tag))
-                    }
-                    className={`flex flex-col items-center justify-center gap-3 px-6 py-5 rounded-2xl transition-all duration-300 ${
-                      formData.dietaryTags.includes(tag)
-                        ? "bg-accent text-card shadow-md"
-                        : "bg-input/80 text-foreground/80 hover:bg-input"
+              <div className="flex items-center justify-between rounded-xl border border-border/40 bg-input/20 px-4 py-3">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-foreground">
+                    Share with other users
+                  </span>
+                  <span className="text-xs text-foreground/60">
+                    When off, this recipe stays private and is hidden from global search.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={formDisabled}
+                  onClick={() =>
+                    handleFormChange("isShared", !Boolean(formData.isShared))
+                  }
+                  className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
+                    formData.isShared ? "bg-primary" : "bg-secondary"
+                  } ${formDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  aria-label="Toggle recipe sharing"
+                  aria-pressed={Boolean(formData.isShared)}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                      formData.isShared ? "translate-x-7" : "translate-x-1"
                     }`}
-                  >
-                    <span className="text-sm font-semibold pointer-events-none">
-                      {tag}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/30">
-              <Button
-                type="button"
-                disabled={formDisabled}
-                onClick={onClose}
-                className="px-5 py-5 text-sm font-medium text-foreground/60 hover:text-foreground transition-all rounded-lg"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={formDisabled}
-                className="px-6 py-5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2"
-              >
-                {submitting ? (
-                  <Spinner
-                    size={18}
-                    className="text-primary-foreground"
-                    variant="infinite"
                   />
-                ) : (
-                  <Plus size={15} />
-                )}
-                {isEditing ? "Save Changes" : "Save Recipe"}
-              </Button>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <span className="text-base font-semibold text-foreground">
+                  Dietary Tags
+                </span>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  {dietaryOptions.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      disabled={formDisabled}
+                      onClick={() =>
+                        toggleDietaryTag(
+                          tag,
+                          !formData.dietaryTags.includes(tag),
+                        )
+                      }
+                      className={`flex flex-col items-center justify-center gap-3 px-6 py-5 rounded-2xl transition-all duration-300 ${
+                        formData.dietaryTags.includes(tag)
+                          ? "bg-accent text-card shadow-md"
+                          : "bg-input/80 text-foreground/80 hover:bg-input"
+                      }`}
+                    >
+                      <span className="text-sm font-semibold pointer-events-none">
+                        {tag}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/30">
+                <Button
+                  type="button"
+                  disabled={formDisabled}
+                  onClick={onClose}
+                  className="px-5 py-5 text-sm font-medium text-foreground/60 hover:text-foreground transition-all rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={formDisabled}
+                  className="px-6 py-5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <Spinner
+                      size={18}
+                      className="text-primary-foreground"
+                      variant="infinite"
+                    />
+                  ) : (
+                    <Plus size={15} />
+                  )}
+                  {isEditing ? "Save Changes" : "Save Recipe"}
+                </Button>
+              </div>
             </div>
           </form>
         </motion.div>

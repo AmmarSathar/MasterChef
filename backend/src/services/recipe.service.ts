@@ -1,6 +1,7 @@
 import { foods, dietaryExclusions } from "@masterchef/shared/constants";
 import type { FoodTag } from "@masterchef/shared/constants";
 import { Recipe } from "../models/recipe.model.js";
+import "../models/user.model.js";
 import mongoose from "mongoose";
 const { ObjectId } = mongoose.Types;
 import type {
@@ -40,6 +41,29 @@ function computeAllergens(ingredientNames: string[]): string[] {
   return Array.from(allergenSet);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getCreatorId(createdBy: unknown): string {
+  if (typeof createdBy === "string") return createdBy;
+  if (createdBy instanceof ObjectId) return createdBy.toString();
+
+  if (isRecord(createdBy)) {
+    const id = createdBy._id;
+    if (typeof id === "string") return id;
+    if (id instanceof ObjectId) return id.toString();
+  }
+
+  return "";
+}
+
+function getCreatorName(createdBy: unknown): string | undefined {
+  if (!isRecord(createdBy)) return undefined;
+  const name = createdBy.name;
+  return typeof name === "string" && name.trim() ? name : undefined;
+}
+
 // ── Helper: convert document to response ───────────────────────
 
 function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
@@ -56,7 +80,9 @@ function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
     imageUrl: recipe.imageUrl,
     dietaryTags: recipe.dietaryTags,
     containsAllergens: recipe.containsAllergens,
-    createdBy: recipe.createdBy.toString(),
+    isShared: recipe.isPublic ?? true,
+    createdBy: getCreatorId(recipe.createdBy),
+    createdByName: getCreatorName(recipe.createdBy),
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
   };
@@ -67,7 +93,7 @@ function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
 export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResponse> {
   const {
     title, description, ingredients, steps,
-    cookingTime, servings, skillLevel, cuisine, imageUrl, userId,
+    cookingTime, servings, skillLevel, cuisine, imageUrl, isShared, userId,
   } = input;
 
   if (!title || !description || !ingredients?.length || !steps?.length
@@ -105,14 +131,16 @@ export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResp
     imageUrl,
     dietaryTags,
     containsAllergens,
+    isPublic: isShared ?? true,
     createdBy: userId,
   });
 
-  return toRecipeResponse(recipe);
+  const recipeWithAuthor = await Recipe.findById(recipe._id).populate("createdBy", "name");
+  return toRecipeResponse(recipeWithAuthor ?? recipe);
 }
 
 export async function getRecipeById(recipeId: string): Promise<RecipeResponse> {
-  const recipe = await Recipe.findById(recipeId);
+  const recipe = await Recipe.findById(recipeId).populate("createdBy", "name");
   if (!recipe) {
     const error: ApiError = new Error("Recipe not found");
     error.statusCode = 404;
@@ -142,6 +170,7 @@ export async function getRecipes(query: RecipeQueryInput): Promise<{
 
   if (cuisine) filter.cuisine = cuisine;
   if (createdBy) filter.createdBy = createdBy;
+  if (!createdBy) filter.isPublic = true;
 
   if (max_time) filter.cookingTime = { $lte: max_time };
 
@@ -164,7 +193,7 @@ export async function getRecipes(query: RecipeQueryInput): Promise<{
 
   const skip = (page - 1) * limit;
   const [recipes, total] = await Promise.all([
-    Recipe.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Recipe.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("createdBy", "name"),
     Recipe.countDocuments(filter),
   ]);
 
@@ -198,6 +227,7 @@ export async function searchRecipes(input: {
 
   const regex = new RegExp(q.trim(), "i");
   const filter = {
+    isPublic: true,
     $or: [
       { title: regex },
       { description: regex },
@@ -207,7 +237,7 @@ export async function searchRecipes(input: {
 
   const skip = (page - 1) * limit;
   const [recipes, total] = await Promise.all([
-    Recipe.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Recipe.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("createdBy", "name"),
     Recipe.countDocuments(filter),
   ]);
 
@@ -249,11 +279,16 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<RecipeResp
     updateData.containsAllergens = computeAllergens(ingredientNames);
   }
 
+  if (typeof updateData.isShared === "boolean") {
+    (updateData as Record<string, unknown>).isPublic = updateData.isShared;
+    delete (updateData as Record<string, unknown>).isShared;
+  }
+
   const updated = await Recipe.findByIdAndUpdate(
     recipeId,
     { $set: updateData },
     { new: true, runValidators: true }
-  );
+  ).populate("createdBy", "name");
 
   if (!updated) {
     const error: ApiError = new Error("Recipe not found after update");
@@ -318,6 +353,7 @@ export async function getRecommendations(
 
   // MongoDB filter: exclude conflicting recipes
   const filter: Record<string, unknown> = {};
+  filter.isPublic = true;
   if (excludedTags.length) {
     filter.dietaryTags = { $nin: excludedTags };
   }
@@ -325,7 +361,7 @@ export async function getRecommendations(
     filter.containsAllergens = { $nin: userAllergies };
   }
 
-  const candidates = await Recipe.find(filter);
+  const candidates = await Recipe.find(filter).populate("createdBy", "name");
 
   // Score each candidate by ingredient match
   const availableSet = new Set(

@@ -12,6 +12,7 @@ import {
   CookingPot,
   Users,
   Trash2,
+  BookmarkPlus,
 } from "lucide-react";
 
 import { useUser } from "@/context/UserContext";
@@ -23,6 +24,8 @@ interface RecipeViewProps {
   onClose: () => void;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipeId: string) => void;
+  onAddToCollection?: (recipe: Recipe) => void;
+  isAddingToCollection?: boolean;
 }
 
 export default function RecipeView({
@@ -31,6 +34,8 @@ export default function RecipeView({
   onClose,
   onEdit,
   onDelete,
+  onAddToCollection,
+  isAddingToCollection = false,
 }: RecipeViewProps) {
   const { user, loading } = useUser();
 
@@ -47,6 +52,7 @@ export default function RecipeView({
       animate={{ opacity: 1, backdropFilter: "blur(3px)" }}
       exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
       className="recipe-view-overlay w-full h-full py-10 fixed top-0 left-0 flex items-center justify-center z-90 bg-background/60"
+      onClick={onClose}
     >
       <motion.div
         initial={{ opacity: 0, y: 14, scale: 0.98 }}
@@ -54,6 +60,7 @@ export default function RecipeView({
         exit={{ opacity: 0, y: 14, scale: 0.98 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
         className="recipe-view-card w-full max-w-4xl max-h-full rounded-4xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-xl shadow-black/40 relative overflow-y-scroll overflow-x-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="fixed top-6 left-5 flex items-center gap-2 z-20">
           <button
@@ -80,6 +87,18 @@ export default function RecipeView({
               className="text-foreground/70 w-10 h-10 rounded-full flex items-center justify-center bg-card/50 hover:bg-destructive/70 hover:text-foreground ring-2 ring-border/40 transition-all duration-200"
             >
               <Trash2 size={16} className="pointer-events-none" />
+            </button>
+          )}
+          {!isOwner && onAddToCollection && (
+            <button
+              onClick={() => onAddToCollection(recipe)}
+              disabled={isAddingToCollection}
+              className="h-10 px-3 rounded-full flex items-center justify-center gap-2 bg-card/70 hover:bg-card/90 ring-2 ring-border/40 transition-all duration-200 text-sm font-semibold text-foreground/85 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <BookmarkPlus size={15} className="pointer-events-none" />
+              <span className="pointer-events-none">
+                {isAddingToCollection ? "Adding..." : "Add to Collection"}
+              </span>
             </button>
           )}
         </div>
@@ -154,7 +173,7 @@ export default function RecipeView({
               <div className="recipe-decription w-full flex flex-col gap-1">
                 <span className="font-semibold text-foreground/80 text-sm">
                   {/* This gives the user id, we should modify the backend to have a getUser route and get the actual username */}
-                  {recipe.createdBy}
+                  {recipe.createdByName || recipe.createdBy}
                 </span>
                 <span className="text-xs text-accent/80">
                   {recipe.description

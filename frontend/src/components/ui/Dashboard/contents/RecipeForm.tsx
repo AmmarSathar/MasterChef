@@ -49,6 +49,31 @@ const TIME_RANGES = [
   { label: "1+ hours", value: "over60", icon: Timer },
 ];
 
+function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
+  const now = new Date();
+
+  return {
+    id: recipe.id ?? "",
+    createdBy: recipe.createdBy ?? "",
+    createdByName: recipe.createdByName,
+    createdAt: recipe.createdAt ?? now,
+    updatedAt: recipe.updatedAt ?? now,
+    title: recipe.title ?? "",
+    description: recipe.description ?? "",
+    imageUrl: recipe.imageUrl ?? "",
+    prepingTime: recipe.prepingTime ?? 0,
+    cookingTime: recipe.cookingTime ?? 0,
+    servings: recipe.servings ?? 1,
+    cost: 0,
+    skillLevel: recipe.skillLevel ?? "beginner",
+    dietaryTags: recipe.dietaryTags ?? [],
+    isShared: recipe.isShared ?? true,
+    ingredients: recipe.ingredients ?? [],
+    steps: recipe.steps ?? [],
+    containsAllergens: recipe.containsAllergens ?? [],
+  };
+}
+
 function SkillBars({ count }: { count: number }) {
   return (
     <span className="skill-bars flex items-end gap-0.5">
@@ -86,6 +111,7 @@ export function RecipeContent() {
   const [pendingEditRecipe, setPendingEditRecipe] = useState<Recipe | null>(
     null,
   );
+  const [isAddingToCollection, setIsAddingToCollection] = useState(false);
 
   const [activeFilters, setActiveFilters] = useState<{
     mealType: string[];
@@ -131,23 +157,9 @@ export function RecipeContent() {
         if (!res.ok) throw new Error(json?.message || "Failed to load recipes");
 
         const items = json?.data?.recipes ?? [];
-        const mapped: Recipe[] = items.map((recip: Recipe) => ({
-          id: recip.id,
-          createdBy: recip.createdBy,
-          createdAt: recip.createdAt,
-          updatedAt: recip.updatedAt,
-          title: recip.title,
-          description: recip.description,
-          imageUrl: recip.imageUrl ?? "",
-          prepingTime: recip.prepingTime ?? 0,
-          cookingTime: recip.cookingTime ?? 0,
-          servings: recip.servings ?? 1,
-          cost: 0,
-          skillLevel: recip.skillLevel,
-          dietaryTags: recip.dietaryTags ?? [],
-          ingredients: recip.ingredients ?? [],
-          steps: recip.steps ?? [],
-        }));
+        const mapped: Recipe[] = items.map((recipe: Recipe) =>
+          normalizeRecipe(recipe),
+        );
         setRecipes(mapped);
       } catch (err: unknown) {
         console.error("Error loading recipes", err);
@@ -181,7 +193,10 @@ export function RecipeContent() {
       return;
     }
 
-    const recipePayload: RecipeBase & { dietaryTags?: string[] } = {
+    const recipePayload: RecipeBase & {
+      dietaryTags?: string[];
+      isShared?: boolean;
+    } = {
       title: data.title,
       description: data.description,
       ingredients: data.ingredients,
@@ -190,6 +205,7 @@ export function RecipeContent() {
       prepTime: data.prepingTime,
       servings: data.servings,
       skillLevel: data.skillLevel,
+      isShared: data.isShared ?? true,
       dietaryTags: data.dietaryTags,
     };
 
@@ -234,6 +250,10 @@ export function RecipeContent() {
                     skillLevel: updated?.skillLevel ?? recipePayload.skillLevel,
                     dietaryTags:
                       updated?.dietaryTags ?? data.dietaryTags ?? r.dietaryTags,
+                    isShared:
+                      typeof updated?.isShared === "boolean"
+                        ? updated.isShared
+                        : data.isShared ?? r.isShared,
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
                     steps: updated?.steps ?? recipePayload.steps,
@@ -284,6 +304,10 @@ export function RecipeContent() {
           servings: created.servings ?? 1,
           skillLevel: created.skillLevel,
           dietaryTags: created.dietaryTags ?? data.dietaryTags ?? [],
+          isShared:
+            typeof created?.isShared === "boolean"
+              ? created.isShared
+              : data.isShared ?? true,
           ingredients: created.ingredients ?? [],
           steps: created.steps ?? [],
           containsAllergens: [],
@@ -569,22 +593,82 @@ export function RecipeContent() {
     return id || null;
   };
 
+  const handleAddToCollection = async (recipe: Recipe) => {
+    if (!currentUserId) {
+      toast.error("Please login first");
+      return;
+    }
+
+    setIsAddingToCollection(true);
+    try {
+      const payload = {
+        userId: currentUserId,
+        title: recipe.title,
+        description: recipe.description,
+        ingredients: recipe.ingredients ?? [],
+        steps: recipe.steps ?? [],
+        cookingTime: recipe.cookingTime ?? 0,
+        servings: recipe.servings ?? 1,
+        skillLevel: recipe.skillLevel,
+        imageUrl: recipe.imageUrl ?? "",
+        isShared: false,
+      };
+
+      const res = await fetch(RECIPES_API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.message || "Failed to add recipe");
+      }
+
+      const created = normalizeRecipe(json?.data as Recipe);
+      setRecipes((prev) => [created, ...prev]);
+      toast.success("Recipe added to your collection");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not add recipe";
+      toast.error(msg);
+    } finally {
+      setIsAddingToCollection(false);
+    }
+  };
+
   useEffect(() => {
-    const openFromHash = () => {
+    const openFromHashAsync = async () => {
       const id = getRecipeIdFromHash();
       if (!id) return;
 
       const found = recipes.find((r) => r.id === id);
-      if (!found) return;
+      if (found) {
+        setRecipeCreateOpen(false);
+        setEditingRecipe(null);
+        setOpenedRecipe(found);
+        window.setTimeout(() => setViewOpen(true), 120);
+        return;
+      }
 
-      setRecipeCreateOpen(false);
-      setEditingRecipe(null);
-      setOpenedRecipe(found);
-      window.setTimeout(() => setViewOpen(true), 120);
+      try {
+        const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json?.message || "Failed to load recipe");
+        }
+        const remoteRecipe = normalizeRecipe(json?.data as Recipe);
+        setRecipeCreateOpen(false);
+        setEditingRecipe(null);
+        setOpenedRecipe(remoteRecipe);
+        window.setTimeout(() => setViewOpen(true), 120);
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : "Could not open this recipe";
+        toast.error(msg);
+      }
     };
 
-    openFromHash();
-    const onHash = () => openFromHash();
+    void openFromHashAsync();
+    const onHash = () => void openFromHashAsync();
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, [recipes]);
@@ -748,66 +832,87 @@ export function RecipeContent() {
           </div>
 
           <div
-            className="filter-chips overflow-x-auto flex items-center gap-2 pb-1"
+            className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
             style={{ scrollbarWidth: "none" }}
           >
-            {MEAL_TYPES.map(({ label, icon: Icon }) => {
-              const isActive = activeFilters.mealType.includes(label);
-              return (
-                <button
-                  key={label}
-                  onClick={() => toggleFilter("mealType", label)}
-                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                  }`}
-                >
-                  <Icon size={15} className="pointer-events-none" />
-                  <span className="pointer-events-none">{label}</span>
-                </button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Meal Type
+              </span>
+              <div className="flex items-center gap-2">
+                {MEAL_TYPES.map(({ label, icon: Icon }) => {
+                  const isActive = activeFilters.mealType.includes(label);
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => toggleFilter("mealType", label)}
+                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                      }`}
+                    >
+                      <Icon size={15} className="pointer-events-none" />
+                      <span className="pointer-events-none">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="filter-divider w-px h-6 bg-border/40 shrink-0 mx-1" />
+            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            {SKILL_LEVELS.map((level, index) => {
-              const isActive = activeFilters.skillLevel.includes(level.value);
-              return (
-                <button
-                  key={level.value}
-                  onClick={() => toggleFilter("skillLevel", level.value)}
-                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                  }`}
-                >
-                  <SkillBars count={index + 1} />
-                  <span className="pointer-events-none">{level.label}</span>
-                </button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Skill Level
+              </span>
+              <div className="flex items-center gap-2">
+                {SKILL_LEVELS.map((level, index) => {
+                  const isActive = activeFilters.skillLevel.includes(level.value);
+                  return (
+                    <button
+                      key={level.value}
+                      onClick={() => toggleFilter("skillLevel", level.value)}
+                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                      }`}
+                    >
+                      <SkillBars count={index + 1} />
+                      <span className="pointer-events-none">{level.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="filter-divider w-px h-6 bg-border/40 shrink-0 mx-1" />
+            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            {TIME_RANGES.map(({ label, value, icon: Icon }) => {
-              const isActive = activeFilters.cookingTime.includes(value);
-              return (
-                <button
-                  key={value}
-                  onClick={() => toggleFilter("cookingTime", value)}
-                  className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                      : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                  }`}
-                >
-                  <Icon size={15} className="pointer-events-none" />
-                  <span className="pointer-events-none">{label}</span>
-                </button>
-              );
-            })}
+            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                Cooking Time
+              </span>
+              <div className="flex items-center gap-2">
+                {TIME_RANGES.map(({ label, value, icon: Icon }) => {
+                  const isActive = activeFilters.cookingTime.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => toggleFilter("cookingTime", value)}
+                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                      }`}
+                    >
+                      <Icon size={15} className="pointer-events-none" />
+                      <span className="pointer-events-none">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -851,6 +956,7 @@ export function RecipeContent() {
                     servings: editingRecipe.servings,
                     skillLevel: editingRecipe.skillLevel,
                     dietaryTags: editingRecipe.dietaryTags,
+                    isShared: editingRecipe.isShared ?? true,
                     containsAllergens: editingRecipe.containsAllergens,
                     id: editingRecipe.id,
                     createdBy: editingRecipe.createdBy,
@@ -880,6 +986,7 @@ export function RecipeContent() {
             key={`recipe-view-${openedRecipe.id}`}
             recipe={openedRecipe}
             isOwner={openedRecipe.createdBy === currentUserId}
+            isAddingToCollection={isAddingToCollection}
             onClose={() => {
               setViewOpen(false);
               setOpenedRecipe(null);
@@ -896,6 +1003,7 @@ export function RecipeContent() {
               }
             }}
             onDelete={(id) => handleRequestDelete(id)}
+            onAddToCollection={handleAddToCollection}
           />
         )}
       </AnimatePresence>
