@@ -88,11 +88,11 @@ function SkillBars({ count }: { count: number }) {
 }
 
 export function RecipeTitle() {
-  return <h1 className="text-xl font-bold text-accent/80">Recipes</h1>;
+  return <h1 className="text-xl font-bold text-accent/80 w-10">Recipes</h1>;
 }
 
 export function RecipeContent() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -578,8 +578,8 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
-    if (recipes.length === 0) setExampleRecipes();
-  }, [recipes.length]);
+    if (recipes.length === 0 && !user && !loading) setExampleRecipes();
+  }, [recipes.length, user, loading]);
 
   const getRecipeIdFromHash = () => {
     const raw = window.location.hash.startsWith("#")
@@ -755,7 +755,7 @@ export function RecipeContent() {
   });
 
   return (
-    <div className="w-full h-full flex relative flex-col gap-10 overflow-hidden">
+    <div className="main-recipe-container w-full h-full flex relative shrink flex-col gap-10 overflow-hidden px-12">
       <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4 overflow-hidden min-h-0">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -836,7 +836,7 @@ export function RecipeContent() {
             className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
             style={{ scrollbarWidth: "none" }}
           >
-            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+            <div className="flex flex-col gap-2 min-w-min">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
                 Meal Type
               </span>
@@ -890,7 +890,7 @@ export function RecipeContent() {
               </div>
             </div>
 
-            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
+            <div className="h-16 bg-border/35 shrink-0 mt-4" />
 
             <div className="shrink-0 flex flex-col gap-2 min-w-max">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
