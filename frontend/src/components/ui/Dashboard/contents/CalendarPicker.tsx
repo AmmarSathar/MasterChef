@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants/";
+import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
 
 const _dayLabels = DAYS_OF_WEEK.map((d) => d.label.slice(0, 3));
 const WEEKDAY_SHORT = [_dayLabels[6], ..._dayLabels.slice(0, 6)];
