@@ -128,7 +128,7 @@ export function CalendarDayView({
 }: Props) {
   return (
     <motion.div className="w-full h-full flex gap-6 relative">
-      <section className="w-full h-full">
+      <section className="w-full h-full flex flex-col">
         <div className="flex items-start justify-between gap-3 mb-6">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
@@ -155,7 +155,7 @@ export function CalendarDayView({
           </div>
         </div>
 
-        <div className="meal-plan-choices flex flex-col gap-5 overflow-hidden overflow-y-scroll">
+        <div className="meal-plan-choices flex flex-col gap-5 flex-1 min-h-0 overflow-hidden overflow-y-scroll">
           {MEAL_SLOTS.map((slot) => (
             <div key={slot}>
               <h3 className="text-3xl italic mb-3 text-foreground/90">
