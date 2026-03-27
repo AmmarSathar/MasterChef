@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { createMealPlan as createMealPlanService, getMealPlanById as getMealPlanByIdService, createMealPlanEntry as createMealPlanEntryService, updateMealPlanEntry as updateMealPlanEntryService } from "../services/meal-plan.service.js";
+import {
+  createMealPlan as createMealPlanService,
+  getMealPlanById as getMealPlanByIdService,
+  createMealPlanEntry as createMealPlanEntryService,
+  deleteMealPlanEntry as deleteMealPlanEntryService,
+  updateMealPlanEntry as updateMealPlanEntryService,
+} from "../services/meal-plan.service.js";
 import type { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
 import type { ApiError } from "../types/index.js";
@@ -75,9 +81,12 @@ export async function updateMealPlanEntry(
   next: NextFunction
 ): Promise<void> {
   try {
+    const entryId = req.params.id as string;
     const userId = (req as AuthenticatedRequest).session.user.id;
-    const id = req.params.id as string;
-    const { recipe_id, notes } = req.body as { recipe_id: string; notes?: string };
+    const { recipe_id, notes } = req.body as {
+      recipe_id?: string;
+      notes?: string;
+    };
 
     if (!recipe_id) {
       const error: ApiError = new Error("recipe_id is required");
@@ -85,8 +94,30 @@ export async function updateMealPlanEntry(
       throw error;
     }
 
-    const result = await updateMealPlanEntryService({ entryId: id, userId, recipeId: recipe_id, notes });
+    const result = await updateMealPlanEntryService({
+      entryId,
+      userId,
+      recipeId: recipe_id,
+      notes,
+    });
+
     res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteMealPlanEntry(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const entryId = req.params.id as string;
+    const userId = (req as AuthenticatedRequest).session.user.id;
+
+    await deleteMealPlanEntryService({ entryId, userId });
+    res.status(204).send();
   } catch (error) {
     next(error);
   }
