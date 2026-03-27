@@ -173,7 +173,7 @@ export default function RecipeView({
               <div className="recipe-decription w-full flex flex-col gap-1">
                 <span className="font-semibold text-foreground/80 text-sm">
                   {/* This gives the user id, we should modify the backend to have a getUser route and get the actual username */}
-                  {recipe.createdBy}
+                  {recipe.createdByName || recipe.createdBy}
                 </span>
                 <span className="text-xs text-accent/80">
                   {recipe.description

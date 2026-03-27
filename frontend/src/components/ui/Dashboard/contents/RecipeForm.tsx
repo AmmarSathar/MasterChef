@@ -55,6 +55,7 @@ function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
   return {
     id: recipe.id ?? "",
     createdBy: recipe.createdBy ?? "",
+    createdByName: recipe.createdByName,
     createdAt: recipe.createdAt ?? now,
     updatedAt: recipe.updatedAt ?? now,
     title: recipe.title ?? "",

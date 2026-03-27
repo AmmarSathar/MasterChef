@@ -35,6 +35,7 @@ export interface Recipe {
   containsAllergens: string[];
   isShared?: boolean;
   createdBy: string;
+  createdByName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
