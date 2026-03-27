@@ -239,6 +239,7 @@ export function RecipeContent() {
     const recipePayload: Partial<Recipe> & {
       dietaryTags?: string[];
       isShared?: boolean;
+      imageUrl?: string;
     } = {
       title: data.title,
       description: data.description,
@@ -250,6 +251,7 @@ export function RecipeContent() {
       skillLevel: data.skillLevel,
       isShared: data.isShared ?? true,
       dietaryTags: data.dietaryTags,
+      imageUrl: data.imageUrl || "",
     };
 
     console.log(recipePayload);
