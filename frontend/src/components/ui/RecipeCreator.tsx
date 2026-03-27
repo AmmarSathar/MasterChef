@@ -74,6 +74,9 @@ export default function RecipeCreator({
 
   const [busy, setBusy] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importNotice, setImportNotice] = useState<string | null>(null);
 
   const [isIngredientClicked, setIsIngredientClicked] = useState("");
 
@@ -111,6 +114,97 @@ export default function RecipeCreator({
   }, [loading, user]);
 
   const formDisabled = busy || submitting;
+
+  const applyImportedRecipe = (data: {
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    ingredients?: Ingredient[];
+    steps?: string[];
+    servings?: number;
+    prepTime?: number;
+    cookTime?: number;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      title: data.title ?? prev.title,
+      description: data.description ?? prev.description,
+      prepingTime:
+        typeof data.prepTime === "number" ? data.prepTime : prev.prepingTime,
+      cookingTime:
+        typeof data.cookTime === "number" ? data.cookTime : prev.cookingTime,
+      servings:
+        typeof data.servings === "number" ? data.servings : prev.servings,
+    }));
+
+    if (data.imageUrl) setCoverImage(data.imageUrl);
+
+    if (data.ingredients?.length) {
+      setIngredients(
+        data.ingredients.map((ing, i) => ({
+          id: String(i + 1),
+          foodItem: ing.foodItem ?? "",
+          amount: typeof ing.amount === "number" ? ing.amount : "",
+          unit: ing.unit ?? "",
+          notes: ing.notes,
+        }))
+      );
+    }
+
+    if (data.steps?.length) {
+      setSteps(
+        data.steps.map((content, i) => ({ id: String(i + 1), content }))
+      );
+    }
+
+    setIsIngredientClicked("");
+  };
+
+  const handleImport = async () => {
+    if (!importUrl.trim()) {
+      toast.error("Paste a recipe URL first");
+      return;
+    }
+
+    setImporting(true);
+    setImportNotice(null);
+
+    try {
+      const res = await fetch("/api/recipes/parse-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: importUrl.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || "Failed to parse recipe");
+
+      const data = json?.data ?? {};
+      applyImportedRecipe(data);
+
+      const warnings = Array.isArray(data?.warnings) ? data.warnings : [];
+
+      let host = "";
+      try {
+        host = new URL(importUrl.trim()).hostname;
+      } catch {
+        host = "";
+      }
+
+      setImportNotice(
+        `Imported recipe data${host ? ` from ${host}` : ""}. Please review before saving.`
+      );
+      toast.success("Import successful. Please review the fields.");
+      if (warnings.length > 0) {
+        toast(`Import warnings: ${warnings.join(", ")}`);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Could not import recipe";
+      toast.error(`Import failed: ${msg}`);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleFormChange = (
     field: keyof typeof formData,
@@ -363,6 +457,45 @@ export default function RecipeCreator({
             }}
             className="flex flex-col gap-12 px-8 py-6"
           >
+            {!isEditing && (
+              <div className="flex flex-col gap-2 rounded-xl border border-border/40 bg-input/20 p-4">
+                <div className="flex items-center gap-2">
+                  <ChefHat size={16} className="text-foreground/70" />
+                  <span className="text-sm font-semibold text-foreground/80">
+                    Import from a recipe URL
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="url"
+                    placeholder="Paste a recipe link..."
+                    value={importUrl}
+                    onChange={(e) => setImportUrl(e.target.value)}
+                    disabled={formDisabled || importing}
+                    className="bg-input/40 border-border/50 rounded-xl"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleImport}
+                    disabled={formDisabled || importing}
+                    className="px-4 rounded-xl"
+                  >
+                    {importing ? (
+                      <Spinner
+                        size={16}
+                        className="text-primary-foreground"
+                        variant="infinite"
+                      />
+                    ) : (
+                      "Import"
+                    )}
+                  </Button>
+                </div>
+                {importNotice && (
+                  <p className="text-xs text-foreground/60">{importNotice}</p>
+                )}
+              </div>
+            )}
             <div className="flex gap-5 relative h-60 w-full">
               <div className="flex flex-col gap-2 shrink-0">
                 <span className="text-sm font-medium text-foreground/70">

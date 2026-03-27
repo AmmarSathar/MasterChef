@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import type { ApiError } from "../types/index.js";
 import {
   createRecipe,
   getRecipeById,
@@ -8,6 +9,7 @@ import {
   deleteRecipe,
   getRecommendations,
 } from "../services/recipe.service.js";
+import { parseRecipeFromUrl } from "../services/recipe-import.service.js";
 
 export async function create(
   req: Request,
@@ -135,6 +137,25 @@ export async function recommend(
       page,
     });
     res.status(200).json({ success: true, data: results });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function parseFromUrl(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { url } = req.body as { url?: string };
+    if (!url?.trim()) {
+      const error = new Error("Recipe URL is required") as ApiError;
+      error.statusCode = 400;
+      throw error;
+    }
+    const parsed = await parseRecipeFromUrl(url.trim());
+    res.status(200).json({ success: true, data: parsed });
   } catch (error) {
     next(error);
   }

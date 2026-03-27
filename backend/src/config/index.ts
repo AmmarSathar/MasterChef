@@ -15,4 +15,7 @@ export const config = {
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
   githubClientId: process.env.GH_CLIENT_ID || "",
   githubClientSecret: process.env.GH_CLIENT_SECRET || "",
+  openaiApiKey: process.env.OPENAI_API_KEY || "",
+  openaiModel: process.env.OPENAI_RECIPE_MODEL || "gpt-4o-mini",
+  openaiUseAi: process.env.RECIPE_IMPORT_USE_AI !== "false",
 } as const;
