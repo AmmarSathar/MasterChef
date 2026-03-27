@@ -27,6 +27,24 @@ export type DayOfWeekLabel = (typeof DAYS_OF_WEEK)[number]["label"];
 /** Just the value strings, for mongoose enum and validation */
 export const dayOfWeekValues = DAYS_OF_WEEK.map((d) => d.value) as DayOfWeek[];
 
+export const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+export type MonthName = (typeof MONTH_NAMES)[number];
+export const monthNameValues = [...MONTH_NAMES] as const satisfies MonthName[];
+
 // ── Meal Types ──────────────────────────────────────────
 
 export const MEAL_TYPES = [
