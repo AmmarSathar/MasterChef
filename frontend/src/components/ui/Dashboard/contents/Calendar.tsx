@@ -8,7 +8,7 @@ import {
   type MealPrepOption,
 } from "./CalendarDayView";
 import RecipeCreator from "@/components/ui/RecipeCreator";
-import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants/";
+import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
 import { CalendarPicker } from "./CalendarPicker";
 
 type TimeFilter = "weekly" | "monthly" | "yearly";
