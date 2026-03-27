@@ -56,6 +56,7 @@ function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
     imageUrl: recipe.imageUrl,
     dietaryTags: recipe.dietaryTags,
     containsAllergens: recipe.containsAllergens,
+    isShared: recipe.isPublic ?? true,
     createdBy: recipe.createdBy.toString(),
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
@@ -67,7 +68,7 @@ function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
 export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResponse> {
   const {
     title, description, ingredients, steps,
-    cookingTime, servings, skillLevel, cuisine, imageUrl, userId,
+    cookingTime, servings, skillLevel, cuisine, imageUrl, isShared, userId,
   } = input;
 
   if (!title || !description || !ingredients?.length || !steps?.length
@@ -105,6 +106,7 @@ export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResp
     imageUrl,
     dietaryTags,
     containsAllergens,
+    isPublic: isShared ?? true,
     createdBy: userId,
   });
 
@@ -142,6 +144,7 @@ export async function getRecipes(query: RecipeQueryInput): Promise<{
 
   if (cuisine) filter.cuisine = cuisine;
   if (createdBy) filter.createdBy = createdBy;
+  if (!createdBy) filter.isPublic = true;
 
   if (max_time) filter.cookingTime = { $lte: max_time };
 
@@ -198,6 +201,7 @@ export async function searchRecipes(input: {
 
   const regex = new RegExp(q.trim(), "i");
   const filter = {
+    isPublic: true,
     $or: [
       { title: regex },
       { description: regex },
@@ -247,6 +251,11 @@ export async function updateRecipe(input: UpdateRecipeInput): Promise<RecipeResp
     const ingredientNames = updateData.ingredients.map((i) => i.foodItem);
     updateData.dietaryTags = computeDietaryTags(ingredientNames);
     updateData.containsAllergens = computeAllergens(ingredientNames);
+  }
+
+  if (typeof updateData.isShared === "boolean") {
+    (updateData as Record<string, unknown>).isPublic = updateData.isShared;
+    delete (updateData as Record<string, unknown>).isShared;
   }
 
   const updated = await Recipe.findByIdAndUpdate(
@@ -318,6 +327,7 @@ export async function getRecommendations(
 
   // MongoDB filter: exclude conflicting recipes
   const filter: Record<string, unknown> = {};
+  filter.isPublic = true;
   if (excludedTags.length) {
     filter.dietaryTags = { $nin: excludedTags };
   }

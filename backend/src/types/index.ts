@@ -75,6 +75,7 @@ export interface CreateRecipeInput {
   skillLevel: string;
   cuisine?: string;
   imageUrl?: string;
+  isShared?: boolean;
   userId: string;
 }
 
@@ -90,6 +91,7 @@ export interface UpdateRecipeInput {
   skillLevel?: string;
   cuisine?: string;
   imageUrl?: string;
+  isShared?: boolean;
   dietaryTags?: string[];
   containsAllergens?: string[];
 }
@@ -107,6 +109,7 @@ export interface RecipeResponse {
   imageUrl?: string;
   dietaryTags: string[];
   containsAllergens: string[];
+  isShared: boolean;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

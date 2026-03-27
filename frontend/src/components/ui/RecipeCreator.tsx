@@ -47,6 +47,7 @@ const INITIAL_FORM_DATA: Recipe = {
   skillLevel:
     SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
   dietaryTags: [] as DietaryOption[],
+  isShared: true,
 };
 
 const INITIAL_INGREDIENTS: Ingredient[] = [
@@ -241,6 +242,7 @@ export default function RecipeCreator({
       cookingTime: Number(formData.cookingTime),
       servings: Number(formData.servings) || 1,
       skillLevel: formData.skillLevel,
+      isShared: Boolean(formData.isShared),
       dietaryTags: formData.dietaryTags,
       imageUrl: coverImage,
       ingredients: ingredients.map((ing) => ({
@@ -853,58 +855,92 @@ export default function RecipeCreator({
             </div>
 
             <div className="flex flex-col gap-3">
-              <span className="text-base font-semibold text-foreground">
-                Dietary Tags
-              </span>
-
-              <div className="flex items-center gap-3 flex-wrap">
-                {dietaryOptions.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    disabled={formDisabled}
-                    onClick={() =>
-                      toggleDietaryTag(tag, !formData.dietaryTags.includes(tag))
-                    }
-                    className={`flex flex-col items-center justify-center gap-3 px-6 py-5 rounded-2xl transition-all duration-300 ${
-                      formData.dietaryTags.includes(tag)
-                        ? "bg-accent text-card shadow-md"
-                        : "bg-input/80 text-foreground/80 hover:bg-input"
+              <div className="flex items-center justify-between rounded-xl border border-border/40 bg-input/20 px-4 py-3">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-foreground">
+                    Share with other users
+                  </span>
+                  <span className="text-xs text-foreground/60">
+                    When off, this recipe stays private and is hidden from global search.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={formDisabled}
+                  onClick={() =>
+                    handleFormChange("isShared", !Boolean(formData.isShared))
+                  }
+                  className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
+                    formData.isShared ? "bg-primary" : "bg-secondary"
+                  } ${formDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  aria-label="Toggle recipe sharing"
+                  aria-pressed={Boolean(formData.isShared)}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                      formData.isShared ? "translate-x-7" : "translate-x-1"
                     }`}
-                  >
-                    <span className="text-sm font-semibold pointer-events-none">
-                      {tag}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/30">
-              <Button
-                type="button"
-                disabled={formDisabled}
-                onClick={onClose}
-                className="px-5 py-5 text-sm font-medium text-foreground/60 hover:text-foreground transition-all rounded-lg"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={formDisabled}
-                className="px-6 py-5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2"
-              >
-                {submitting ? (
-                  <Spinner
-                    size={18}
-                    className="text-primary-foreground"
-                    variant="infinite"
                   />
-                ) : (
-                  <Plus size={15} />
-                )}
-                {isEditing ? "Save Changes" : "Save Recipe"}
-              </Button>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <span className="text-base font-semibold text-foreground">
+                  Dietary Tags
+                </span>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  {dietaryOptions.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      disabled={formDisabled}
+                      onClick={() =>
+                        toggleDietaryTag(
+                          tag,
+                          !formData.dietaryTags.includes(tag),
+                        )
+                      }
+                      className={`flex flex-col items-center justify-center gap-3 px-6 py-5 rounded-2xl transition-all duration-300 ${
+                        formData.dietaryTags.includes(tag)
+                          ? "bg-accent text-card shadow-md"
+                          : "bg-input/80 text-foreground/80 hover:bg-input"
+                      }`}
+                    >
+                      <span className="text-sm font-semibold pointer-events-none">
+                        {tag}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/30">
+                <Button
+                  type="button"
+                  disabled={formDisabled}
+                  onClick={onClose}
+                  className="px-5 py-5 text-sm font-medium text-foreground/60 hover:text-foreground transition-all rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={formDisabled}
+                  className="px-6 py-5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <Spinner
+                      size={18}
+                      className="text-primary-foreground"
+                      variant="infinite"
+                    />
+                  ) : (
+                    <Plus size={15} />
+                  )}
+                  {isEditing ? "Save Changes" : "Save Recipe"}
+                </Button>
+              </div>
             </div>
           </form>
         </motion.div>

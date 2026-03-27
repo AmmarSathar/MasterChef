@@ -110,7 +110,7 @@ const recipeSchema = new Schema<IRecipe>(
       required: [true, "Creator user ID is required"],
       index: true,
     },
-    isPublic: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: true, index: true },
   },
   {
     timestamps: true,

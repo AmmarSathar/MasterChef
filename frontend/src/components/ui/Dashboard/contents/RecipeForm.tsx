@@ -145,6 +145,7 @@ export function RecipeContent() {
           cost: 0,
           skillLevel: recip.skillLevel,
           dietaryTags: recip.dietaryTags ?? [],
+          isShared: recip.isShared ?? true,
           ingredients: recip.ingredients ?? [],
           steps: recip.steps ?? [],
         }));
@@ -181,7 +182,10 @@ export function RecipeContent() {
       return;
     }
 
-    const recipePayload: RecipeBase & { dietaryTags?: string[] } = {
+    const recipePayload: RecipeBase & {
+      dietaryTags?: string[];
+      isShared?: boolean;
+    } = {
       title: data.title,
       description: data.description,
       ingredients: data.ingredients,
@@ -190,6 +194,7 @@ export function RecipeContent() {
       prepTime: data.prepingTime,
       servings: data.servings,
       skillLevel: data.skillLevel,
+      isShared: data.isShared ?? true,
       dietaryTags: data.dietaryTags,
     };
 
@@ -234,6 +239,10 @@ export function RecipeContent() {
                     skillLevel: updated?.skillLevel ?? recipePayload.skillLevel,
                     dietaryTags:
                       updated?.dietaryTags ?? data.dietaryTags ?? r.dietaryTags,
+                    isShared:
+                      typeof updated?.isShared === "boolean"
+                        ? updated.isShared
+                        : data.isShared ?? r.isShared,
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
                     steps: updated?.steps ?? recipePayload.steps,
@@ -284,6 +293,10 @@ export function RecipeContent() {
           servings: created.servings ?? 1,
           skillLevel: created.skillLevel,
           dietaryTags: created.dietaryTags ?? data.dietaryTags ?? [],
+          isShared:
+            typeof created?.isShared === "boolean"
+              ? created.isShared
+              : data.isShared ?? true,
           ingredients: created.ingredients ?? [],
           steps: created.steps ?? [],
           containsAllergens: [],
@@ -872,6 +885,7 @@ export function RecipeContent() {
                     servings: editingRecipe.servings,
                     skillLevel: editingRecipe.skillLevel,
                     dietaryTags: editingRecipe.dietaryTags,
+                    isShared: editingRecipe.isShared ?? true,
                     containsAllergens: editingRecipe.containsAllergens,
                     id: editingRecipe.id,
                     createdBy: editingRecipe.createdBy,
