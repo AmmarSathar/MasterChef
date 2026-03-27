@@ -69,6 +69,13 @@ export default function Login() {
 
   const loginContainerRef = useRef<HTMLDivElement>(null);
   const customizeContainerRef = useRef<HTMLDivElement>(null);
+  const timeoutRefs = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+
+  const queueTimeout = (callback: () => void, delay: number) => {
+    const id = setTimeout(callback, delay);
+    timeoutRefs.current.push(id);
+    return id;
+  };
 
   useEffect(() => {
     const queryParameters = new URLSearchParams(window.location.search);
@@ -88,6 +95,15 @@ export default function Login() {
     }
   }, [navigate, isLogin, user, loading]);
 
+  useEffect(() => {
+    return () => {
+      for (const timeoutId of timeoutRefs.current) {
+        clearTimeout(timeoutId);
+      }
+      timeoutRefs.current = [];
+    };
+  }, []);
+
   const changeRegisterState = () => {
     if (isChangingState) return;
 
@@ -102,7 +118,7 @@ export default function Login() {
       `${window.location.pathname}?${params}`,
     );
 
-    setTimeout(() => {
+    queueTimeout(() => {
       setIsChangingState(false);
     }, 1000);
   };
@@ -112,23 +128,23 @@ export default function Login() {
       loginContainerRef.current.classList.add("login-fadeout");
     }
 
-    setTimeout(() => {
+    queueTimeout(() => {
       setShowCustomize(true);
     }, 800);
 
-    setTimeout(() => {
+    queueTimeout(() => {
       if (customizeContainerRef.current) {
         customizeContainerRef.current.classList.add("customize-slide");
       }
     }, 1000);
 
-    setTimeout(() => {
+    queueTimeout(() => {
       if (customizeContainerRef.current) {
         customizeContainerRef.current.classList.add("customize-expand");
       }
     }, 1800);
 
-    setTimeout(() => {
+    queueTimeout(() => {
       setIsCustomizeReady(true);
     }, 3000);
   };
