@@ -24,7 +24,7 @@ vi.mock("@context/UserContext", () => ({
       age: 20,
       bio: "Chef",
     },
-    setUser: mockSetUser,
+    refetchUser: mockSetUser,
   }),
 }));
 

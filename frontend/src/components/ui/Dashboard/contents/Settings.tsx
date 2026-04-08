@@ -33,7 +33,7 @@ export function SettingsTitle() {
 }
 
 export function SettingsContent() {
-  const { user, setUser, loading } = useUser();
+  const { user, refetchUser, loading } = useUser();
 
   const [busy, setbusy] = useState(true);
   const [selectedSetting, setSelectedSetting] = useState(null as string | null);
@@ -190,7 +190,7 @@ export function SettingsContent() {
       const updatedUser = res.data.user;
 
       // Update the global user var
-      setUser(updatedUser);
+      refetchUser();
 
       toast.dismiss(loadingToast);
       toast.success("Account updated successfully!");

@@ -92,7 +92,7 @@ export function RecipeTitle() {
 }
 
 export function RecipeContent() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -578,8 +578,8 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
-    if (recipes.length === 0) setExampleRecipes();
-  }, [recipes.length]);
+    if (recipes.length === 0 && !loading) setExampleRecipes();
+  }, [recipes.length, loading]);
 
   const getRecipeIdFromHash = () => {
     const raw = window.location.hash.startsWith("#")
@@ -755,7 +755,6 @@ export function RecipeContent() {
   return (
     <div className="w-full h-full flex relative flex-col gap-10 overflow-hidden">
       <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4 overflow-hidden min-h-0">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-start justify-baseline">
             <div className="flex items-center justify-baseline gap-5">
@@ -806,8 +805,6 @@ export function RecipeContent() {
             </Button>
           </div>
         </div>
-
-        {/* Filter row */}
         <div
           className={`filter-menu w-full flex flex-col gap-3 transition-all duration-300 ease-out ${
             filterOpen
