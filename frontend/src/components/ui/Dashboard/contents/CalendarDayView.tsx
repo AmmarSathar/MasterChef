@@ -46,7 +46,7 @@ export const EXAMPLE_MEALPLAN: Record<MealSlot, MealPrepOption[]> = {
       imageUrl:
         "https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=1200",
       duration: "5 mins",
-      kcal: 320,
+      kcal: 320,                   
     },
     {
       id: "b3",
