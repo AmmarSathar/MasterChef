@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CalendarDayView } from "./calendar/CalendarDayView";
-import CalendarWeekView, { CalendarWeekViewSkeleton } from "./calendar/CalendarWeekView";
+import CalendarWeekView, {
+  CalendarWeekViewSkeleton,
+} from "./calendar/CalendarWeekView";
 import RecipeCreator from "@/components/ui/RecipeCreator";
+import RecipeView from "@/components/ui/RecipeView";
 import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
 import { CalendarPicker } from "./calendar/CalendarPicker";
 import {
@@ -23,6 +26,11 @@ import {
   AvatarGroup,
   AvatarGroupCount,
 } from "@/components/ui/avatar";
+import { useUser } from "@/context/UserContext";
+import { type Recipe } from "@masterchef/shared/types";
+import { useNavigate } from "react-router-dom";
+
+const RECIPES_API_BASE = "/api/recipes";
 
 type TimeFilter = "weekly" | "monthly" | "yearly";
 type ViewMode = "calendar" | "day";
@@ -71,7 +79,13 @@ const getYearDates = (baseDate: Date): Date[] =>
   Array.from({ length: 12 }, (_, i) => new Date(baseDate.getFullYear(), i, 1));
 
 const DAYNAME_BY_GETDAY: DayName[] = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];
 
 const toEntry = (
@@ -98,6 +112,8 @@ export function CalendarTitle() {
 }
 
 export function CalendarContent() {
+  const navigate = useNavigate();
+  const { user } = useUser();
   const [activeTimeFilter, setActiveTimeFilter] =
     useState<TimeFilter>("weekly");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -108,6 +124,27 @@ export function CalendarContent() {
   >({});
   const [loading, setLoading] = useState(false);
   const [yearDir, setYearDir] = useState(0);
+  const [viewedRecipe, setViewedRecipe] = useState<Recipe | null>(null);
+  const [loadingMealId, setLoadingMealId] = useState<string | null>(null);
+
+  const handleMealClick = async (meal: CalendarSlotEntry) => {
+    setLoadingMealId(meal.recipeId);
+    try {
+      const res = await fetch(
+        `${RECIPES_API_BASE}/${encodeURIComponent(meal.recipeId)}`,
+        {
+          credentials: "include",
+        },
+      );
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message ?? "Failed to load recipe");
+      setViewedRecipe(json.data as Recipe);
+    } catch (err) {
+      console.error("[Calendar] Failed to fetch recipe:", err);
+    } finally {
+      setLoadingMealId(null);
+    }
+  };
 
   // Fetch meal plan data whenever the view or date changes.
   useEffect(() => {
@@ -148,7 +185,10 @@ export function CalendarContent() {
     ])
       .then(([prevData, mainData]) => {
         const result: Record<string, CalendarDayData> = {};
-        result[toDateKey(sundayDate)] = toEntry(prevData.days as never, sundayDate);
+        result[toDateKey(sundayDate)] = toEntry(
+          prevData.days as never,
+          sundayDate,
+        );
         calWeek.slice(1).forEach((date) => {
           result[toDateKey(date)] = toEntry(mainData.days as never, date);
         });
@@ -166,8 +206,7 @@ export function CalendarContent() {
 
   const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate]);
   const selectedKey = toDateKey(selectedDate);
-  const selectedMeals =
-    calendarDays[selectedKey] ?? emptyCalendarDay();
+  const selectedMeals = calendarDays[selectedKey] ?? emptyCalendarDay();
   const weeklyLabel = `${MONTH_NAMES[weekDates[0].getMonth()]} ${weekDates[0].getDate()} - ${weekDates[6].getDate()}, ${weekDates[6].getFullYear()}`;
 
   const changeYear = (dir: 1 | -1) => {
@@ -256,6 +295,8 @@ export function CalendarContent() {
                               setSelectedDate(date);
                               setViewMode("day");
                             }}
+                            onMealClick={handleMealClick}
+                            loadingMealId={loadingMealId}
                           />
                         </motion.div>
                       )}
@@ -309,11 +350,16 @@ export function CalendarContent() {
                       >
                         {displayedDates.map((date) => {
                           const dateKey = toDateKey(date);
-                          const dayData = activeTimeFilter === "monthly"
-                            ? (calendarDays[dateKey] ?? emptyCalendarDay())
-                            : null;
+                          const dayData =
+                            activeTimeFilter === "monthly"
+                              ? (calendarDays[dateKey] ?? emptyCalendarDay())
+                              : null;
                           const meals = dayData
-                            ? [dayData.breakfast, dayData.lunch, dayData.dinner].filter(
+                            ? [
+                                dayData.breakfast,
+                                dayData.lunch,
+                                dayData.dinner,
+                              ].filter(
                                 (m): m is CalendarSlotEntry => m !== null,
                               )
                             : [];
@@ -348,7 +394,10 @@ export function CalendarContent() {
                                 <AvatarGroup className="mt-auto pt-2 pointer-events-none">
                                   {visibleMeals.map((meal) => (
                                     <Avatar key={meal.recipeId} size="sm">
-                                      <AvatarImage src={meal.imageUrl} alt={meal.title} />
+                                      <AvatarImage
+                                        src={meal.imageUrl}
+                                        alt={meal.title}
+                                      />
                                       <AvatarFallback className="text-[10px]">
                                         {meal.title.charAt(0).toUpperCase()}
                                       </AvatarFallback>
@@ -396,15 +445,21 @@ export function CalendarContent() {
                 </div>
                 <div className="macro-breakdown grid grid-cols-3 mt-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground text-xs uppercase">Protein</p>
+                    <p className="text-muted-foreground text-xs uppercase">
+                      Protein
+                    </p>
                     <p>—</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs uppercase">Carbs</p>
+                    <p className="text-muted-foreground text-xs uppercase">
+                      Carbs
+                    </p>
                     <p>—</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs uppercase">Fat</p>
+                    <p className="text-muted-foreground text-xs uppercase">
+                      Fat
+                    </p>
                     <p>—</p>
                   </div>
                 </div>
@@ -448,6 +503,25 @@ export function CalendarContent() {
           <RecipeCreator
             onClose={() => setCreatorOpen(false)}
             onFinish={() => setCreatorOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {viewedRecipe && (
+          <RecipeView
+            key={viewedRecipe.id}
+            recipe={viewedRecipe}
+            isOwner={!!user && viewedRecipe.createdBy === user.id}
+            onClose={() => setViewedRecipe(null)}
+            onEdit={() => {
+              navigate(`/dashboard#recipe?edit=${viewedRecipe.id}`);
+              setViewedRecipe(null);
+            }}
+            onDelete={() => {
+              navigate(`/dashboard#recipe?view=${viewedRecipe.id}`);
+              setViewedRecipe(null);
+            }}
           />
         )}
       </AnimatePresence>

@@ -161,7 +161,6 @@ function TiltedRecipeCard({
   isOwner,
   onEdit,
   onDelete,
-  onRecipeSelect,
 }: {
   recipe: Recipe;
   isOwner: boolean;

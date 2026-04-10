@@ -169,7 +169,7 @@ export function RecipeTitle() {
 }
 
 export function RecipeContent() {
-  const { user, loading } = useUser();
+  const { user } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -669,15 +669,18 @@ export function RecipeContent() {
   //   if (recipes.length === 0 && !loading) setExampleRecipes();
   // }, [recipes.length, loading]);
 
-  const getRecipeIdFromHash = () => {
+  const parseRecipeHash = (): { mode: "view" | "edit" | "new"; id: string | null } => {
     const raw = window.location.hash.startsWith("#")
       ? window.location.hash.slice(1)
       : window.location.hash;
-    if (!raw.startsWith("recipe")) return null;
+    if (!raw.startsWith("recipe")) return { mode: "view", id: null };
     const query = raw.split("?")[1] ?? "";
     const params = new URLSearchParams(query);
+    if (params.get("new") === "true") return { mode: "new", id: null };
+    const editId = params.get("edit");
+    if (editId) return { mode: "edit", id: editId };
     const id = params.get("id");
-    return id || null;
+    return { mode: "view", id: id || null };
   };
 
   const handleAddToCollection = async (recipe: Recipe) => {
@@ -724,9 +727,36 @@ export function RecipeContent() {
 
   useEffect(() => {
     const openFromHashAsync = async () => {
-      const id = getRecipeIdFromHash();
+      const { mode, id } = parseRecipeHash();
+
+      // ?new=true → open creator in new mode
+      if (mode === "new") {
+        openCreateModal();
+        return;
+      }
+
       if (!id) return;
 
+      // ?edit=<id> → open creator pre-filled with the recipe
+      if (mode === "edit") {
+        const found = recipes.find((r) => r.id === id);
+        if (found) {
+          handleStartEdit(found);
+          return;
+        }
+        try {
+          const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
+          const json = await res.json();
+          if (!res.ok) throw new Error(json?.message || "Failed to load recipe");
+          handleStartEdit(normalizeRecipe(json?.data as Recipe));
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Could not open recipe for editing";
+          toast.error(msg);
+        }
+        return;
+      }
+
+      // ?id=<id> → open recipe in view mode (existing behaviour)
       const found = recipes.find((r) => r.id === id);
       if (found) {
         setRecipeCreateOpen(false);
@@ -735,21 +765,17 @@ export function RecipeContent() {
         window.setTimeout(() => setViewOpen(true), 120);
         return;
       }
-
       try {
         const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
         const json = await res.json();
-        if (!res.ok) {
-          throw new Error(json?.message || "Failed to load recipe");
-        }
+        if (!res.ok) throw new Error(json?.message || "Failed to load recipe");
         const remoteRecipe = normalizeRecipe(json?.data as Recipe);
         setRecipeCreateOpen(false);
         setEditingRecipe(null);
         setOpenedRecipe(remoteRecipe);
         window.setTimeout(() => setViewOpen(true), 120);
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "Could not open this recipe";
+        const msg = err instanceof Error ? err.message : "Could not open this recipe";
         toast.error(msg);
       }
     };
