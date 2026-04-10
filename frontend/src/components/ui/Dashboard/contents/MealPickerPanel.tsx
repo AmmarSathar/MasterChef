@@ -1,29 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock4,
-  CookingPot,
-  CookieIcon,
-  Plus,
-} from "lucide-react";
+
+import { Spinner } from "@/components/ui/spinner";
+import { useUser } from "@/context/UserContext";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { addMealPlanEntry } from "@/lib/api/meal-plan";
+
+import { ChevronLeft, ChevronRight, Clock4, CookingPot, CookieIcon, Plus } from "lucide-react";
+
 import { type Recipe } from "@masterchef/shared/types";
-import { useUser } from "@/context/UserContext";
-import {
-  addMealPlanEntry,
-  type MealEntry,
-  type SlotName,
-  type DayName,
-} from "@/lib/api/meal-plan";
-import { Spinner } from "@/components/ui/spinner";
+import { type MealEntry, type SlotName, type DayName } from "@/lib/api/meal-plan";
 
 const BASE = import.meta.env.VITE_BASE_API_URL as string;
 const PAGE_SIZE = 6;
-
-// ── Recipe card derived from StandardCard, selection-only ─────
 
 function RecipePickerCard({
   recipe,
@@ -60,7 +50,6 @@ function RecipePickerCard({
         )}
       </div>
 
-      {/* Info */}
       <div className="flex flex-col gap-1 px-3 py-3 pb-4 flex-1 pointer-events-none">
         <span className="text-sm font-semibold text-foreground/80 leading-tight line-clamp-2">
           {recipe.title}
@@ -107,8 +96,6 @@ function RecipePickerCardSkeleton() {
   );
 }
 
-// ── Panel ─────────────────────────────────────────────────────
-
 export interface MealPickerPanelProps {
   slot: SlotName;
   dayName: DayName;
@@ -133,7 +120,6 @@ export default function MealPickerPanel({
   const [loading, setLoading] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
-  // Fetch user's recipes on page change
   useEffect(() => {
     if (!user?.id) return;
     setLoading(true);
@@ -191,8 +177,6 @@ export default function MealPickerPanel({
     }
   };
 
-  // Fill empty slots so the grid is always 2×3.
-  // On the last page, the first empty slot becomes an "add recipe" button.
   type GridItem = Recipe | "add" | null;
   const isLastPage = page >= totalPages;
   const gridItems: GridItem[] = [...recipes];
@@ -201,7 +185,6 @@ export default function MealPickerPanel({
 
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         key="meal-picker-backdrop"
         initial={{ opacity: 0 }}
@@ -212,7 +195,6 @@ export default function MealPickerPanel({
         onClick={submittingId ? undefined : onClose}
       />
 
-      {/* Slide-in panel */}
       <motion.div
         key="meal-picker-panel"
         initial={{ x: "100%" }}
@@ -221,14 +203,12 @@ export default function MealPickerPanel({
         transition={{ type: "spring", stiffness: 340, damping: 36 }}
         className="fixed top-0 right-0 h-screen w-[30%] min-w-64 bg-card border-l border-border/50 shadow-2xl z-50 flex flex-col p-3 py-5"
       >
-        {/* Header */}
         <div className="p-3 py-4 shrink-0 border-b border-border/40">
           <h2 className="text-2xl font-bold text-accent/70 tracking-wide uppercase">
             Recipes
           </h2>
         </div>
 
-        {/* Recipe grid */}
         <div className="flex-1 overflow-hidden p-2 py-6 mt-4 px-6 relative">
           <div className="grid-backdrop absolute flex flex-col items-center justify-between px-3 py-2 w-full h-full rounded-xl border-none top-0 left-0 pointer-events-none">
             <div className="w-full h-10 flex items-center justify-between relative">
@@ -311,7 +291,6 @@ export default function MealPickerPanel({
           </AnimatePresence>
         </div>
 
-        {/* Pagination */}
         <div className="p-2 shrink-0 flex items-center justify-end gap-1 border-t border-border/40">
           <span className="text-[10px] text-muted-foreground mr-auto">
             {page} / {totalPages}
