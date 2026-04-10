@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { CalendarDayView } from "./calendar/CalendarDayView";
@@ -35,7 +36,7 @@ const toDateKey = (date: Date): string => {
 
 const getWeekDates = (baseDate: Date): Date[] => {
   const start = new Date(baseDate);
-  start.setDate(baseDate.getDate() - baseDate.getDay()); // roll back to Sunday
+  start.setDate(baseDate.getDate() - baseDate.getDay());
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);

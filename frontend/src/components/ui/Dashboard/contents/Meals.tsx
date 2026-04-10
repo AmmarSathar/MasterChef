@@ -668,7 +668,6 @@ export function MealsContent() {
 
   return (
     <div className="flex h-full w-full flex-col gap-8 overflow-y-auto pb-4 pr-1">
-      {/* Week header + day selector */}
       <div className="sticky top-0 z-20">
         <div className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4">
           <div className="flex items-center justify-between gap-3 pb-3">
@@ -736,7 +735,6 @@ export function MealsContent() {
         </div>
       </div>
 
-      {/* Meal slots */}
       <div className="flex flex-col gap-6">
         <AnimatePresence mode="wait">
           {loading || !activeDayMeals ? (
