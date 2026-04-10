@@ -1,13 +1,13 @@
-import { CookieIcon, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DAYS_OF_WEEK } from "@masterchef/shared/constants";
+
 import { MEAL_SLOTS } from "./CalendarDayView";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  emptyCalendarDay,
-  type CalendarDayData,
-  type CalendarMealType,
-} from "@/lib/api/calendar";
+import { DAYS_OF_WEEK } from "@masterchef/shared/constants";
+import { emptyCalendarDay } from "@/lib/api/calendar";
+
+import { CookieIcon, Plus } from "lucide-react";
+
+import { type CalendarDayData, type CalendarMealType } from "@/lib/api/calendar";
 
 const _dayLabels = DAYS_OF_WEEK.map((d) => d.label.slice(0, 3));
 const WEEKDAY_SHORT = [_dayLabels[6], ..._dayLabels.slice(0, 6)];

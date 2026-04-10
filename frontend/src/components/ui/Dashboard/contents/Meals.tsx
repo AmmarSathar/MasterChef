@@ -1,32 +1,19 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock4,
-  MoreHorizontal,
-  Plus,
-} from "lucide-react";
-import RecipeView from "@components/ui/RecipeView";
-import { Spinner } from "@/components/ui/spinner";
-import { useUser } from "@/context/UserContext";
-import { type Recipe } from "@masterchef/shared/types";
-import toast from "react-hot-toast";
-import {
-  type MealEntry,
-  type SlotName,
-  type DayName,
-  type WeekDays,
-  fetchMealPlanWeek,
-  addMealPlanEntry,
-  removeMealPlanEntry,
-  toMondayIso,
-} from "@/lib/api/meal-plan";
-import MealPickerPanel from "./MealPickerPanel";
 
-// ── Constants ─────────────────────────────────────────────────
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import RecipeView from "@components/ui/RecipeView";
+import MealPickerPanel from "./MealPickerPanel";
+import toast from "react-hot-toast";
+import { useUser } from "@/context/UserContext";
+import { fetchMealPlanWeek, addMealPlanEntry, removeMealPlanEntry, toMondayIso } from "@/lib/api/meal-plan";
+
+import { ChevronLeft, ChevronRight, Clock4, MoreHorizontal, Plus } from "lucide-react";
+
+import { type Recipe } from "@masterchef/shared/types";
+import { type MealEntry, type SlotName, type DayName, type WeekDays } from "@/lib/api/meal-plan";
 
 const RECIPES_API_BASE = import.meta.env.VITE_BASE_API_URL as string;
 
@@ -54,9 +41,6 @@ const SLOT_STYLES: Record<SlotName, string> = {
   dinner: "bg-secondary/40 text-foreground",
 };
 
-// ── Sync helpers ──────────────────────────────────────────────
-
-/** Maps each entryId to its current position in the week. */
 function buildPositionMap(
   days: WeekDays,
 ): Record<string, { dayOfWeek: DayName; mealType: SlotName }> {
@@ -88,8 +72,6 @@ function findEntryInDays(
     }
   }
 }
-
-// ── MealCard ──────────────────────────────────────────────────
 
 function MealCard({
   entry,
@@ -156,7 +138,6 @@ function MealCard({
         )}
       </AnimatePresence>
 
-      {/* Context menu */}
       <div className="absolute top-4 right-4" ref={menuRef}>
         <Button
           variant="ghost"
@@ -200,7 +181,6 @@ function MealCard({
         )}
       </div>
 
-      {/* Thumbnail */}
       <div className="absolute -top-6 left-4 h-14 w-14 rounded-full border-4 border-card bg-secondary shadow-md overflow-hidden">
         {entry.imageUrl ? (
           <img
@@ -213,7 +193,6 @@ function MealCard({
         )}
       </div>
 
-      {/* Content */}
       <div className="flex flex-col gap-1.5 pt-2">
         <h3 className="text-base font-semibold text-foreground">
           {entry.title}
@@ -298,8 +277,6 @@ function MealsLoadingSkeleton() {
   );
 }
 
-// ── Main component ─────────────────────────────────────────────
-
 export function MealsTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Meals</h1>;
 }
@@ -308,7 +285,6 @@ export function MealsContent() {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  // ── UI state ────────────────────────────────────────────────
   const [activeDay, setActiveDay] = useState<number>(() => {
     const hash = window.location.hash.replace(/^#/, "");
     const qIdx = hash.indexOf("?");
@@ -328,7 +304,6 @@ export function MealsContent() {
     return d === 0 ? 6 : d - 1; // convert to Mon=0..Sun=6
   });
   const [weekStart, setWeekStart] = useState<Date>(() => {
-    // Check for date param in hash (e.g. #meals?date=2026-04-07&slot=lunch)
     const hash = window.location.hash.replace(/^#/, "");
     const qIdx = hash.indexOf("?");
     if (qIdx !== -1) {
@@ -354,12 +329,10 @@ export function MealsContent() {
     return start;
   });
 
-  // ── Data state ──────────────────────────────────────────────
   const [days, setDays] = useState<WeekDays | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  // ── UI interaction state ────────────────────────────────────
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [loadingRecipeId, setLoadingRecipeId] = useState<string | null>(null);
   const [viewedRecipe, setViewedRecipe] = useState<Recipe | null>(null);
@@ -377,7 +350,6 @@ export function MealsContent() {
     position: "before" | "after";
   } | null>(null);
 
-  // ── Refs — prevent stale closures inside the sync timer ─────
   const daysRef = useRef<WeekDays | null>(null);
   const weekStartRef = useRef<Date>(weekStart);
   const mealPlanIdRef = useRef<string | null>(null);
@@ -392,9 +364,6 @@ export function MealsContent() {
     weekStartRef.current = weekStart;
   }, [weekStart]);
 
-  // ── Derived data (useMemo) ───────────────────────────────────
-
-  /** Calendar dates for the week header day-picker. */
   const weekDates = useMemo(
     () =>
       DAY_LABELS.map((label, i) => {
@@ -405,16 +374,11 @@ export function MealsContent() {
     [weekStart],
   );
 
-  /** The three meal slots for the currently selected day. */
   const activeDayMeals = useMemo(
     () => days?.[DAY_NAMES[activeDay]] ?? null,
     [days, activeDay],
   );
 
-  /**
-   * Recipe IDs already present in the target day — used to block adding
-   * the same recipe twice within the same day across different slots.
-   */
   const existingRecipeIds = useMemo(() => {
     if (!days || !pickerTarget) return new Set<string>();
     const daySlots = days[pickerTarget.dayName] ?? {};
@@ -426,8 +390,6 @@ export function MealsContent() {
     }
     return new Set(ids);
   }, [days, pickerTarget]);
-
-  // ── Fetch on week change ─────────────────────────────────────
 
   useEffect(() => {
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
@@ -445,7 +407,6 @@ export function MealsContent() {
       .finally(() => setLoading(false));
   }, [weekStart]);
 
-  // Cleanup timer on unmount
   useEffect(
     () => () => {
       if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
@@ -453,13 +414,6 @@ export function MealsContent() {
     [],
   );
 
-  // ── Sync logic ───────────────────────────────────────────────
-
-  /**
-   * Diffs local state against the last-synced baseline and issues the minimum
-   * API calls to reconcile. Surgically renames entryIds after a delete+create
-   * so that any drag the user makes *during* the sync is not lost.
-   */
   const syncPendingChanges = async () => {
     if (
       !isDirtyRef.current ||
@@ -478,10 +432,8 @@ export function MealsContent() {
       const orig = buildPositionMap(originalDaysRef.current);
       const curr = buildPositionMap(daysRef.current);
 
-      // Map: oldEntryId → newEntryId for every delete+create move.
       const renames = new Map<string, string>();
 
-      // 1. Entries that moved slot — delete from old slot, create in new slot.
       for (const [entryId, currPos] of Object.entries(curr)) {
         const origPos = orig[entryId];
         if (!origPos) continue; // added via picker, already persisted
@@ -489,7 +441,7 @@ export function MealsContent() {
           origPos.dayOfWeek === currPos.dayOfWeek &&
           origPos.mealType === currPos.mealType
         )
-          continue; // same-slot reorder is UI-only, no API call needed
+          continue;
 
         const entry = findEntryInDays(daysRef.current!, entryId);
         if (!entry) continue;
@@ -504,15 +456,12 @@ export function MealsContent() {
         renames.set(entryId, newEntryId);
       }
 
-      // 2. Entries the user explicitly removed.
       for (const entryId of Object.keys(orig)) {
         if (!curr[entryId]) {
           await removeMealPlanEntry(entryId);
         }
       }
 
-      // 3. Patch both local state and the baseline with the new entryIds so
-      //    any in-progress drag (isDirtyRef=true) keeps working with correct IDs.
       if (renames.size > 0) {
         const applyRenames = (data: WeekDays): WeekDays => {
           const result = { ...data } as WeekDays;
@@ -533,8 +482,6 @@ export function MealsContent() {
         }
       }
 
-      // 4. Refetch for authoritative baseline. Only update the displayed data
-      //    when there are no new pending drags — otherwise we'd stomp them.
       const fresh = await fetchMealPlanWeek(toMondayIso(weekStartRef.current));
       mealPlanIdRef.current = fresh.id;
       originalDaysRef.current = fresh.days;
@@ -544,7 +491,6 @@ export function MealsContent() {
     } catch (err) {
       console.error("[MealPlan] Sync failed:", err);
       toast.error("Couldn't save changes. Refreshing…");
-      // Hard-reset to server state to avoid data inconsistency.
       try {
         const fresh = await fetchMealPlanWeek(toMondayIso(weekStartRef.current));
         setDays(fresh.days);
@@ -552,7 +498,7 @@ export function MealsContent() {
         originalDaysRef.current = fresh.days;
         isDirtyRef.current = false;
       } catch {
-        isDirtyRef.current = true; // retry on next interaction
+        isDirtyRef.current = true;
       }
     } finally {
       setSyncing(false);
@@ -563,8 +509,6 @@ export function MealsContent() {
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(syncPendingChanges, 1500);
   };
-
-  // ── Drag handlers ────────────────────────────────────────────
 
   const handleDrop = (
     e: React.DragEvent,
@@ -585,8 +529,6 @@ export function MealsContent() {
       const dayName = DAY_NAMES[activeDay];
       const daySlots = prev[dayName];
 
-      // Work on copies — newFromItems and newToItems share the same reference
-      // when fromSlot === toSlot, which is intentional (one array, two ops).
       const newFromItems = [...daySlots[fromSlot]];
       const newToItems =
         fromSlot === toSlot ? newFromItems : [...daySlots[toSlot]];
@@ -598,12 +540,10 @@ export function MealsContent() {
       const [movedEntry] = newFromItems.splice(fromIndex, 1);
 
       if (toEntryId === null) {
-        // Dropped onto the slot container (no specific card) — append to end
         newToItems.push(movedEntry);
       } else {
         const toIndex = newToItems.findIndex((e) => e.entryId === toEntryId);
         const base = hoverPos === "after" ? toIndex + 1 : toIndex;
-        // When same slot: removal shifted indices, compensate
         const insertAt =
           fromSlot === toSlot && fromIndex < base ? base - 1 : base;
         newToItems.splice(Math.max(0, insertAt), 0, movedEntry);
@@ -641,8 +581,6 @@ export function MealsContent() {
     setOpenMenuId(null);
   };
 
-  // ── Recipe view handler ──────────────────────────────────────
-
   const handleSeeRecipe = async (entry: MealEntry) => {
     setLoadingRecipeId(entry.entryId);
     try {
@@ -660,8 +598,6 @@ export function MealsContent() {
     }
   };
 
-  // ── Picker handler ───────────────────────────────────────────
-
   const handlePickerSelect = (entry: MealEntry) => {
     if (!pickerTarget) return;
     const { slot, dayName } = pickerTarget;
@@ -675,7 +611,6 @@ export function MealsContent() {
     });
 
     setDays((prev) => (prev ? updater(prev) : prev));
-    // Keep originalDaysRef consistent so the 5s sync doesn't try to delete this entry
     if (originalDaysRef.current) {
       originalDaysRef.current = updater(originalDaysRef.current);
     }
@@ -683,11 +618,8 @@ export function MealsContent() {
     setPickerTarget(null);
   };
 
-  // ── Render ───────────────────────────────────────────────────
-
   return (
     <div className="flex h-full w-full flex-col gap-8 overflow-y-auto pb-4 pr-1">
-      {/* Week header + day selector */}
       <div className="sticky top-0 z-20">
         <div className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4">
           <div className="flex items-center justify-between gap-3 pb-3">
@@ -755,7 +687,6 @@ export function MealsContent() {
         </div>
       </div>
 
-      {/* Meal slots */}
       <div className="flex flex-col gap-6">
         <AnimatePresence mode="wait">
           {loading || !activeDayMeals ? (
@@ -779,7 +710,6 @@ export function MealsContent() {
             >
               {SLOT_NAMES.map((slot) => (
                 <div key={slot} className="grid grid-cols-[70px_1fr] gap-4">
-                  {/* Slot label */}
                   <div className="flex items-stretch">
                     <div
                       className={`flex w-full items-center justify-center rounded-2xl ${SLOT_STYLES[slot]}`}
@@ -790,7 +720,6 @@ export function MealsContent() {
                     </div>
                   </div>
 
-                  {/* Cards + drop zone */}
                   <div
                     className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                     onDragOver={(e) => e.preventDefault()}
@@ -860,7 +789,6 @@ export function MealsContent() {
         </AnimatePresence>
       </div>
 
-      {/* Meal picker panel */}
       <AnimatePresence>
         {pickerTarget && mealPlanIdRef.current && (
           <MealPickerPanel
