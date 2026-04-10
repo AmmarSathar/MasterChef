@@ -64,6 +64,23 @@ const getMonthGridDates = (baseDate: Date): Date[] => {
 const getYearDates = (baseDate: Date): Date[] =>
   Array.from({ length: 12 }, (_, i) => new Date(baseDate.getFullYear(), i, 1));
 
+const DAYNAME_BY_GETDAY: DayName[] = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+const toEntry = (
+  days: Record<string, Record<string, CalendarSlotEntry[]>>,
+  date: Date,
+): CalendarDayData => {
+  const dayName = DAYNAME_BY_GETDAY[date.getDay()];
+  const daySlots = days[dayName];
+  return {
+    breakfast: (daySlots?.breakfast?.[0] as CalendarSlotEntry) ?? null,
+    lunch: (daySlots?.lunch?.[0] as CalendarSlotEntry) ?? null,
+    dinner: (daySlots?.dinner?.[0] as CalendarSlotEntry) ?? null,
+  };
+};
+
 const yearVariants = {
   enter: (dir: number) => ({ x: dir * 24, opacity: 0 }),
   center: { x: 0, opacity: 1 },
