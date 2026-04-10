@@ -1,6 +1,8 @@
-import { Cookie, CookieIcon, Plus } from "lucide-react";
+import { CookieIcon, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { DAYS_OF_WEEK } from "@masterchef/shared/constants";
 import { MEAL_SLOTS } from "./CalendarDayView";
+import { Spinner } from "@/components/ui/spinner";
 import {
   emptyCalendarDay,
   type CalendarDayData,
@@ -41,12 +43,16 @@ interface CalendarWeekViewProps {
   dates: Date[];
   selectionsByDay: Record<string, CalendarDayData>;
   onDayClick: (date: Date) => void;
+  onMealClick?: (meal: NonNullable<CalendarDayData[CalendarMealType]>) => void;
+  loadingMealId?: string | null;
 }
 
 export default function CalendarWeekView({
   dates,
   selectionsByDay,
   onDayClick,
+  onMealClick,
+  loadingMealId,
 }: CalendarWeekViewProps) {
   return (
     <div className="week-grid grid grid-cols-7 gap-0">
@@ -71,16 +77,17 @@ export default function CalendarWeekView({
                 return meal ? (
                   <div
                     key={slot}
-                    className="meal-card h-28 rounded-xl overflow-hidden relative p-0"
+                    onClick={(e) => { e.stopPropagation(); onMealClick?.(meal); }}
+                    className="meal-card h-28 rounded-xl overflow-hidden relative p-0 cursor-pointer"
                   >
                     {meal.imageUrl ? (
                       <img
                         src={meal.imageUrl}
                         alt={meal.title}
-                        className="w-full h-full object-cover m-0 pointer-events-auto cursor-pointer"
+                        className="w-full h-full object-cover m-0 pointer-events-none"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-card/50 pointer-events-auto cursor-pointer">
+                      <div className="w-full h-full flex items-center justify-center bg-card/50 pointer-events-none">
                         <CookieIcon size={32} className="text-foreground/20" />
                       </div>
                     )}
@@ -92,6 +99,19 @@ export default function CalendarWeekView({
                         {meal.title}
                       </span>
                     </div>
+                    <AnimatePresence>
+                      {loadingMealId === meal.recipeId && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-sm bg-card/50"
+                        >
+                          <Spinner variant="infinite" size={24} className="text-accent" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ) : (
                   <div
