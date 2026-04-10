@@ -60,14 +60,19 @@ vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarPicker", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarDayView", () => ({
-  CalendarDayView: ({ onBack }: { onBack: () => void }) => (
-    <div data-testid="calendar-day-view">
-      <button onClick={onBack}>Back</button>
-    </div>
-  ),
-  MEAL_SLOTS: ["breakfast", "lunch", "dinner"],
-}));
+vi.mock(
+  "@/components/ui/Dashboard/contents/calendar/CalendarDayView",
+  async (importOriginal) => {
+    return {
+      CalendarDayView: ({ onBack }: { onBack: () => void }) => (
+        <div data-testid="calendar-day-view">
+          <button onClick={onBack}>Back</button>
+        </div>
+      ),
+      MEAL_SLOTS: ["breakfast", "lunch", "dinner"],
+    };
+  }
+);
 
 // Stub CalendarSlotPicker so CalendarWeekView tests don't need useUser context
 vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarSlotPicker", () => ({
