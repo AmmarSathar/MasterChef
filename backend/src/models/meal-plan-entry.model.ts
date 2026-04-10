@@ -52,11 +52,10 @@ const mealPlanEntrySchema = new Schema<IMealPlanEntry>(
   }
 );
 
-// Duplicate prevention: one slot per (mealPlanId, dayOfWeek, mealType)
-mealPlanEntrySchema.index(
-  { mealPlanId: 1, dayOfWeek: 1, mealType: 1 },
-  { unique: true }
-);
+// Index for fast slot lookups — not unique (up to 3 entries per slot allowed)
+// NOTE: if upgrading from a schema that had { unique: true } on this index,
+// drop the old index in the DB before restarting: db.mealplanentries.dropIndex("mealPlanId_1_dayOfWeek_1_mealType_1")
+mealPlanEntrySchema.index({ mealPlanId: 1, dayOfWeek: 1, mealType: 1 });
 
 export const MealPlanEntry = mongoose.model<IMealPlanEntry>(
   "MealPlanEntry",

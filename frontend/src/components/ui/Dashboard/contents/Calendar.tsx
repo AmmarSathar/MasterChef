@@ -1,15 +1,21 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import {
-  CalendarDayView,
-  MEAL_SLOTS,
-  type MealSlot,
-  type MealPrepOption,
-} from "./CalendarDayView";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDayView } from "./CalendarDayView";
+import CalendarWeekView, { CalendarWeekViewSkeleton } from "./CalendarWeekView";
 import RecipeCreator from "@/components/ui/RecipeCreator";
 import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
 import { CalendarPicker } from "./CalendarPicker";
+import {
+  emptyCalendarDay,
+  type CalendarDayData,
+  type CalendarSlotEntry,
+} from "@/lib/api/calendar";
+import {
+  fetchMealPlanWeek,
+  toMondayIso,
+  type DayName,
+} from "@/lib/api/meal-plan";
 
 type TimeFilter = "weekly" | "monthly" | "yearly";
 type ViewMode = "calendar" | "day";
@@ -28,7 +34,7 @@ const toDateKey = (date: Date): string => {
 
 const getWeekDates = (baseDate: Date): Date[] => {
   const start = new Date(baseDate);
-  start.setDate(baseDate.getDate() - baseDate.getDay());
+  start.setDate(baseDate.getDate() - baseDate.getDay()); // roll back to Sunday
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
@@ -73,10 +79,56 @@ export function CalendarContent() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [creatorOpen, setCreatorOpen] = useState(false);
-  const [selectionsByDay, setSelectionsByDay] = useState<
-    Record<string, Partial<Record<MealSlot, MealPrepOption>>>
+  const [calendarDays, setCalendarDays] = useState<
+    Record<string, CalendarDayData>
   >({});
+  const [loading, setLoading] = useState(false);
   const [yearDir, setYearDir] = useState(0);
+
+  // Fetch meal plan data whenever the displayed week changes.
+  // The calendar week is Sun–Sat (Sunday-based); the meal plan week is Mon–Sun
+  // (Monday-based). Sunday always belongs to the *previous* meal-plan week, so
+  // we fetch two weeks and merge them.
+  useEffect(() => {
+    setLoading(true);
+    const calWeek = getWeekDates(selectedDate); // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+    const sundayDate = calWeek[0];
+    const mondayDate = calWeek[1];
+    // Each Sunday is the LAST day of the previous Monday-based week
+    const prevMondayIso = toMondayIso(sundayDate); // e.g. March 31 for Sunday April 6
+    const mainMondayIso = toMondayIso(mondayDate); // e.g. April 7
+
+    const DAYNAME_BY_GETDAY: DayName[] = [
+      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+    ];
+    const toEntry = (
+      days: Record<string, Record<string, CalendarSlotEntry[]>>,
+      date: Date,
+    ): CalendarDayData => {
+      const dayName = DAYNAME_BY_GETDAY[date.getDay()];
+      const daySlots = days[dayName];
+      return {
+        breakfast: (daySlots?.breakfast?.[0] as CalendarSlotEntry) ?? null,
+        lunch: (daySlots?.lunch?.[0] as CalendarSlotEntry) ?? null,
+        dinner: (daySlots?.dinner?.[0] as CalendarSlotEntry) ?? null,
+      };
+    };
+
+    Promise.all([
+      fetchMealPlanWeek(prevMondayIso), // Sunday's data
+      fetchMealPlanWeek(mainMondayIso), // Mon–Sat data
+    ])
+      .then(([prevData, mainData]) => {
+        const result: Record<string, CalendarDayData> = {};
+        result[toDateKey(sundayDate)] = toEntry(prevData.days as never, sundayDate);
+        calWeek.slice(1).forEach((date) => {
+          result[toDateKey(date)] = toEntry(mainData.days as never, date);
+        });
+        setCalendarDays(result);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [selectedDate]);
 
   const displayedDates = useMemo(() => {
     if (activeTimeFilter === "weekly") return getWeekDates(selectedDate);
@@ -86,7 +138,8 @@ export function CalendarContent() {
 
   const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate]);
   const selectedKey = toDateKey(selectedDate);
-  const selectedMeals = selectionsByDay[selectedKey] ?? {};
+  const selectedMeals =
+    calendarDays[selectedKey] ?? emptyCalendarDay();
   const weeklyLabel = `${MONTH_NAMES[weekDates[0].getMonth()]} ${weekDates[0].getDate()} - ${weekDates[6].getDate()}, ${weekDates[6].getFullYear()}`;
 
   const changeYear = (dir: 1 | -1) => {
@@ -98,13 +151,6 @@ export function CalendarContent() {
     } else {
       setSelectedDate(new Date(selectedDate.getFullYear() + dir, 0, 1));
     }
-  };
-
-  const chooseMeal = (slot: MealSlot, option: MealPrepOption) => {
-    setSelectionsByDay((prev) => ({
-      ...prev,
-      [selectedKey]: { ...prev[selectedKey], [slot]: option },
-    }));
   };
 
   return (
@@ -156,66 +202,36 @@ export function CalendarContent() {
                   className="relative"
                 >
                   {activeTimeFilter === "weekly" ? (
-                    <div className="week-grid grid grid-cols-7 gap-3">
-                      {displayedDates.map((date) => {
-                        const key = toDateKey(date);
-                        const dayMeals = selectionsByDay[key] ?? {};
-                        return (
-                          <div
-                            key={key}
-                            onClick={() => {
+                    <AnimatePresence mode="wait">
+                      {loading ? (
+                        <motion.div
+                          key="week-skeleton"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <CalendarWeekViewSkeleton />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="week-content"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <CalendarWeekView
+                            dates={displayedDates}
+                            selectionsByDay={calendarDays}
+                            onDayClick={(date) => {
                               setSelectedDate(date);
                               setViewMode("day");
                             }}
-                            className="day-col cursor-pointer hover:bg-secondary/30 transition duration-300 rounded-2xl flex flex-col"
-                          >
-                            <div className="day-label mb-2 text-center pointer-events-none">
-                              <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.22em] text-muted-foreground">
-                                {WEEKDAY_SHORT[date.getDay()]}
-                              </p>
-                              <p className="text-2xl font-semibold">
-                                {date.getDate()}
-                              </p>
-                            </div>
-                            <div className="meal-slots space-y-2 pointer-events-auto">
-                              {MEAL_SLOTS.map((slot) => {
-                                const meal = dayMeals[slot];
-                                return meal ? (
-                                  <div
-                                    key={slot}
-                                    className="meal-card h-28 rounded-xl overflow-hidden relative"
-                                  >
-                                    <img
-                                      src={meal.imageUrl}
-                                      alt={meal.title}
-                                      className="w-full h-full object-cover pointer-events-auto cursor-pointer"
-                                    />
-                                    <div className="meal-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-2 flex flex-col justify-end pointer-events-none">
-                                      <span className="text-[9px] uppercase tracking-[0.2em] text-accent">
-                                        {slot}
-                                      </span>
-                                      <span className="text-xs leading-tight font-medium">
-                                        {meal.title}
-                                      </span>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div
-                                    key={slot}
-                                    className="meal-slot-empty h-28 rounded-xl bg-card border border-border flex items-center justify-center cursor-pointer hover:bg-secondary/70 transition duration-300"
-                                  >
-                                    <Plus
-                                      size={16}
-                                      className="text-muted-foreground pointer-events-none"
-                                    />
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   ) : (
                     <>
                       <div className="date-selector absolute flex items-center gap-3 mb-4 right-0 -top-11">
@@ -312,30 +328,24 @@ export function CalendarContent() {
                     Avg. Daily Calories
                   </p>
                   <p className="text-3xl font-semibold">
-                    1,850 <span className="text-lg">kcal</span>
+                    — <span className="text-lg">kcal</span>
                   </p>
                 </div>
                 <div className="h-1.5 rounded-full bg-secondary mt-3 overflow-hidden">
-                  <div className="h-full w-2/3 bg-accent" />
+                  <div className="h-full w-0 bg-accent" />
                 </div>
                 <div className="macro-breakdown grid grid-cols-3 mt-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground text-xs scale-95 -ml-1 uppercase">
-                      Protein
-                    </p>
-                    <p>140g</p>
+                    <p className="text-muted-foreground text-xs uppercase">Protein</p>
+                    <p>—</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs scale-95 -ml-1 uppercase">
-                      Carbs
-                    </p>
-                    <p>185g</p>
+                    <p className="text-muted-foreground text-xs uppercase">Carbs</p>
+                    <p>—</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs scale-95 -ml-1 uppercase">
-                      Fat
-                    </p>
-                    <p>65g</p>
+                    <p className="text-muted-foreground text-xs uppercase">Fat</p>
+                    <p>—</p>
                   </div>
                 </div>
               </div>
@@ -362,7 +372,12 @@ export function CalendarContent() {
               meals={selectedMeals}
               onBack={() => setViewMode("calendar")}
               onNewRecipe={() => setCreatorOpen(true)}
-              onChooseMeal={chooseMeal}
+              onMealsChange={(updatedMeals) =>
+                setCalendarDays((prev) => ({
+                  ...prev,
+                  [selectedKey]: updatedMeals,
+                }))
+              }
             />
           </motion.div>
         )}

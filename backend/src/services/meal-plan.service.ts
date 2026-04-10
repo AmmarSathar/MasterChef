@@ -65,26 +65,34 @@ export async function getMealPlanById(id: string): Promise<MealPlanResponse> {
   }
 
   const entries = await MealPlanEntry.find({ mealPlanId: id }).populate<{
-    recipeId: { _id: mongoose.Types.ObjectId; title: string };
-  }>("recipeId", "title");
+    recipeId: {
+      _id: mongoose.Types.ObjectId;
+      title: string;
+      description: string;
+      imageUrl?: string;
+      cookingTime: number;
+    };
+  }>("recipeId", "title description imageUrl cookingTime");
 
   const days = {} as MealPlanResponse["days"];
 
   for (const day of dayOfWeekValues) {
     days[day] = {} as Record<MealType, MealPlanResponse["days"][DayOfWeek][MealType]>;
     for (const meal of mealTypeValues) {
-      const entry = entries.find(
+      const slotEntries = entries.filter(
         (e) => e.dayOfWeek === day && e.mealType === meal
       );
-      if (entry && entry.recipeId) {
-        days[day][meal] = {
-          recipeId: entry.recipeId._id.toString(),
-          title: entry.recipeId.title,
-          notes: entry.notes ?? "",
-        };
-      } else {
-        days[day][meal] = null;
-      }
+      days[day][meal] = slotEntries
+        .filter((e) => e.recipeId)
+        .map((e) => ({
+          entryId: e._id.toString(),
+          recipeId: e.recipeId._id.toString(),
+          title: e.recipeId.title,
+          description: e.recipeId.description ?? "",
+          imageUrl: e.recipeId.imageUrl ?? "",
+          cookingTime: e.recipeId.cookingTime ?? 0,
+          notes: e.notes ?? "",
+        }));
     }
   }
 
@@ -93,6 +101,41 @@ export async function getMealPlanById(id: string): Promise<MealPlanResponse> {
     weekStartDate: mealPlan.weekStartDate,
     days,
   };
+}
+
+export async function getOrCreateMealPlanByWeek(
+  userId: string,
+  weekStartDateStr: string
+): Promise<MealPlanResponse> {
+  const weekStartDate = new Date(weekStartDateStr);
+
+  if (isNaN(weekStartDate.getTime())) {
+    const error: ApiError = new Error("Invalid week_start_date");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (weekStartDate.getUTCDay() !== 1) {
+    const error: ApiError = new Error("week_start_date must be a Monday");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  weekStartDate.setUTCHours(0, 0, 0, 0);
+
+  let mealPlan = await MealPlan.findOne({
+    userId: new mongoose.Types.ObjectId(userId),
+    weekStartDate,
+  });
+
+  if (!mealPlan) {
+    mealPlan = await MealPlan.create({
+      userId: new mongoose.Types.ObjectId(userId),
+      weekStartDate,
+    });
+  }
+
+  return getMealPlanById(mealPlan._id.toString());
 }
 
 export async function createMealPlanEntry(
@@ -138,55 +181,51 @@ export async function createMealPlanEntry(
     throw error;
   }
 
+  // Prevent the same recipe appearing in any other slot this week
   const duplicateRecipe = await MealPlanEntry.findOne({
     mealPlanId,
     recipeId,
-    mealType: { $ne: mealType },
+    $or: [{ dayOfWeek: { $ne: dayOfWeek } }, { mealType: { $ne: mealType } }],
   });
   if (duplicateRecipe) {
     const error: ApiError = new Error(
       `This recipe is already assigned to ${duplicateRecipe.dayOfWeek}, ${duplicateRecipe.mealType} this week.`
     );
     error.statusCode = 409;
-    (error as ApiError & { details?: { existingMealType?: string } }).details = {
+    (error as ApiError & { details?: { existingDay?: string; existingMealType?: string } }).details = {
+      existingDay: duplicateRecipe.dayOfWeek,
       existingMealType: duplicateRecipe.mealType,
     };
     throw error;
   }
 
-  try {
-    const entry = await MealPlanEntry.create({
-      mealPlanId,
-      dayOfWeek,
-      mealType,
-      recipeId,
-      notes,
-    });
-
-    return {
-      id: entry._id.toString(),
-      mealPlanId: entry.mealPlanId.toString(),
-      dayOfWeek: entry.dayOfWeek,
-      mealType: entry.mealType,
-      recipeId: entry.recipeId.toString(),
-      notes: entry.notes,
-      createdAt: entry.createdAt.toISOString(),
-    };
-  } catch (err: unknown) {
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      (err as { code: number }).code === 11000
-    ) {
-      const error: ApiError = new Error(
-        "A recipe is already assigned to this slot"
-      );
-      error.statusCode = 409;
-      throw error;
-    }
-    throw err;
+  // Each slot supports a maximum of 3 options
+  const slotCount = await MealPlanEntry.countDocuments({ mealPlanId, dayOfWeek, mealType });
+  if (slotCount >= 3) {
+    const error: ApiError = new Error(
+      `This slot already has 3 meal options. Remove one before adding another.`
+    );
+    error.statusCode = 409;
+    throw error;
   }
+
+  const entry = await MealPlanEntry.create({
+    mealPlanId,
+    dayOfWeek,
+    mealType,
+    recipeId,
+    notes,
+  });
+
+  return {
+    id: entry._id.toString(),
+    mealPlanId: entry.mealPlanId.toString(),
+    dayOfWeek: entry.dayOfWeek,
+    mealType: entry.mealType,
+    recipeId: entry.recipeId.toString(),
+    notes: entry.notes,
+    createdAt: entry.createdAt.toISOString(),
+  };
 }
 
 export async function deleteMealPlanEntry(input: {

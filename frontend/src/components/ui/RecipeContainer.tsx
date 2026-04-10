@@ -52,7 +52,7 @@ function StandardCard({
       {recipe.imageUrl ? (
         <img
           src={recipe.imageUrl}
-          alt={recipe.title}
+          
           className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} object-cover duration-300 ease-out-cubic transition-all pointer-events-none`}
         />
       ) : (
