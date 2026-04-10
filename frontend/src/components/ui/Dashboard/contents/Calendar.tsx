@@ -65,7 +65,13 @@ const getYearDates = (baseDate: Date): Date[] =>
   Array.from({ length: 12 }, (_, i) => new Date(baseDate.getFullYear(), i, 1));
 
 const DAYNAME_BY_GETDAY: DayName[] = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];
 
 const toEntry = (
@@ -118,6 +124,8 @@ function CalendarRecipeViewer({
 }
 
 export function CalendarContent() {
+  const navigate = useNavigate();
+  const { user } = useUser();
   const [activeTimeFilter, setActiveTimeFilter] =
     useState<TimeFilter>("weekly");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
