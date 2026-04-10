@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
 import { RecipeContainer } from "@/components/ui/RecipeContainer";
 import RecipeCreator from "@/components/ui/RecipeCreator";
 import RecipeView from "@/components/ui/RecipeView";
+import { Badge } from "@components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useUser } from "@/context/UserContext";
+import { SKILL_LEVELS, SAD_KAOMOJIS, Recipe } from "@masterchef/shared";
+import toast from "react-hot-toast";
+import BeefTacos from "@/lib/images/beef-tacos.webp";
+import CaesarSalad from "@/lib/images/caesar-salad.webp";
+import Carbonara from "@/lib/images/carbonara.webp";
+import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
+import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
+import Margherita from "@/lib/images/margherita.webp";
 
 import {
   Plus,
@@ -15,23 +27,6 @@ import {
   Timer,
   SlidersHorizontal,
 } from "lucide-react";
-
-import { Badge } from "@components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SKILL_LEVELS } from "@masterchef/shared";
-import toast from "react-hot-toast";
-import { SAD_KAOMOJIS } from "@masterchef/shared";
-
-import BeefTacos from "@/lib/images/beef-tacos.webp";
-import CaesarSalad from "@/lib/images/caesar-salad.webp";
-import Carbonara from "@/lib/images/carbonara.webp";
-import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
-import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
-import Margherita from "@/lib/images/margherita.webp";
-
-import { Recipe } from "@masterchef/shared";
-
-import { useUser } from "@/context/UserContext";
 
 const RECIPES_API_BASE = "/api/recipes";
 
@@ -90,13 +85,9 @@ function SkillBars({ count }: { count: number }) {
 function RecipeCardSkeleton() {
   return (
     <div className="rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm">
-      {/* Image */}
       <div className="w-full h-42 bg-muted animate-pulse" />
-      {/* Body */}
       <div className="flex flex-col gap-2 px-3 py-3">
-        {/* Title */}
         <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-        {/* Detail rows */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <div className="h-3 w-12 rounded bg-muted animate-pulse" />
@@ -104,7 +95,6 @@ function RecipeCardSkeleton() {
           </div>
           <div className="h-3 w-14 rounded bg-muted animate-pulse" />
         </div>
-        {/* Action buttons row */}
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-2">
             <div className="h-7 w-7 rounded-full bg-muted animate-pulse" />
@@ -982,7 +972,6 @@ export function RecipeContent() {
           </div>
         </div>
 
-        {/* Recipe list or empty state */}
         <AnimatePresence mode="wait">
           {loadingRecipes ? (
             <motion.div
@@ -1102,7 +1091,6 @@ export function RecipeContent() {
           />
         )}
       </AnimatePresence>
-      {/* Delete confirm */}
       <AnimatePresence>
         {pendingDeleteRecipeId && (
           <motion.div

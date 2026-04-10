@@ -1,22 +1,21 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Clock4, CookingPot, CookieIcon } from "lucide-react";
-import axios from "axios";
-import type { Recipe } from "@masterchef/shared/types";
+
 import { useUser } from "@/context/UserContext";
+import axios from "axios";
+
+import { ChevronLeft, ChevronRight, Clock4, CookingPot, CookieIcon } from "lucide-react";
+
+import type { Recipe } from "@masterchef/shared/types";
 
 const BASE = import.meta.env.VITE_BASE_API_URL as string;
 const PAGE_SIZE = 6;
-
-// ── Props ─────────────────────────────────────────────────────
 
 export interface CalendarSlotPickerProps {
   onPick: (recipe: Recipe) => void;
   onClose: () => void;
   submitting?: boolean;
 }
-
-// ── Component ─────────────────────────────────────────────────
 
 export default function CalendarSlotPicker({
   onPick,
@@ -52,7 +51,6 @@ export default function CalendarSlotPicker({
       .finally(() => setLoading(false));
   }, [page, user?.id]);
 
-  // Pad to full grid so layout stays stable
   const gridItems: (Recipe | null)[] = [
     ...recipes,
     ...Array(Math.max(0, PAGE_SIZE - recipes.length)).fill(null),
@@ -60,7 +58,6 @@ export default function CalendarSlotPicker({
 
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         key="cal-picker-backdrop"
         initial={{ opacity: 0 }}
@@ -71,7 +68,6 @@ export default function CalendarSlotPicker({
         onClick={onClose}
       />
 
-      {/* Slide-in panel */}
       <motion.div
         key="cal-picker-panel"
         initial={{ x: "100%" }}
@@ -80,14 +76,12 @@ export default function CalendarSlotPicker({
         transition={{ type: "spring", stiffness: 340, damping: 36 }}
         className="fixed top-0 right-0 h-screen w-[30%] min-w-64 bg-card border-l border-border/50 shadow-2xl z-50 flex flex-col"
       >
-        {/* Header */}
         <div className="p-2 shrink-0 border-b border-border/40">
           <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">
             Pick a Recipe
           </h2>
         </div>
 
-        {/* Recipe grid */}
         <div className="flex-1 overflow-hidden p-2">
           {loading ? (
             <div className="h-full flex items-center justify-center">
@@ -149,7 +143,6 @@ export default function CalendarSlotPicker({
           )}
         </div>
 
-        {/* Pagination */}
         <div className="p-2 shrink-0 flex items-center justify-end gap-1 border-t border-border/40">
           <span className="text-[10px] text-muted-foreground mr-auto">
             {page} / {totalPages}
