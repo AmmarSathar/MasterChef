@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import React from "react";
 
 // ── Framer-motion stub ─────────────────────────────────────────
@@ -7,12 +13,16 @@ vi.mock("framer-motion", async (importOriginal) => {
   const actual = await importOriginal<typeof import("framer-motion")>();
   return {
     ...actual,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
     motion: new Proxy(actual.motion, {
       get: (_target, prop: string) => {
         const Tag = prop as keyof React.JSX.IntrinsicElements;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const Comp = ({ children: c, ...rest }: any) => <Tag {...rest}>{c}</Tag>;
+        const Comp = ({ children: c, ...rest }: any) => (
+          <Tag {...rest}>{c}</Tag>
+        );
         Comp.displayName = `motion.${prop}`;
         return Comp;
       },
@@ -78,7 +88,15 @@ import type { WeekDays } from "@/lib/api/meal-plan";
 // ── Helpers ────────────────────────────────────────────────────
 
 function emptyWeekDays(): WeekDays {
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ] as const;
   const slots = ["breakfast", "lunch", "dinner"] as const;
   const result = {} as WeekDays;
   for (const day of days) {
@@ -102,14 +120,26 @@ function weekWithEntry(): WeekDays {
     notes: "",
   };
   // Add the entry to every day so it always shows regardless of activeDay
-  const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+  const dayNames = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ] as const;
   for (const day of dayNames) {
     days[day]["breakfast"] = [entry];
   }
   return days;
 }
 
-const fakePlan = (days: WeekDays) => ({ id: "plan-1", weekStartDate: new Date(), days });
+const fakePlan = (days: WeekDays) => ({
+  id: "plan-1",
+  weekStartDate: new Date(),
+  days,
+});
 
 // ── Tests ──────────────────────────────────────────────────────
 
@@ -153,7 +183,9 @@ describe("MealsContent", () => {
   it("shows 'Week of' label in the header", async () => {
     render(<MealsContent />);
 
-    await waitFor(() => expect(screen.getByText(/week of/i)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/week of/i)).toBeInTheDocument(),
+    );
   });
 
   // ── Week navigation ──────────────────────────────────────────
@@ -164,9 +196,11 @@ describe("MealsContent", () => {
     await waitFor(() => expect(screen.queryByText("Loading…")).toBeNull());
 
     // Find the two navigation chevron buttons in the header
-    const roundButtons = screen.getAllByRole("button").filter(
-      (b) => b.className.includes("rounded-full") && b.querySelector("svg")
-    );
+    const roundButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (b) => b.className.includes("rounded-full") && b.querySelector("svg"),
+      );
 
     // Click prev
     fireEvent.click(roundButtons[0]);
@@ -212,7 +246,10 @@ describe("MealsContent", () => {
   it("opens MealPickerPanel when AddMealCard is clicked", async () => {
     render(<MealsContent />);
 
-    await waitFor(() => screen.queryByText("Loading…") === null);
+    // Wait for the "Add item" buttons to appear instead of just checking for loading
+    await waitFor(() => {
+      expect(screen.getAllByText("Add item").length).toBeGreaterThanOrEqual(1);
+    });
 
     const addButtons = screen.getAllByText("Add item");
     fireEvent.click(addButtons[0]);
@@ -274,7 +311,9 @@ describe("MealsContent", () => {
     // The context-menu button has no text label — find it by its position
     // relative to the card. It is the button with h-8 w-8 rounded-full inside
     // the MealCard.
-    const moreBtn = document.querySelector(".absolute.top-4.right-4 button") as HTMLElement;
+    const moreBtn = document.querySelector(
+      ".absolute.top-4.right-4 button",
+    ) as HTMLElement;
     fireEvent.click(moreBtn!);
 
     expect(screen.getByText("Remove")).toBeInTheDocument();
@@ -287,7 +326,9 @@ describe("MealsContent", () => {
 
     await waitFor(() => screen.getByText("Scrambled Eggs"));
 
-    const moreBtn = document.querySelector(".absolute.top-4.right-4 button") as HTMLElement;
+    const moreBtn = document.querySelector(
+      ".absolute.top-4.right-4 button",
+    ) as HTMLElement;
     fireEvent.click(moreBtn!);
     fireEvent.click(screen.getByText("Remove"));
 
@@ -316,7 +357,9 @@ describe("MealsContent", () => {
       });
 
       // Perform a remove
-      const moreBtn = document.querySelector(".absolute.top-4.right-4 button") as HTMLElement;
+      const moreBtn = document.querySelector(
+        ".absolute.top-4.right-4 button",
+      ) as HTMLElement;
       if (moreBtn) {
         fireEvent.click(moreBtn);
         const removeBtn = screen.queryByText("Remove");
@@ -334,15 +377,17 @@ describe("MealsContent", () => {
 
       // Only put entry on MONDAY so removing it makes it disappear from all state
       const mondayOnlyDays = emptyWeekDays();
-      mondayOnlyDays["Monday"]["breakfast"] = [{
-        entryId: "e1",
-        recipeId: "r1",
-        title: "Sync Test Egg",
-        description: "",
-        imageUrl: "",
-        cookingTime: 5,
-        notes: "",
-      }];
+      mondayOnlyDays["Monday"]["breakfast"] = [
+        {
+          entryId: "e1",
+          recipeId: "r1",
+          title: "Sync Test Egg",
+          description: "",
+          imageUrl: "",
+          cookingTime: 5,
+          notes: "",
+        },
+      ];
       mockFetchMealPlanWeek.mockResolvedValue(fakePlan(mondayOnlyDays));
       mockRemoveMealPlanEntry.mockResolvedValue(undefined);
 
@@ -357,7 +402,9 @@ describe("MealsContent", () => {
       });
 
       // Verify the entry is visible
-      const moreBtn = document.querySelector(".absolute.top-4.right-4 button") as HTMLElement;
+      const moreBtn = document.querySelector(
+        ".absolute.top-4.right-4 button",
+      ) as HTMLElement;
       expect(moreBtn).toBeTruthy();
 
       // Remove it
