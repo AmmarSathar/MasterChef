@@ -98,8 +98,12 @@ export function CalendarDayView({
   }, [user, dateStr, date, dayName]);
 
   const handleChoose = async (slot: MealSlot, entry: MealEntry) => {
-    const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
-    onMealsChange({ ...meals, [slot]: result });
+    try {
+      const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
+      onMealsChange({ ...meals, [slot]: result });
+    } catch (err) {
+      console.error("[CalendarDayView] Failed to assign calendar entry:", err);
+    }
   };
 
   return (
@@ -123,10 +127,13 @@ export function CalendarDayView({
               <ArrowLeft className="pointer-events-none" size={14} /> Back
             </button>
             <button
-              onClick={onNewRecipe}
+              onClick={() => {
+                window.location.hash = `meals?date=${dateStr}&slot=${warningSlot}`;
+                setWarningSlot(null);
+              }}
               className="rounded-xl bg-primary text-primary-foreground font-semibold px-4 py-2 text-sm hover:opacity-90 transition"
             >
-              + New Recipe
+              Open in Meal Prepper
             </button>
           </div>
         </div>
