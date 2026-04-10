@@ -142,9 +142,6 @@ function MealCard({
         isDragging ? "opacity-60 ring-2 ring-accent/40" : ""
       }`}
     >
-      {/* Next bug, in the calendar weekly view, selecting another recipe on the selection of the same day section (for example, breakfast day 10 has         
-  "entry1" and "entry2" as options, and I select the "entry2" when "entry1" was already selected), it should actually switch the chosen recipe for    
-  this day section as demanded. However, this doen't happen and entry1 stays the selected entry no matter what                                         */}
       <AnimatePresence>
         {isLoadingRecipe && (
           <motion.div
