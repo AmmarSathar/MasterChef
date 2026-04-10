@@ -140,17 +140,22 @@ describe("CalendarContent", () => {
     expect(screen.getByTestId("calendar-day-view")).toBeInTheDocument();
   });
 
-  it("Back button in day view returns to calendar view", async () => {
-    render(<CalendarContent />);
-    await waitFor(() => expect(document.querySelectorAll(".day-col").length).toBe(7));
+it("Back button in day view returns to calendar view", async () => {
+  render(<CalendarContent />);
+  await waitFor(() => expect(document.querySelectorAll(".day-col").length).toBe(7));
 
-    const firstDayCol = document.querySelector(".day-col") as HTMLElement;
-    fireEvent.click(firstDayCol!);
-    expect(screen.getByTestId("calendar-day-view")).toBeInTheDocument();
+  const firstDayCol = document.querySelector(".day-col") as HTMLElement;
+  fireEvent.click(firstDayCol!);
+  expect(screen.getByTestId("calendar-day-view")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /back/i }));
-    await waitFor(() => expect(document.querySelectorAll(".day-col")).toHaveLength(7));
-  });
+  fireEvent.click(screen.getByRole("button", { name: /back/i }));
+  
+  // Wait for the day view to disappear first
+  await waitFor(() => expect(screen.queryByTestId("calendar-day-view")).not.toBeInTheDocument());
+  
+  // Then verify the week view is back
+  await waitFor(() => expect(document.querySelectorAll(".day-col")).toHaveLength(7));
+});
 
   it("CalendarPicker day pick switches active filter back to weekly", () => {
     render(<CalendarContent />);
