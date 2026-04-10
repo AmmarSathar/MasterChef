@@ -11,14 +11,11 @@ import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
 import { CalendarPicker } from "./calendar/CalendarPicker";
 import {
   emptyCalendarDay,
+  fetchCalendarWeek,
+  toSundayIso,
   type CalendarDayData,
   type CalendarSlotEntry,
 } from "@/lib/api/calendar";
-import {
-  fetchMealPlanWeek,
-  toMondayIso,
-  type DayName,
-} from "@/lib/api/meal-plan";
 import {
   Avatar,
   AvatarImage,
@@ -78,29 +75,6 @@ const getMonthGridDates = (baseDate: Date): Date[] => {
 const getYearDates = (baseDate: Date): Date[] =>
   Array.from({ length: 12 }, (_, i) => new Date(baseDate.getFullYear(), i, 1));
 
-const DAYNAME_BY_GETDAY: DayName[] = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const toEntry = (
-  days: Record<string, Record<string, CalendarSlotEntry[]>>,
-  date: Date,
-): CalendarDayData => {
-  const dayName = DAYNAME_BY_GETDAY[date.getDay()];
-  const daySlots = days[dayName];
-  return {
-    breakfast: (daySlots?.breakfast?.[0] as CalendarSlotEntry) ?? null,
-    lunch: (daySlots?.lunch?.[0] as CalendarSlotEntry) ?? null,
-    dinner: (daySlots?.dinner?.[0] as CalendarSlotEntry) ?? null,
-  };
-};
-
 const yearVariants = {
   enter: (dir: number) => ({ x: dir * 24, opacity: 0 }),
   center: { x: 0, opacity: 1 },
@@ -146,57 +120,43 @@ export function CalendarContent() {
     }
   };
 
-  // Fetch meal plan data whenever the view or date changes.
+  // Fetch actual calendar assignments whenever the view or date changes.
+  // Skip re-fetching when entering day view — the data is already loaded from
+  // the weekly view, and a background re-fetch would race with the user's
+  // recipe selection and overwrite it.
   useEffect(() => {
+    if (viewMode === "day") return;
+
     setLoading(true);
 
     if (activeTimeFilter === "monthly") {
-      // Fetch all weeks covering the displayed month grid (42 dates).
+      // Fetch all calendar weeks covering the displayed month grid (42 dates).
       const monthDates = getMonthGridDates(selectedDate);
-      const uniqueMondays = [...new Set(monthDates.map((d) => toMondayIso(d)))];
+      const uniqueSundays = [...new Set(monthDates.map((d) => toSundayIso(d)))];
 
-      Promise.all(uniqueMondays.map((monday) => fetchMealPlanWeek(monday)))
+      Promise.all(uniqueSundays.map((sunday) => fetchCalendarWeek(sunday)))
         .then((results) => {
-          const result: Record<string, CalendarDayData> = {};
-          for (const date of monthDates) {
-            const mondayIso = toMondayIso(date);
-            const idx = uniqueMondays.indexOf(mondayIso);
-            if (idx === -1) continue;
-            result[toDateKey(date)] = toEntry(results[idx].days as never, date);
-          }
-          setCalendarDays((prev) => ({ ...prev, ...result }));
+          setCalendarDays((prev) => {
+            const next = { ...prev };
+            for (const data of results) {
+              Object.assign(next, data.days);
+            }
+            return next;
+          });
         })
         .catch(console.error)
         .finally(() => setLoading(false));
       return;
     }
 
-    // Weekly fetch: calendar week is Sun–Sat; meal plan week is Mon–Sun.
-    // Sunday belongs to the *previous* Monday-based week, so fetch two weeks.
-    const calWeek = getWeekDates(selectedDate);
-    const sundayDate = calWeek[0];
-    const mondayDate = calWeek[1];
-    const prevMondayIso = toMondayIso(sundayDate);
-    const mainMondayIso = toMondayIso(mondayDate);
-
-    Promise.all([
-      fetchMealPlanWeek(prevMondayIso),
-      fetchMealPlanWeek(mainMondayIso),
-    ])
-      .then(([prevData, mainData]) => {
-        const result: Record<string, CalendarDayData> = {};
-        result[toDateKey(sundayDate)] = toEntry(
-          prevData.days as never,
-          sundayDate,
-        );
-        calWeek.slice(1).forEach((date) => {
-          result[toDateKey(date)] = toEntry(mainData.days as never, date);
-        });
-        setCalendarDays(result);
+    // Weekly fetch: one fetchCalendarWeek call covers the full Sun–Sat week.
+    fetchCalendarWeek(toSundayIso(selectedDate))
+      .then((data) => {
+        setCalendarDays(data.days);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedDate, activeTimeFilter]);
+  }, [selectedDate, activeTimeFilter, viewMode]);
 
   const displayedDates = useMemo(() => {
     if (activeTimeFilter === "weekly") return getWeekDates(selectedDate);
