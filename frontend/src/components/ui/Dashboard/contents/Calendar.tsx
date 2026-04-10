@@ -35,7 +35,7 @@ const toDateKey = (date: Date): string => {
 
 const getWeekDates = (baseDate: Date): Date[] => {
   const start = new Date(baseDate);
-  start.setDate(baseDate.getDate() - baseDate.getDay());
+  start.setDate(baseDate.getDate() - baseDate.getDay()); // roll back to Sunday
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
