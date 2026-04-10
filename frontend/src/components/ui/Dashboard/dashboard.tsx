@@ -24,10 +24,11 @@ import {
 } from "./contents/DashboardMain";
 import { SettingsTitle, SettingsContent } from "./contents/Settings";
 import { RecipeTitle, RecipeContent } from "./contents/RecipeForm";
-import SearchContainer from "./SearchModal";
 import { MealsTitle, MealsContent } from "./contents/Meals";
+import { CalendarTitle, CalendarContent } from "./contents/Calendar";
+import SearchContainer from "./SearchModal";
 
-type DashboardRouteKey = "main" | "settings" | "meals" | "recipe";
+type DashboardRouteKey = "main" | "settings" | "meals" | "recipe" | "calendar";
 
 const dashboardRoutes: Record<
   DashboardRouteKey,
@@ -49,6 +50,10 @@ const dashboardRoutes: Record<
     Title: RecipeTitle,
     Content: RecipeContent,
   },
+  calendar: {
+    Title: CalendarTitle,
+    Content: CalendarContent,
+  },
 }; 
 
 export default function Dashboard() {
@@ -67,8 +72,10 @@ export default function Dashboard() {
   const parseHashRoute = (hashValue: string): DashboardRouteKey => {
     const raw = hashValue.startsWith("#") ? hashValue.slice(1) : hashValue;
     const route = raw.split("?")[0];
-    if (route === "main" || route === "settings" || route === "recipe" || route === "meals")
+    if (route === "main" || route === "settings" || route === "recipe" || route === "meals" || route === "calendar")
       return route as DashboardRouteKey;
+
+    console.log("passed there")
     return "main";
   };
 
@@ -181,15 +188,7 @@ export default function Dashboard() {
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings" || activeDashboard === "meals" || activeDashboard === "recipe") {
-                  handleDashboardChange("main");
-                  return;
-                } else if (activeDashboard === "main") {
-                  navigate(lastPage);
-                  return;
-                }
-
-                handleDashboardChange("main");
+                window.history.back();
               }}
               className="header-return w-12 h-12 rounded-full bg-input/80 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-input hover:border-border/60 transition-all duration-300 cursor-pointer"
             >

@@ -126,12 +126,12 @@ describe("MealPlanEntry service", () => {
     expect(entryInDb?.recipeId.toString()).toBe(recipe._id.toString()); // Entry should be associated with correct recipe
   });
 
-  it("prevents duplicate assignment to the same slot with a 409 error", async () => {
+  it("allows up to 3 recipes per slot and rejects a 4th with 409", async () => {
 
     // Create a user
     const user = await User.create({
-      email: "duplicate-slot@example.com",
-      name: "Duplicate Slot User",
+      email: "max-slot@example.com",
+      name: "Max Slot User",
       passwordHash: "hashed-password",
     });
 
@@ -141,37 +141,38 @@ describe("MealPlanEntry service", () => {
       weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
     });
 
-    // Create two recipes for that user
-    const recipe1 = await createTestRecipe(user._id, {
-      title: "Test Recipe 1",
-    });
+    // Create four distinct recipes
+    const recipes = await Promise.all(
+      [1, 2, 3, 4].map((n) =>
+        createTestRecipe(user._id, { title: `Slot Recipe ${n}` })
+      )
+    );
 
-    const recipe2 = await createTestRecipe(user._id, {
-      title: "Test Recipe 2",
-    });
+    // Assign first three — all should succeed
+    for (let i = 0; i < 3; i++) {
+      await expect(
+        createMealPlanEntry({
+          mealPlanId: mealPlan._id.toString(),
+          userId: user._id.toString(),
+          dayOfWeek: "Monday",
+          mealType: "breakfast",
+          recipeId: recipes[i]._id.toString(),
+          notes: `Recipe ${i + 1}`,
+        })
+      ).resolves.toBeTruthy();
+    }
 
-    // Assign the first recipe to Monday breakfast
-    await createMealPlanEntry({
-      mealPlanId: mealPlan._id.toString(),
-      userId: user._id.toString(),
-      dayOfWeek: "Monday",
-      mealType: "breakfast",
-      recipeId: recipe1._id.toString(),
-      notes: "First recipe",
-    });
-
-    // Attempt to assign the second recipe to the same Monday breakfast slot (should fail with 409)
+    // Fourth assignment to the same slot must fail with 409
     await expect(
       createMealPlanEntry({
         mealPlanId: mealPlan._id.toString(),
         userId: user._id.toString(),
         dayOfWeek: "Monday",
         mealType: "breakfast",
-        recipeId: recipe2._id.toString(),
-        notes: "Duplicate slot attempt",
+        recipeId: recipes[3]._id.toString(),
+        notes: "Over the limit",
       })
     ).rejects.toMatchObject({
-      message: "A recipe is already assigned to this slot",
       statusCode: 409,
     });
   });

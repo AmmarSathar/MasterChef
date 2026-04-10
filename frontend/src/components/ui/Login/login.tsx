@@ -87,7 +87,7 @@ export default function Login() {
       setIsLogin(true);
     }
 
-    if (user && user.isCustomized) {
+    if (user && user.isCustomized && !loading) {
       navigate("/dashboard");
       return;
     } else if (user) {

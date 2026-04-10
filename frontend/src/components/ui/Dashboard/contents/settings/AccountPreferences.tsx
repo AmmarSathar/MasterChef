@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 
 export default function AccountPreferences() {
-  const { user, setUser, loading } = useUser();
+  const { user, refetchUser, loading } = useUser();
 
   const [weight, setWeight] = useState(user?.weight);
   const [height, setHeight] = useState(user?.height);
@@ -148,7 +148,7 @@ export default function AccountPreferences() {
       );
       const updatedUser = res.data.user;
 
-      setUser(updatedUser);
+      refetchUser();
 
       toast.dismiss(loadingToast);
       toast.success("Successfully saved\nLet's start cooking!");

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import {
   createMealPlan as createMealPlanService,
   getMealPlanById as getMealPlanByIdService,
+  getOrCreateMealPlanByWeek as getOrCreateMealPlanByWeekService,
   createMealPlanEntry as createMealPlanEntryService,
   deleteMealPlanEntry as deleteMealPlanEntryService,
   updateMealPlanEntry as updateMealPlanEntryService,
@@ -101,6 +102,22 @@ export async function updateMealPlanEntry(
       notes,
     });
 
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getMealPlanByWeek(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const weekStartDate = req.params.date as string;
+    const userId = (req as AuthenticatedRequest).session.user.id;
+
+    const result = await getOrCreateMealPlanByWeekService(userId, weekStartDate);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);

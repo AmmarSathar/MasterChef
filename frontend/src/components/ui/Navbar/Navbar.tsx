@@ -25,7 +25,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [selectedBtn, setSelectedBtn] = React.useState<string>("");
+  const [selectedBtn, setSelectedBtn] = React.useState<
+    "nav-main" | "nav-meals" | "nav-recipes" | "nav-settings" | "nav-calendar"
+  >("nav-main");
   const [isMoreOpen, setIsMoreOpen] = React.useState<boolean>(false);
   const [showMoreButton, setShowMoreButton] = React.useState<boolean>(false);
 
@@ -48,19 +50,60 @@ export default function Navbar() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const goToRecipePage = () => {
-    if (!userConnected) {
+  const goToDashboardPage = (
+    e: React.MouseEvent,
+    hash: string,
+    verifyConnexion: boolean,
+  ) => {
+    if (!userConnected && verifyConnexion) {
       navigate("/login");
       return;
     }
-    navigate("/dashboard");
-    window.location.hash = "recipe";
-    setSelectedBtn("nav-upload");
+
+    const btnLabel = e.currentTarget.ariaLabel as
+      | "Dashboard"
+      | "Calendar"
+      | "Recipes"
+      | "Meals"
+      | "Settings";
+
+    const buttonMap: Record<
+      "Dashboard" | "Calendar" | "Recipes" | "Meals" | "Settings",
+      "nav-main" | "nav-meals" | "nav-recipes" | "nav-settings" | "nav-calendar"
+    > = {
+      Dashboard: "nav-main",
+      Calendar: "nav-calendar",
+      Recipes: "nav-recipes",
+      Meals: "nav-meals",
+      Settings: "nav-settings",
+    };
+
+    if (window.location.pathname !== "/dashboard") {
+      navigate(`/dashboard#${hash}`);
+    } else {
+      window.location.hash = hash;
+    }
+    setSelectedBtn(buttonMap[btnLabel]);
     setIsMoreOpen(false);
   };
 
+  const logoutUser = () => {
+    setIsMoreOpen(false);
+
+    if (user) {
+      if (location.pathname === "/login") {
+        navigate("/");
+      } else {
+        navigate("/login");
+      }
+    }
+
+    setSelectedBtn("nav-main");
+    logout();
+  };
+
   return (
-    <div className="navbar-parent-container w-screen h-screen flex items-center justify-baseline pointer-events-none absolute top-0 left-0">
+    <div className="navbar-parent-container w-screen h-screen min-h-155 flex items-center justify-baseline pointer-events-none absolute top-0 left-0 transition-all duration-1000 ease-out-expo">
       <nav className="md:h-full w-30 max-md:w-screen max-md:hidden max-md:h-10 flex relative max-md:left-0 max-md:my-10 max-md:mx-0 items-center pointer-events-auto justify-center p-3 m-0 text-foreground z-50">
         <div className="w-full h-full py-8 p-4 pointer-events-auto transition-all duration-400 delay-100 ease-out bg-card/70 hover:bg-card rounded-3xl flex flex-col items-center justify-between gap-3 relative shadow-xl border border-border">
           <div className="flex flex-col items-center gap-3 z-20">
@@ -71,18 +114,9 @@ export default function Navbar() {
 
           <div className="flex flex-col items-center gap-6 flex-1 justify-center z-20">
             <button
-              onClick={() => {
-                if (!userConnected) {
-                  navigate("/login");
-                  return;
-                }
-
-                navigate("/dashboard");
-                window.location.hash = "main";
-                setSelectedBtn("nav-dashboard");
-              }}
+              onClick={(e) => goToDashboardPage(e, "main", true)}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                selectedBtn === "nav-dashboard"
+                selectedBtn === "nav-main"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
@@ -90,10 +124,10 @@ export default function Navbar() {
               aria-label="Dashboard"
             >
               <LayoutGrid
-                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-main" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
               <span
-                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-main" ? "text-primary-foreground" : "text-muted-foreground"}`}
               >
                 Home
               </span>
@@ -103,12 +137,9 @@ export default function Navbar() {
               <>
                 <button
                   disabled={!userConnected}
-                  onClick={() => {
-                    setSelectedBtn("nav-saved");
-                    setIsMoreOpen(false);
-                  }}
+                  onClick={(e) => goToDashboardPage(e, "calendar", true)}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-saved"
+                    selectedBtn === "nav-calendar"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
@@ -116,10 +147,10 @@ export default function Navbar() {
                   aria-label="Calendar"
                 >
                   <Calendar
-                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
                   <span
-                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     Calendar
                   </span>
@@ -127,9 +158,9 @@ export default function Navbar() {
 
                 <button
                   disabled={!userConnected}
-                  onClick={goToRecipePage}
+                  onClick={(e) => goToDashboardPage(e, "recipe", true)}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-upload"
+                    selectedBtn === "nav-recipes"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
@@ -137,26 +168,17 @@ export default function Navbar() {
                   aria-label="Recipes"
                 >
                   <FileText
-                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
                   <span
-                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     Recipes
                   </span>
                 </button>
                 <button
                   disabled={!userConnected}
-                  onClick={() => {
-                    if (!userConnected) {
-                      navigate("/login");
-                      return;
-                    }
-                    navigate("/dashboard");
-                    window.location.hash = "meals";
-                    setSelectedBtn("nav-meals");
-                    setIsMoreOpen(false);
-                  }}
+                  onClick={(e) => goToDashboardPage(e, "meals", true)}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                     selectedBtn === "nav-meals"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -175,7 +197,7 @@ export default function Navbar() {
                   </span>
                 </button>
 
-                <button
+                {/* <button
                   disabled={!userConnected}
                   onClick={() => {
                     setSelectedBtn("nav-tv");
@@ -197,9 +219,9 @@ export default function Navbar() {
                   >
                     Media
                   </span>
-                </button>
+                </button> */}
 
-                <button
+                {/* <button
                   onClick={() => {
                     setSelectedBtn("nav-idk");
                     setIsMoreOpen(false);
@@ -220,7 +242,7 @@ export default function Navbar() {
                   >
                     Stats
                   </span>
-                </button>
+                </button> */}
               </>
             )}
 
@@ -229,11 +251,11 @@ export default function Navbar() {
                 <button
                   disabled={!userConnected}
                   onClick={() => {
-                    setSelectedBtn("nav-saved");
+                    setSelectedBtn("nav-calendar");
                     setIsMoreOpen(false);
                   }}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-saved"
+                    selectedBtn === "nav-calendar"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
@@ -241,10 +263,10 @@ export default function Navbar() {
                   aria-label="Calendar"
                 >
                   <Calendar
-                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
                   <span
-                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     Calendar
                   </span>
@@ -274,15 +296,7 @@ export default function Navbar() {
 
           <div className="flex flex-col items-center gap-3 z-20">
             <button
-              onClick={() => {
-                if (!userConnected) {
-                  navigate("/login");
-                  return;
-                }
-                navigate("/dashboard");
-                window.location.hash = "settings";
-                setSelectedBtn("nav-settings");
-              }}
+              onClick={(e) => goToDashboardPage(e, "settings", true)}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-settings"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -304,21 +318,7 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
             <button
-              onClick={() => {
-                console.log("pressed");
-                setIsMoreOpen(false);
-
-                if (user) {
-                  if (location.pathname === "/login") {
-                    navigate("/");
-                  } else {
-                    navigate("/login");
-                  }
-                }
-
-                setSelectedBtn("");
-                logout();
-              }}
+              onClick={logoutUser}
               disabled={false}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 bg-secondary hover:bg-muted`}
               aria-label="Logout"
@@ -342,9 +342,9 @@ export default function Navbar() {
           <div className="py-8 p-4 bg-card/70 backdrop-blur-sm rounded-3xl flex flex-col items-center gap-6 shadow-xl border border-border">
             <button
               disabled={!userConnected}
-              onClick={goToRecipePage}
+              onClick={(e) => goToDashboardPage(e, "recipe", true)}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                selectedBtn === "nav-upload"
+                selectedBtn === "nav-recipes"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
@@ -352,25 +352,17 @@ export default function Navbar() {
               aria-label="Recipes"
             >
               <FileText
-                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
               <span
-                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
               >
                 Recipes
               </span>
             </button>
             <button
               disabled={!userConnected}
-              onClick={() => {
-                if (!userConnected) {
-                  navigate("/login");
-                  return;
-                }
-                navigate("/dashboard");
-                window.location.hash = "meals";
-                setSelectedBtn("nav-meals");
-              }}
+              onClick={(e) => goToDashboardPage(e, "meals", true)}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
                 selectedBtn === "nav-meals"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
@@ -389,7 +381,7 @@ export default function Navbar() {
               </span>
             </button>
 
-            <button
+            {/* <button
               disabled={!userConnected}
               onClick={() => {
                 setSelectedBtn("nav-tv");
@@ -410,9 +402,9 @@ export default function Navbar() {
               >
                 Media
               </span>
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={() => {
                 setSelectedBtn("nav-idk");
               }}
@@ -432,7 +424,7 @@ export default function Navbar() {
               >
                 Stats
               </span>
-            </button>
+            </button> */}
           </div>
         </div>
       </nav>

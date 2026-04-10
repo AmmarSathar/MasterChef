@@ -457,7 +457,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
                         {recipe.imageUrl ? (
                           <img
                             src={recipe.imageUrl}
-                            alt={recipe.title}
+                            
                             className="w-20 h-20 rounded-xl object-cover shrink-0 shadow-md shadow-border/20 pointer-events-none"
                           />
                         ) : (

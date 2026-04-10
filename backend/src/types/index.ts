@@ -150,8 +150,12 @@ export interface RecommendationResult {
 import type { DayOfWeek, MealType } from "@masterchef/shared/constants";
 
 export interface MealSlot {
+  entryId: string;
   recipeId: string;
   title: string;
+  description: string;
+  imageUrl: string;
+  cookingTime: number;
   notes: string;
 }
 
@@ -163,7 +167,8 @@ export interface CreateMealPlanInput {
 export interface MealPlanResponse {
   id: string;
   weekStartDate: Date;
-  days: Record<DayOfWeek, Record<MealType, MealSlot | null>>;
+  // Each slot holds an ordered pool of up to 3 recipe options (empty array = no options assigned)
+  days: Record<DayOfWeek, Record<MealType, MealSlot[]>>;
 }
 
 export interface CreateMealPlanEntryInput {
@@ -188,6 +193,39 @@ export interface MealPlanEntryResponse {
 export interface UpdateMealPlanEntryInput {
   entryId: string;
   userId: string;
+  recipeId: string;
+  notes?: string;
+}
+
+// ── Calendar types ─────────────────────────────────────────────
+
+import type { CalendarMealType } from "../models/calendar-entry.model.js";
+
+/** A finalized recipe assignment for one slot on one day */
+export interface CalendarEntrySlot {
+  entryId: string;
+  recipeId: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  cookingTime: number;
+  notes: string;
+}
+
+/**
+ * Response for a calendar week.
+ * days is keyed by ISO date string (yyyy-mm-dd), Sunday through Saturday.
+ * Each day has breakfast, lunch, dinner — null means no assignment yet.
+ */
+export interface CalendarWeekResponse {
+  weekStartDate: string; // ISO date of the Sunday starting the week
+  days: Record<string, Record<CalendarMealType, CalendarEntrySlot | null>>;
+}
+
+export interface UpsertCalendarEntryInput {
+  userId: string;
+  dateStr: string;
+  mealType: CalendarMealType;
   recipeId: string;
   notes?: string;
 }

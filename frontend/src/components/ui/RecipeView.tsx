@@ -108,7 +108,6 @@ export default function RecipeView({
           {recipe.imageUrl ? (
             <img
               src={recipe.imageUrl}
-              alt={recipe.title}
               className="w-full h-full object-cover brightness-95 contrast-95"
               style={{
                 maskImage:

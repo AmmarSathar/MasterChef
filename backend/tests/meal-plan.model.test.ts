@@ -151,8 +151,8 @@ describe("MealPlan model", () => {
     expect(foundEntry?.notes).toBe("Oatmeal with berries");
   });
 
-  it("prevents duplicate meal plan entries with the same composite ID { mealPlanId, dayOfWeek, mealType }", async () => {
-    
+  it("allows multiple meal plan entries for the same slot (no unique index)", async () => {
+
     // Create a user
     const user = await User.create({
       email: "duplicateentry@example.com",
@@ -166,7 +166,7 @@ describe("MealPlan model", () => {
       weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
     });
 
-    // Create an entry for this meal plan
+    // Create first entry
     await MealPlanEntry.create({
       mealPlanId: mealPlan._id,
       dayOfWeek: "Monday",
@@ -175,18 +175,18 @@ describe("MealPlan model", () => {
       notes: "First breakfast entry",
     });
 
-    // Attempt to create a duplicate entry with the same composite ID
-    await expect(
-      MealPlanEntry.create({
-        mealPlanId: mealPlan._id,
-        dayOfWeek: "Monday",
-        mealType: "breakfast",
-        recipeId: new mongoose.Types.ObjectId(),
-        notes: "Duplicate breakfast entry",
-      })
-    ).rejects.toMatchObject({
-      code: 11000, // MongoDB duplicate key error code
+    // A second entry for the same slot should succeed (no unique index enforced at DB level)
+    const second = await MealPlanEntry.create({
+      mealPlanId: mealPlan._id,
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: new mongoose.Types.ObjectId(),
+      notes: "Second breakfast entry",
     });
+
+    expect(second).not.toBeNull();
+    const count = await MealPlanEntry.countDocuments({ mealPlanId: mealPlan._id, dayOfWeek: "Monday", mealType: "breakfast" });
+    expect(count).toBe(2);
   });
 
   it("associates a meal plan with the correct user", async () => {
@@ -273,7 +273,7 @@ describe("MealPlan model", () => {
       .rejects.toMatchObject({ statusCode: 404 });
   });                                                                                       
                                                                                          
-  it("returns null slots when meal plan has no entries", async () => {
+  it("returns empty array slots when meal plan has no entries", async () => {
     
     // Create a user
     const user = await User.create({
@@ -288,8 +288,8 @@ describe("MealPlan model", () => {
       weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
     });
 
-    const result = await getMealPlanById(mealPlan._id.toString()); // Fetch meal plan using service function (should return null for all meal slots)
-    expect(result.days.Monday.breakfast).toBeNull(); // Check that breakfast slot for Monday is null
+    const result = await getMealPlanById(mealPlan._id.toString()); // Fetch meal plan using service function (should return empty array for all meal slots)
+    expect(result.days.Monday.breakfast).toEqual([]); // Empty slots return [] not null
   });
 
 });

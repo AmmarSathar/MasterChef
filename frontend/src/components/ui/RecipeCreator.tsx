@@ -55,7 +55,7 @@ const INITIAL_INGREDIENTS: Ingredient[] = [
 ];
 const INITIAL_STEPS: Step[] = [{ id: "1", content: "" }];
 
-const UNITS = ["g", "kg", "ml", "L", "tsp"];
+const UNITS = ["u", "g", "kg", "ml", "L", "tsp"];
 
 interface RecipeCreatorProps {
   onFinish: (data: Recipe) => void;
@@ -118,9 +118,9 @@ export default function RecipeCreator({
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const [selectedDietaryTags, setSelectedDietaryTags] = useState<DietaryOption[]>(
-    initialData?.dietaryTags ?? []
-  );
+  const [selectedDietaryTags, setSelectedDietaryTags] = useState<
+    DietaryOption[]
+  >(initialData?.dietaryTags ?? []);
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -133,7 +133,7 @@ export default function RecipeCreator({
     setSelectedDietaryTags((prevTags) =>
       checked
         ? Array.from(new Set([...prevTags, tag]))
-        : prevTags.filter((t) => t !== tag)
+        : prevTags.filter((t) => t !== tag),
     );
   };
 
@@ -255,6 +255,7 @@ export default function RecipeCreator({
       containsAllergens: [],
       id: initialData?.id ?? "",
       createdAt: new Date(),
+      updatedAt: new Date(),
       createdBy: user?.id ?? "system",
     });
   };
@@ -337,7 +338,7 @@ export default function RecipeCreator({
                 value={formData.title}
                 onChange={(e) => handleFormChange("title", e.target.value)}
                 rows={1}
-                className="outline-none transition-all duration-200 rounded-xl min-h-20 p-2 w-full bg-none text-4xl leading-tight font-bold text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden break-words whitespace-pre-wrap"
+                className="outline-none transition-all duration-200 rounded-xl p-2 py-4 focus:pl-5 mb-1 w-full bg-none text-4xl leading-tight font-bold text-foreground/60 focus:text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden break-words whitespace-pre-wrap"
               />
 
               <p className="text-sm text-accent/70 mt-0.5">
@@ -349,9 +350,9 @@ export default function RecipeCreator({
             <Button
               onClick={onClose}
               disabled={formDisabled}
-              className="p-2 h-10 w-10 shrink-0 rounded-full bg-transparent hover:bg-secondary text-foreground opacity-55 hover:opacity-100 transition-all duration-300 cursor-pointer"
+              className="p-2 h-10 w-10 relative flex rounded-full bg-transparent hover:bg-secondary text-foreground opacity-55 hover:opacity-100 transition-all duration-300 cursor-pointer"
             >
-              <X size={20} />
+              <X size={20} className="font-bold" />
             </Button>
           </div>
 
@@ -855,35 +856,6 @@ export default function RecipeCreator({
             </div>
 
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between rounded-xl border border-border/40 bg-input/20 px-4 py-3">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">
-                    Share with other users
-                  </span>
-                  <span className="text-xs text-foreground/60">
-                    When off, this recipe stays private and is hidden from global search.
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  disabled={formDisabled}
-                  onClick={() =>
-                    handleFormChange("isShared", !Boolean(formData.isShared))
-                  }
-                  className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
-                    formData.isShared ? "bg-primary" : "bg-secondary"
-                  } ${formDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                  aria-label="Toggle recipe sharing"
-                  aria-pressed={Boolean(formData.isShared)}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
-                      formData.isShared ? "translate-x-7" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
               <div className="flex flex-col gap-3">
                 <span className="text-base font-semibold text-foreground">
                   Dietary Tags
@@ -915,7 +887,37 @@ export default function RecipeCreator({
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/30">
+              <div className="flex items-center justify-between rounded-xl border border-border/40 bg-input/20 px-4 py-3 my-5">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-foreground">
+                    Share with other users
+                  </span>
+                  <span className="text-xs text-foreground/60">
+                    When off, this recipe stays private and is hidden from
+                    global search.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={formDisabled}
+                  onClick={() =>
+                    handleFormChange("isShared", !Boolean(formData.isShared))
+                  }
+                  className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
+                    formData.isShared ? "bg-primary" : "bg-secondary"
+                  } ${formDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  aria-label="Toggle recipe sharing"
+                  aria-pressed={Boolean(formData.isShared)}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200 ${
+                      formData.isShared ? "translate-x-7" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-5 border-t border-border/30">
                 <Button
                   type="button"
                   disabled={formDisabled}

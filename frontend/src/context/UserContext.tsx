@@ -9,8 +9,7 @@ import { User } from "@masterchef/shared/types/user";
 
 export interface UserContextType {
   user: User | null;
-  // setUser is kept for compatibility — it triggers a session refresh
-  setUser: (user: User | null) => void;
+  refetchUser: () => void;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -28,14 +27,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     await authClient.signOut();
   };
 
-  // After profile updates, components call setUser to refresh the displayed data.
+  // After profile updates, components call refetchUser to refresh the displayed data.
   // With BetterAuth sessions we just re-fetch — the server has the updated user.
-  const setUser = (_updatedUser: User | null) => {
-    refetch();
-  };
+  const refetchUser = refetch;
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout, loading }}>
+    <UserContext.Provider value={{ user, refetchUser, logout, loading }}>
       {children}
     </UserContext.Provider>
   );

@@ -27,7 +27,7 @@ interface CustomizeProps {
 
 export default function Customize({ ready }: CustomizeProps) {
   const navigate = useNavigate();
-  const { user: contextUser, setUser } = useUser();
+  const { user: contextUser, refetchUser } = useUser();
 
   const [headerTransitioned, setHeaderTransitioned] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -137,7 +137,7 @@ export default function Customize({ ready }: CustomizeProps) {
       );
       const updatedUser = res.data.user;
 
-      setUser(updatedUser);
+      refetchUser();
 
       toast.dismiss(loadingToast);
       toast.success("Profile customization complete!\nLet's start cooking!");

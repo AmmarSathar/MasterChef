@@ -29,7 +29,7 @@ import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
 import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
 import Margherita from "@/lib/images/margherita.webp";
 
-import { Recipe, RecipeBase } from "@masterchef/shared";
+import { Recipe } from "@masterchef/shared";
 
 import { useUser } from "@/context/UserContext";
 
@@ -64,7 +64,6 @@ function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
     prepingTime: recipe.prepingTime ?? 0,
     cookingTime: recipe.cookingTime ?? 0,
     servings: recipe.servings ?? 1,
-    cost: 0,
     skillLevel: recipe.skillLevel ?? "beginner",
     dietaryTags: recipe.dietaryTags ?? [],
     isShared: recipe.isShared ?? true,
@@ -88,12 +87,52 @@ function SkillBars({ count }: { count: number }) {
   );
 }
 
+function RecipeCardSkeleton() {
+  return (
+    <div className="rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm">
+      {/* Image */}
+      <div className="w-full h-42 bg-muted animate-pulse" />
+      {/* Body */}
+      <div className="flex flex-col gap-2 px-3 py-3">
+        {/* Title */}
+        <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+        {/* Detail rows */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <div className="h-3 w-12 rounded bg-muted animate-pulse" />
+            <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+          </div>
+          <div className="h-3 w-14 rounded bg-muted animate-pulse" />
+        </div>
+        {/* Action buttons row */}
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex gap-2">
+            <div className="h-7 w-7 rounded-full bg-muted animate-pulse" />
+            <div className="h-7 w-7 rounded-full bg-muted animate-pulse" />
+          </div>
+          <div className="h-7 w-7 rounded-full bg-muted animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecipeGridSkeleton() {
+  return (
+    <div className="recipe-container grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-4 w-full pt-10">
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <RecipeCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
 export function RecipeTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Recipes</h1>;
 }
 
 export function RecipeContent() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -112,6 +151,7 @@ export function RecipeContent() {
     null,
   );
   const [isAddingToCollection, setIsAddingToCollection] = useState(false);
+  const [loadingRecipes, setLoadingRecipes] = useState(true);
 
   const [activeFilters, setActiveFilters] = useState<{
     mealType: string[];
@@ -145,6 +185,7 @@ export function RecipeContent() {
   useEffect(() => {
     async function load() {
       if (!currentUserId) return;
+      setLoadingRecipes(true);
       try {
         const params = new URLSearchParams();
         params.set("createdBy", currentUserId);
@@ -166,6 +207,8 @@ export function RecipeContent() {
         const msg =
           err instanceof Error ? err.message : "Could not load recipes";
         toast.error(msg);
+      } finally {
+        setLoadingRecipes(false);
       }
     }
     load();
@@ -193,7 +236,7 @@ export function RecipeContent() {
       return;
     }
 
-    const recipePayload: RecipeBase & {
+    const recipePayload: Partial<Recipe> & {
       dietaryTags?: string[];
       isShared?: boolean;
     } = {
@@ -202,7 +245,7 @@ export function RecipeContent() {
       ingredients: data.ingredients,
       steps: data.steps,
       cookingTime: data.cookingTime,
-      prepTime: data.prepingTime,
+      prepingTime: data.prepingTime,
       servings: data.servings,
       skillLevel: data.skillLevel,
       isShared: data.isShared ?? true,
@@ -578,9 +621,9 @@ export function RecipeContent() {
     ]);
   };
 
-  useEffect(() => {
-    if (recipes.length === 0) setExampleRecipes();
-  }, [recipes.length]);
+  // useEffect(() => {
+  //   if (recipes.length === 0 && !loading) setExampleRecipes();
+  // }, [recipes.length, loading]);
 
   const getRecipeIdFromHash = () => {
     const raw = window.location.hash.startsWith("#")
@@ -756,7 +799,6 @@ export function RecipeContent() {
   return (
     <div className="w-full h-full flex relative flex-col gap-10 overflow-hidden">
       <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4 overflow-hidden min-h-0">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-start justify-baseline">
             <div className="flex items-center justify-baseline gap-5">
@@ -807,10 +849,8 @@ export function RecipeContent() {
             </Button>
           </div>
         </div>
-
-        {/* Filter row */}
         <div
-          className={`filter-menu w-full flex flex-col gap-3 transition-all duration-300 ease-out ${
+          className={`filter-menu w-full flex flex-col gap-3 -mb-10 transition-all duration-300 ease-out ${
             filterOpen
               ? "opacity-100 mt-0 pointer-events-auto"
               : "opacity-0 -mt-14 pointer-events-none"
@@ -835,7 +875,7 @@ export function RecipeContent() {
             className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
             style={{ scrollbarWidth: "none" }}
           >
-            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+            <div className="shrink-0 flex flex-col gap-2 ">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
                 Meal Type
               </span>
@@ -862,7 +902,7 @@ export function RecipeContent() {
 
             <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+            <div className="shrink-0 flex flex-col gap-2 ">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
                 Skill Level
               </span>
@@ -889,7 +929,7 @@ export function RecipeContent() {
 
             <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            <div className="shrink-0 flex flex-col gap-2 min-w-max">
+            <div className="shrink-0 flex flex-col gap-2 ">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
                 Cooking Time
               </span>
@@ -917,31 +957,58 @@ export function RecipeContent() {
         </div>
 
         {/* Recipe list or empty state */}
-        {recipes.length === 0 || filteredRecipes.length === 0 ? (
-          <div className="no-recipe-container flex flex-col items-center justify-center gap-2 w-full flex-1 border-2 border-dashed border-border/30 rounded-lg -mt-40 pointer-events-none">
-            <Wind size={28} className="opacity-80" />
-            <span className="text-2xl text-center text-bold text-foreground/80">
-              There's.. Nothing to show here
-            </span>
-            <div className="text-center text-foreground/50 flex items-center justify-center gap-2">
-              <span className="text-sm">No recipes found</span>
-              <span className="text-xl mb-1">
-                {SAD_KAOMOJIS[Math.floor(Math.random() * SAD_KAOMOJIS.length)]}
+        <AnimatePresence mode="wait">
+          {loadingRecipes ? (
+            <motion.div
+              key="recipe-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <RecipeGridSkeleton />
+            </motion.div>
+          ) : recipes.length === 0 || filteredRecipes.length === 0 ? (
+            <motion.div
+              key="recipe-empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="no-recipe-container flex flex-col items-center justify-center gap-2 w-full flex-1 border-2 border-dashed border-border/30 rounded-lg -mt-40 pointer-events-none"
+            >
+              <Wind size={28} className="opacity-80" />
+              <span className="text-2xl text-center text-bold text-foreground/80">
+                There's.. Nothing to show here
               </span>
-            </div>
-          </div>
-        ) : (
-          <RecipeContainer
-            recipes={filteredRecipes}
-            currentUserId={currentUserId}
-            onEdit={handleStartEdit}
-            onDelete={handleRequestDelete}
-            onSelect={onRecipeSelect}
-            type="standard"
-          />
-        )}
+              <div className="text-center text-foreground/50 flex items-center justify-center gap-2">
+                <span className="text-sm">No recipes found</span>
+                <span className="text-xl mb-1">
+                  {SAD_KAOMOJIS[Math.floor(Math.random() * SAD_KAOMOJIS.length)]}
+                </span>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="recipe-content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col flex-1 min-h-0"
+            >
+              <RecipeContainer
+                recipes={filteredRecipes}
+                currentUserId={currentUserId}
+                onEdit={handleStartEdit}
+                onDelete={handleRequestDelete}
+                onSelect={onRecipeSelect}
+                type="standard"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      {/* Recipe Creator modal */}
       <AnimatePresence>
         {recipeCreateOpen && (
           <RecipeCreator
@@ -964,6 +1031,9 @@ export function RecipeContent() {
                     imageUrl: editingRecipe.imageUrl,
                     ingredients: editingRecipe.ingredients,
                     steps: editingRecipe.steps,
+                    updatedAt: editingRecipe.updatedAt,
+                    createdByName: editingRecipe.createdByName,
+                    cuisine: editingRecipe.cuisine,
                   }
                 : null
             }
@@ -972,7 +1042,6 @@ export function RecipeContent() {
           />
         )}
       </AnimatePresence>
-      {/* Recipe view modal */}
       <AnimatePresence
         onExitComplete={() => {
           if (pendingEditRecipe) {

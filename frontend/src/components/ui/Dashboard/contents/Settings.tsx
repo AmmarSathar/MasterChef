@@ -5,6 +5,9 @@ import toast from "react-hot-toast";
 
 import AccountSettings from "./settings/AccountSettings";
 import AccountPreferences from "./settings/AccountPreferences";
+import AppearanceSettings from "./settings/AppearanceSettings";
+import PrivacyPolicy from "./settings/PrivacyPolicy";
+import TermsOfService from "./settings/TermsOfService";
 import ProfilePictureChange from "@components/ui/ProfilePictureChange";
 import { Badge } from "@components/ui/badge";
 
@@ -33,7 +36,7 @@ export function SettingsTitle() {
 }
 
 export function SettingsContent() {
-  const { user, setUser, loading } = useUser();
+  const { user, refetchUser, loading } = useUser();
 
   const [busy, setbusy] = useState(true);
   const [selectedSetting, setSelectedSetting] = useState(null as string | null);
@@ -61,112 +64,19 @@ export function SettingsContent() {
       id: "appearance",
       title: "Appearance",
       icon: <Paintbrush size={20} className="" />,
-      content: (
-        <>
-          <div className="account-tab w-full h-60 bg-linear-to-br from-muted to-primary/30 flex flex-col gap-2 items-center justify-center rounded-2xl shadow-sm shadow-border">
-            <div className="account-pfp w-25 h-25 rounded-full p-1 flex items-center justify-center relative border-accent/60 border-3 shadow-sm shadow-border/30 hover:bg-foreground/20 hover:border-border/60 transition-all duration-300 pointer-events-none">
-              <UserIcon
-                size={20}
-                className="text-foreground/60 pointer-events-none"
-              />
-              <div className="modify-btn-overlay w-7 h-10 rotate-45 pointer-events-none rounded-full bg-linear-to-tl from-primary/80 to-primary/60 hover:bg-primary absolute -bottom-1 -right-1 flex items-center justify-center z-1">
-                <button className="w-7 h-10 rounded-full hover:-rotate-45 cursor-pointer transition-all duration-300 ease-out-cubic flex items-center justify-center pointer-events-auto relative z-2">
-                  <Pen
-                    size={14}
-                    className="text-white -rotate-30 pointer-events-none"
-                  />
-                </button>
-              </div>
-            </div>
-            <div className="account-details w-full flex items-center justify-center flex-col gap-0">
-              <span className="text-lg font-bold text-foreground text-center m-0 p-0">
-                Unknown User
-              </span>
-              <span className="text-sm text-foreground/50 brightness-150">
-                Email not available
-              </span>
-              <Badge className="login-badge flex px-2 py-1 mt-2 bg-destructive/30 border shadow-sm shadow-background font-bold tracking-wide text-foreground/70 text-[.65rem]">
-                Creation date unknown
-              </Badge>
-            </div>
-          </div>
-        </>
-      ),
+      content: <AppearanceSettings />,
     },
     {
       id: "privacy",
       title: "Privacy Policy",
       icon: <Shield size={20} className="" />,
-      content: (
-        <>
-          <div className="account-tab w-full h-60 bg-linear-to-br from-muted to-primary/30 flex flex-col gap-2 items-center justify-center rounded-2xl shadow-sm shadow-border">
-            <div className="account-pfp w-25 h-25 rounded-full p-1 flex items-center justify-center relative border-accent/60 border-3 shadow-sm shadow-border/30 hover:bg-foreground/20 hover:border-border/60 transition-all duration-300 pointer-events-none">
-              <UserIcon
-                size={20}
-                className="text-foreground/60 pointer-events-none"
-              />
-              <div className="modify-btn-overlay w-7 h-10 rotate-45 pointer-events-none rounded-full bg-linear-to-tl from-primary/80 to-primary/60 hover:bg-primary absolute -bottom-1 -right-1 flex items-center justify-center z-1">
-                <button
-                  onClick={() => {}}
-                  className="w-7 h-10 rounded-full hover:-rotate-45 cursor-pointer transition-all duration-300 ease-out-cubic flex items-center justify-center pointer-events-auto relative z-2"
-                >
-                  <Pen
-                    size={14}
-                    className="text-white -rotate-30 pointer-events-none"
-                  />
-                </button>
-              </div>
-            </div>
-            <div className="account-details w-full flex items-center justify-center flex-col gap-0">
-              <span className="text-lg font-bold text-foreground text-center m-0 p-0">
-                Unknown User
-              </span>
-              <span className="text-sm text-foreground/50 brightness-150">
-                Email not available
-              </span>
-              <Badge className="login-badge flex px-2 py-1 mt-2 bg-destructive/30 border shadow-sm shadow-background font-bold tracking-wide text-foreground/70 text-[.65rem]">
-                Creation date unknown
-              </Badge>
-            </div>
-          </div>
-        </>
-      ),
+      content: <PrivacyPolicy />,
     },
     {
       id: "terms",
       title: "Terms of Service",
       icon: <Users2 size={20} className="" />,
-      content: (
-        <>
-          <div className="account-tab w-full h-60 bg-linear-to-br from-muted to-primary/30 flex flex-col gap-2 items-center justify-center rounded-2xl shadow-sm shadow-border">
-            <div className="account-pfp w-25 h-25 rounded-full p-1 flex items-center justify-center relative border-accent/60 border-3 shadow-sm shadow-border/30 hover:bg-foreground/20 hover:border-border/60 transition-all duration-300 pointer-events-none">
-              <UserIcon
-                size={20}
-                className="text-foreground/60 pointer-events-none"
-              />
-              <div className="modify-btn-overlay w-7 h-10 rotate-45 pointer-events-none rounded-full bg-linear-to-tl from-primary/80 to-primary/60 hover:bg-primary absolute -bottom-1 -right-1 flex items-center justify-center z-1">
-                <button className="w-7 h-10 rounded-full hover:-rotate-45 cursor-pointer transition-all duration-300 ease-out-cubic flex items-center justify-center pointer-events-auto relative z-2">
-                  <Pen
-                    size={14}
-                    className="text-white -rotate-30 pointer-events-none"
-                  />
-                </button>
-              </div>
-            </div>
-            <div className="account-details w-full flex items-center justify-center flex-col gap-0">
-              <span className="text-lg font-bold text-foreground text-center m-0 p-0">
-                Unknown User
-              </span>
-              <span className="text-sm text-foreground/50 brightness-150">
-                Email not available
-              </span>
-              <Badge className="login-badge flex px-2 py-1 mt-2 bg-destructive/30 border shadow-sm shadow-background font-bold tracking-wide text-foreground/70 text-[.65rem]">
-                Creation date unknown
-              </Badge>
-            </div>
-          </div>
-        </>
-      ),
+      content: <TermsOfService />,
     },
   ];
 
@@ -190,7 +100,7 @@ export function SettingsContent() {
       const updatedUser = res.data.user;
 
       // Update the global user var
-      setUser(updatedUser);
+      refetchUser();
 
       toast.dismiss(loadingToast);
       toast.success("Account updated successfully!");

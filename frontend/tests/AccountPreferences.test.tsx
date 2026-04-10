@@ -42,7 +42,7 @@ describe("AccountPreferences", () => {
         skill_level: "beginner",
         cuisines_pref: [],
       },
-      setUser: mockSetUser,
+      refetchUser: mockSetUser,
       loading: false,
     });
   });
@@ -58,7 +58,7 @@ describe("AccountPreferences", () => {
         skill_level: "beginner",
         cuisines_pref: [],
       },
-      setUser: mockSetUser,
+      refetchUser: mockSetUser,
       loading: false,
     });
 

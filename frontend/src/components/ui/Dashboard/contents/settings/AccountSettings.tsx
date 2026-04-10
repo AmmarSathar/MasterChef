@@ -21,7 +21,7 @@ const PW_REQUIREMENTS = [
 ];
 
 export default function AccountSettings() {
-  const { user, setUser } = useUser();
+  const { user, refetchUser } = useUser();
   const [name, setName] = useState(user?.name);
   const [email, setEmail] = useState(user?.email);
   const [age, setAge] = useState(user?.age);
@@ -86,7 +86,7 @@ export default function AccountSettings() {
       );
       const updatedUser = res.data.user;
 
-      setUser(updatedUser);
+      refetchUser();
 
       toast.dismiss(loadingToast);
       toast.success("Successfully saved\nLet's start cooking!");

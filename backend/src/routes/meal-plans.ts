@@ -3,6 +3,7 @@ import { requireSession } from "../middleware/auth.middleware.js";
 import {
   createMealPlan,
   getMealPlanById,
+  getMealPlanByWeek,
   createMealPlanEntry,
   deleteMealPlanEntry,
   updateMealPlanEntry,
@@ -11,6 +12,8 @@ import {
 const router = Router();
 
 router.post("/", requireSession, createMealPlan);
+// Must be declared before /:id so "week" isn't matched as an ID param
+router.get("/week/:date", requireSession, getMealPlanByWeek);
 router.get("/:id", requireSession, getMealPlanById);
 router.post("/:id/entries", requireSession, createMealPlanEntry);
 router.put("/entries/:id", requireSession, updateMealPlanEntry);

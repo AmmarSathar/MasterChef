@@ -1,160 +1,97 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Clock4, Flame, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock4, MoreHorizontal, Plus } from "lucide-react";
+import {
+  type MealEntry,
+  type SlotName,
+  type DayName,
+  type WeekDays,
+  fetchMealPlanWeek,
+  removeMealPlanEntry,
+  toMondayIso,
+} from "@/lib/api/meal-plan";
+import MealPickerPanel from "./MealPickerPanel";
 
-const FALLBACK_IMAGES = {
-  beefTacos:
-    "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=300&q=80",
-  caesarSalad:
-    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=300&q=80",
-  carbonara:
-    "https://images.unsplash.com/photo-1588013273468-315fd88ea34c?auto=format&fit=crop&w=300&q=80",
-  chickenStirFry:
-    "https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=300&q=80",
-  chocolateCookie:
-    "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=300&q=80",
-  margherita:
-    "https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&w=300&q=80",
-};
+// ── Constants ─────────────────────────────────────────────────
 
-type MealItem = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  calories: string;
-  image: string;
-};
-
-type MealGroup = {
-  id: string;
-  label: string;
-  accentClass: string;
-  items: MealItem[];
-};
-
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const MEALS: MealGroup[] = [
-  {
-    id: "breakfast",
-    label: "Breakfast",
-    accentClass: "bg-accent/30 text-accent",
-    items: [
-      {
-        id: "b1",
-        title: "Morning Smoothie",
-        description: "Berry blend with oats and chia.",
-        time: "10 min",
-        calories: "240 kcal",
-        image: FALLBACK_IMAGES.chocolateCookie,
-      },
-      {
-        id: "b2",
-        title: "Avocado Toast",
-        description: "Sourdough, feta, lemon zest.",
-        time: "12 min",
-        calories: "320 kcal",
-        image: FALLBACK_IMAGES.margherita,
-      },
-      {
-        id: "b3",
-        title: "Greek Yogurt Bowl",
-        description: "Granola, honey, fresh berries.",
-        time: "8 min",
-        calories: "210 kcal",
-        image: FALLBACK_IMAGES.caesarSalad,
-      },
-    ],
-  },
-  {
-    id: "lunch",
-    label: "Lunch",
-    accentClass: "bg-primary/40 text-primary-foreground",
-    items: [
-      {
-        id: "l1",
-        title: "Chicken Stir Fry",
-        description: "Ginger garlic glaze, crisp veggies.",
-        time: "25 min",
-        calories: "540 kcal",
-        image: FALLBACK_IMAGES.chickenStirFry,
-      },
-      {
-        id: "l2",
-        title: "Caesar Salad",
-        description: "Romaine, parmesan, crunchy croutons.",
-        time: "15 min",
-        calories: "430 kcal",
-        image: FALLBACK_IMAGES.caesarSalad,
-      },
-      {
-        id: "l3",
-        title: "Beef Tacos",
-        description: "Spiced beef, fresh toppings.",
-        time: "20 min",
-        calories: "610 kcal",
-        image: FALLBACK_IMAGES.beefTacos,
-      },
-    ],
-  },
-  {
-    id: "dinner",
-    label: "Dinner",
-    accentClass: "bg-secondary/40 text-foreground",
-    items: [
-      {
-        id: "d1",
-        title: "Carbonara",
-        description: "Creamy pasta with pancetta.",
-        time: "30 min",
-        calories: "690 kcal",
-        image: FALLBACK_IMAGES.carbonara,
-      },
-      {
-        id: "d2",
-        title: "Margherita Pizza",
-        description: "Tomato, basil, fresh mozzarella.",
-        time: "28 min",
-        calories: "720 kcal",
-        image: FALLBACK_IMAGES.margherita,
-      },
-    ],
-  },
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const DAY_NAMES: DayName[] = [
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
 ];
+const SLOT_NAMES: SlotName[] = ["breakfast", "lunch", "dinner"];
+
+const SLOT_LABELS: Record<SlotName, string> = {
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
+};
+
+const SLOT_STYLES: Record<SlotName, string> = {
+  breakfast: "bg-accent/30 text-accent",
+  lunch: "bg-primary/40 text-primary-foreground",
+  dinner: "bg-secondary/40 text-foreground",
+};
+
+// ── Sync helpers ──────────────────────────────────────────────
+
+/** Maps each entryId to its current position in the week. */
+function buildPositionMap(
+  days: WeekDays
+): Record<string, { dayOfWeek: DayName; mealType: SlotName }> {
+  const map: Record<string, { dayOfWeek: DayName; mealType: SlotName }> = {};
+  for (const [day, slots] of Object.entries(days) as [DayName, Record<SlotName, MealEntry[]>][]) {
+    for (const [slot, entries] of Object.entries(slots) as [SlotName, MealEntry[]][]) {
+      for (const entry of entries) {
+        map[entry.entryId] = { dayOfWeek: day, mealType: slot };
+      }
+    }
+  }
+  return map;
+}
+
+function findEntryInDays(days: WeekDays, entryId: string): MealEntry | undefined {
+  for (const slots of Object.values(days)) {
+    for (const entries of Object.values(slots) as MealEntry[][]) {
+      const found = entries.find((e) => e.entryId === entryId);
+      if (found) return found;
+    }
+  }
+}
+
+// ── MealCard ──────────────────────────────────────────────────
 
 function MealCard({
-  item,
+  entry,
   isMenuOpen,
   onToggleMenu,
   onCloseMenu,
   onSeeRecipe,
-  draggable,
+  onRemove,
+  isDragging,
   onDragStart,
   onDragOver,
   onDrop,
   onDragEnd,
-  isDragging,
 }: {
-  item: MealItem;
+  entry: MealEntry;
   isMenuOpen: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
-  onSeeRecipe: (item: MealItem) => void;
-  draggable: boolean;
+  onSeeRecipe: () => void;
+  onRemove: () => void;
+  isDragging: boolean;
   onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
-  isDragging: boolean;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isMenuOpen) return;
-    const handleClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onCloseMenu();
       }
     };
@@ -166,7 +103,7 @@ function MealCard({
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 320, damping: 34 }}
-      draggable={draggable}
+      draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
@@ -175,40 +112,30 @@ function MealCard({
         isDragging ? "opacity-60 ring-2 ring-accent/40" : ""
       }`}
     >
+      {/* Context menu */}
       <div className="absolute top-4 right-4" ref={menuRef}>
         <Button
           variant="ghost"
           size="icon-sm"
           className="h-8 w-8 rounded-full text-foreground/60 hover:text-foreground"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleMenu();
-          }}
+          onClick={(e) => { e.stopPropagation(); onToggleMenu(); }}
         >
           <MoreHorizontal size={16} />
         </Button>
         {isMenuOpen && (
-          <div className="absolute right-0 mt-2 w-44 rounded-xl border border-border/60 bg-popover/95 shadow-lg backdrop-blur-sm">
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
-            >
+          <div className="absolute right-0 mt-2 w-44 rounded-xl border border-border/60 bg-popover/95 shadow-lg backdrop-blur-sm z-10">
+            <button type="button" className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors">
               Add to shopping list
             </button>
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
-            >
+            <button type="button" className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors">
               Mark as cooked
             </button>
-            <button
-              type="button"
-              className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors"
-            >
+            <button type="button" className="w-full px-3 py-2 text-left text-sm text-foreground/80 hover:bg-secondary/50 transition-colors">
               Replace meal
             </button>
             <button
               type="button"
+              onClick={onRemove}
               className="w-full px-3 py-2 text-left text-sm text-destructive/80 hover:bg-destructive/10 transition-colors"
             >
               Remove
@@ -216,36 +143,31 @@ function MealCard({
           </div>
         )}
       </div>
-      <div className="absolute -top-6 left-4 h-14 w-14 rounded-full border-4 border-card bg-secondary shadow-md">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="h-full w-full rounded-full object-cover"
-        />
+
+      {/* Thumbnail */}
+      <div className="absolute -top-6 left-4 h-14 w-14 rounded-full border-4 border-card bg-secondary shadow-md overflow-hidden">
+        {entry.imageUrl ? (
+          <img src={entry.imageUrl} alt={entry.title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-secondary" />
+        )}
       </div>
+
+      {/* Content */}
       <div className="flex flex-col gap-1.5 pt-2">
-        <h3 className="text-base font-semibold text-foreground">
-          {item.title}
-        </h3>
-        <p className="text-sm text-muted-foreground">{item.description}</p>
+        <h3 className="text-base font-semibold text-foreground">{entry.title}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-2">{entry.description}</p>
       </div>
-      <div className="flex items-center gap-4 text-xs text-foreground/60">
-        <span className="flex items-center gap-1">
+
+      {entry.cookingTime > 0 && (
+        <div className="flex items-center gap-1 text-xs text-foreground/60">
           <Clock4 size={14} />
-          {item.time}
-        </span>
-        <span className="flex items-center gap-1">
-          <Flame size={14} />
-          {item.calories}
-        </span>
-      </div>
+          {entry.cookingTime} min
+        </div>
+      )}
+
       <div className="pt-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="rounded-full px-4"
-          onClick={() => onSeeRecipe(item)}
-        >
+        <Button variant="secondary" size="sm" className="rounded-full px-4" onClick={onSeeRecipe}>
           See recipe
         </Button>
       </div>
@@ -268,53 +190,354 @@ function AddMealCard({ onClick }: { onClick?: () => void }) {
   );
 }
 
+function MealCardSkeleton() {
+  return (
+    <div className="relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/70 p-4 pt-10 shadow-sm min-h-48">
+      <div className="absolute -top-6 left-4 h-14 w-14 rounded-full border-4 border-card bg-muted animate-pulse" />
+      <div className="flex flex-col gap-2 pt-2">
+        <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+        <div className="h-3 w-full rounded bg-muted animate-pulse" />
+        <div className="h-3 w-2/3 rounded bg-muted animate-pulse" />
+      </div>
+      <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+      <div className="h-8 w-24 rounded-full bg-muted animate-pulse mt-auto" />
+    </div>
+  );
+}
+
+function MealsLoadingSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      {SLOT_NAMES.map((slot) => (
+        <div key={slot} className="grid grid-cols-[70px_1fr] gap-4">
+          <div className="flex items-stretch">
+            <div className={`flex w-full items-center justify-center rounded-2xl ${SLOT_STYLES[slot]}`}>
+              <span className="text-xs font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
+                {SLOT_LABELS[slot]}
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-6">
+            <MealCardSkeleton />
+            <MealCardSkeleton />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────
+
 export function MealsTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Meals</h1>;
 }
 
 export function MealsContent() {
-  const [activeDay, setActiveDay] = useState(2);
-  const [weekStart, setWeekStart] = useState(() => {
+  // ── UI state ────────────────────────────────────────────────
+  const [activeDay, setActiveDay] = useState<number>(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    const qIdx = hash.indexOf("?");
+    if (qIdx !== -1) {
+      const params = new URLSearchParams(hash.slice(qIdx + 1));
+      const dateParam = params.get("date");
+      if (dateParam) {
+        const [y, m, d] = dateParam.split("-").map(Number);
+        if (y && m && d) {
+          const target = new Date(y, m - 1, d);
+          const day = target.getDay();
+          return day === 0 ? 6 : day - 1; // Mon=0..Sun=6
+        }
+      }
+    }
+    const d = new Date().getDay(); // 0 = Sun
+    return d === 0 ? 6 : d - 1;   // convert to Mon=0..Sun=6
+  });
+  const [weekStart, setWeekStart] = useState<Date>(() => {
+    // Check for date param in hash (e.g. #meals?date=2026-04-07&slot=lunch)
+    const hash = window.location.hash.replace(/^#/, "");
+    const qIdx = hash.indexOf("?");
+    if (qIdx !== -1) {
+      const params = new URLSearchParams(hash.slice(qIdx + 1));
+      const dateParam = params.get("date");
+      if (dateParam) {
+        const [y, m, d] = dateParam.split("-").map(Number);
+        if (y && m && d) {
+          const target = new Date(y, m - 1, d);
+          const day = target.getDay();
+          const monday = new Date(target);
+          monday.setDate(target.getDate() + (day === 0 ? -6 : 1 - day));
+          monday.setHours(0, 0, 0, 0);
+          return monday;
+        }
+      }
+    }
     const today = new Date();
-    const day = today.getDay(); // 0 (Sun) - 6 (Sat)
-    const diff = day === 0 ? -6 : 1 - day; // Monday as start of week
+    const diff = today.getDay() === 0 ? -6 : 1 - today.getDay();
     const start = new Date(today);
     start.setDate(today.getDate() + diff);
     start.setHours(0, 0, 0, 0);
     return start;
   });
+
+  // ── Data state ──────────────────────────────────────────────
+  const [days, setDays] = useState<WeekDays | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  // ── UI interaction state ────────────────────────────────────
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [selectedRecipe, setSelectedRecipe] = useState<MealItem | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<MealEntry | null>(null);
+  const [pickerTarget, setPickerTarget] = useState<{
+    slot: SlotName;
+    dayName: DayName;
+  } | null>(null);
+  const [dragging, setDragging] = useState<{ slotName: SlotName; entryId: string } | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<{
-    groupId: string;
-    itemId: string;
+    slotName: SlotName;
+    entryId: string;
     position: "before" | "after";
   } | null>(null);
 
-  const [mealGroups, setMealGroups] = useState<MealGroup[]>(MEALS);
-  const [dragging, setDragging] = useState<{ groupId: string; itemId: string } | null>(null);
-  const days = useMemo(() => {
-    return DAY_LABELS.map((label, index) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + index);
+  // ── Refs — prevent stale closures inside the sync timer ─────
+  const daysRef = useRef<WeekDays | null>(null);
+  const weekStartRef = useRef<Date>(weekStart);
+  const mealPlanIdRef = useRef<string | null>(null);
+  const originalDaysRef = useRef<WeekDays | null>(null);
+  const isDirtyRef = useRef(false);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => { daysRef.current = days; }, [days]);
+  useEffect(() => { weekStartRef.current = weekStart; }, [weekStart]);
+
+  // ── Derived data (useMemo) ───────────────────────────────────
+
+  /** Calendar dates for the week header day-picker. */
+  const weekDates = useMemo(
+    () =>
+      DAY_LABELS.map((label, i) => {
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + i);
+        return { label, dateNum: d.getDate().toString(), dateValue: d };
+      }),
+    [weekStart]
+  );
+
+  /** The three meal slots for the currently selected day. */
+  const activeDayMeals = useMemo(
+    () => days?.[DAY_NAMES[activeDay]] ?? null,
+    [days, activeDay]
+  );
+
+  // ── Fetch on week change ─────────────────────────────────────
+
+  useEffect(() => {
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    isDirtyRef.current = false;
+    setDays(null);
+    setLoading(true);
+
+    fetchMealPlanWeek(toMondayIso(weekStart))
+      .then((data) => {
+        setDays(data.days);
+        mealPlanIdRef.current = data.id;
+        originalDaysRef.current = data.days;
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [weekStart]);
+
+  // Cleanup timer on unmount
+  useEffect(
+    () => () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current); },
+    []
+  );
+
+  // ── Sync logic ───────────────────────────────────────────────
+
+  /**
+   * Diffs local state against the last-synced state and issues the minimum
+   * number of sequential API calls to reconcile. Refetches afterwards to
+   * get authoritative entryIds from newly created entries.
+   */
+  const syncPendingChanges = async () => {
+    if (
+      !isDirtyRef.current ||
+      !daysRef.current ||
+      !originalDaysRef.current ||
+      !mealPlanIdRef.current
+    )
+      return;
+
+    isDirtyRef.current = false;
+    setSyncing(true);
+
+    try {
+      const orig = buildPositionMap(originalDaysRef.current);
+      const curr = buildPositionMap(daysRef.current);
+
+      // 1. Entries that moved to a different slot → delete old, create in new slot
+      for (const [entryId, currPos] of Object.entries(curr)) {
+        const origPos = orig[entryId];
+        if (!origPos) continue; // new entry (not possible yet — AddMealCard is a stub)
+        if (
+          origPos.dayOfWeek !== currPos.dayOfWeek ||
+          origPos.mealType !== currPos.mealType
+        ) {
+          const entry = findEntryInDays(daysRef.current!, entryId);
+          if (!entry) continue;
+          await removeMealPlanEntry(entryId);
+          await addMealPlanEntry(mealPlanIdRef.current!, {
+            dayOfWeek: currPos.dayOfWeek,
+            mealType: currPos.mealType,
+            recipeId: entry.recipeId,
+            notes: entry.notes || undefined,
+          });
+        }
+      }
+
+      // 2. Entries removed by the user (present in original, gone from local)
+      for (const entryId of Object.keys(orig)) {
+        if (!curr[entryId]) {
+          await removeMealPlanEntry(entryId);
+        }
+      }
+
+      // 3. Refetch to get authoritative entryIds after any creates
+      const fresh = await fetchMealPlanWeek(toMondayIso(weekStartRef.current));
+      setDays(fresh.days);
+      mealPlanIdRef.current = fresh.id;
+      originalDaysRef.current = fresh.days;
+    } catch (err) {
+      console.error("[MealPlan] Sync failed:", err);
+      isDirtyRef.current = true; // allow next drag to retry
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const scheduleSyncTimer = () => {
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(syncPendingChanges, 5000);
+  };
+
+  // ── Drag handlers ────────────────────────────────────────────
+
+  const handleDrop = (
+    e: React.DragEvent,
+    toSlot: SlotName,
+    toEntryId: string | null
+  ) => {
+    e.preventDefault();
+    const payload = e.dataTransfer.getData("text/plain");
+    if (!payload) return;
+
+    const sep = payload.indexOf(":");
+    const fromSlot = payload.slice(0, sep) as SlotName;
+    const fromEntryId = payload.slice(sep + 1);
+    const hoverPos = dragOverTarget?.position ?? "after";
+
+    setDays((prev) => {
+      if (!prev) return prev;
+      const dayName = DAY_NAMES[activeDay];
+      const daySlots = prev[dayName];
+
+      // Work on copies — newFromItems and newToItems share the same reference
+      // when fromSlot === toSlot, which is intentional (one array, two ops).
+      const newFromItems = [...daySlots[fromSlot]];
+      const newToItems = fromSlot === toSlot ? newFromItems : [...daySlots[toSlot]];
+
+      const fromIndex = newFromItems.findIndex((e) => e.entryId === fromEntryId);
+      if (fromIndex === -1) return prev;
+      const [movedEntry] = newFromItems.splice(fromIndex, 1);
+
+      if (toEntryId === null) {
+        // Dropped onto the slot container (no specific card) — append to end
+        newToItems.push(movedEntry);
+      } else {
+        const toIndex = newToItems.findIndex((e) => e.entryId === toEntryId);
+        const base = hoverPos === "after" ? toIndex + 1 : toIndex;
+        // When same slot: removal shifted indices, compensate
+        const insertAt =
+          fromSlot === toSlot && fromIndex < base ? base - 1 : base;
+        newToItems.splice(Math.max(0, insertAt), 0, movedEntry);
+      }
+
+      const updatedDay: Record<SlotName, MealEntry[]> = {
+        ...daySlots,
+        [fromSlot]: newFromItems,
+        [toSlot]: newToItems,
+      };
+      return { ...prev, [dayName]: updatedDay };
+    });
+
+    isDirtyRef.current = true;
+    scheduleSyncTimer();
+    setDragging(null);
+    setDragOverTarget(null);
+  };
+
+  const handleRemove = (slotName: SlotName, entryId: string) => {
+    setDays((prev) => {
+      if (!prev) return prev;
+      const dayName = DAY_NAMES[activeDay];
+      const daySlots = prev[dayName];
       return {
-        id: `day-${index}`,
-        label,
-        date: d.getDate().toString(),
-        dateValue: d,
+        ...prev,
+        [dayName]: {
+          ...daySlots,
+          [slotName]: daySlots[slotName].filter((e) => e.entryId !== entryId),
+        },
       };
     });
-  }, [weekStart]);
+    isDirtyRef.current = true;
+    scheduleSyncTimer();
+    setOpenMenuId(null);
+  };
+
+  // ── Picker handler ───────────────────────────────────────────
+
+  const handlePickerSelect = (entry: MealEntry) => {
+    if (!pickerTarget) return;
+    const { slot, dayName } = pickerTarget;
+
+    const updater = (prev: WeekDays): WeekDays => ({
+      ...prev,
+      [dayName]: {
+        ...prev[dayName],
+        [slot]: [...prev[dayName][slot], entry],
+      },
+    });
+
+    setDays((prev) => (prev ? updater(prev) : prev));
+    // Keep originalDaysRef consistent so the 5s sync doesn't try to delete this entry
+    if (originalDaysRef.current) {
+      originalDaysRef.current = updater(originalDaysRef.current);
+    }
+
+    setPickerTarget(null);
+  };
+
+  // ── Render ───────────────────────────────────────────────────
 
   return (
     <div className="flex h-full w-full flex-col gap-8 overflow-y-auto pb-4 pr-1">
+
+      {/* Week header + day selector */}
       <div className="sticky top-0 z-20">
         <div className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4">
           <div className="flex items-center justify-between gap-3 pb-3">
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
+            <div className="flex items-center gap-3 text-sm text-foreground/70">
               <span className="font-semibold">
-                Week of {days[0]?.dateValue.toLocaleString("en-US", { month: "short", day: "numeric" })}
+                Week of{" "}
+                {weekDates[0]?.dateValue.toLocaleString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
               </span>
+              {syncing && (
+                <span className="text-xs text-muted-foreground italic">Saving…</span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -343,139 +566,159 @@ export function MealsContent() {
               </Button>
             </div>
           </div>
+
           <div className="flex items-center gap-3 overflow-x-auto pb-1 noScrollbar">
-            {days.map((day, index) => {
-              const isActive = index === activeDay;
-              return (
-                <button
-                  key={day.id}
-                  type="button"
-                  onClick={() => setActiveDay(index)}
-                  className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border text-xs font-semibold transition-all duration-300 ${
-                    isActive
-                      ? "border-accent bg-accent/20 text-accent shadow-sm"
-                      : "border-border/50 bg-card text-foreground/70 hover:border-accent/50 hover:text-foreground"
-                  }`}
-                >
-                  <span className="text-[11px] uppercase tracking-wide">
-                    {day.label}
-                  </span>
-                  <span className="text-base">{day.date}</span>
-                </button>
-              );
-            })}
+            {weekDates.map(({ label, dateNum }, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActiveDay(i)}
+                className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border text-xs font-semibold transition-all duration-300 ${
+                  i === activeDay
+                    ? "border-accent bg-accent/20 text-accent shadow-sm"
+                    : "border-border/50 bg-card text-foreground/70 hover:border-accent/50 hover:text-foreground"
+                }`}
+              >
+                <span className="text-[11px] uppercase tracking-wide">{label}</span>
+                <span className="text-base">{dateNum}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
+      {/* Meal slots */}
       <div className="flex flex-col gap-6">
-        {mealGroups.map((group) => (
-          <div
-            key={group.id}
-            className="grid grid-cols-[70px_1fr] gap-4"
+        <AnimatePresence mode="wait">
+        {loading || !activeDayMeals ? (
+          <motion.div
+            key="meals-skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="flex items-stretch">
+            <MealsLoadingSkeleton />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="meals-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col gap-6"
+          >
+          {SLOT_NAMES.map((slot) => (
+            <div key={slot} className="grid grid-cols-[70px_1fr] gap-4">
+
+              {/* Slot label */}
+              <div className="flex items-stretch">
+                <div
+                  className={`flex w-full items-center justify-center rounded-2xl ${SLOT_STYLES[slot]}`}
+                >
+                  <span className="text-xs font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
+                    {SLOT_LABELS[slot]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Cards + drop zone */}
               <div
-                className={`flex w-full items-center justify-center rounded-2xl ${group.accentClass}`}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handleDrop(e, slot, null)}
               >
-                <span className="text-xs font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
-                  {group.label}
-                </span>
+                {activeDayMeals[slot].map((entry) => (
+                  <MealCard
+                    key={entry.entryId}
+                    entry={entry}
+                    isDragging={dragging?.entryId === entry.entryId}
+                    isMenuOpen={openMenuId === entry.entryId}
+                    onToggleMenu={() =>
+                      setOpenMenuId((prev) =>
+                        prev === entry.entryId ? null : entry.entryId
+                      )
+                    }
+                    onCloseMenu={() => setOpenMenuId(null)}
+                    onSeeRecipe={() => setSelectedRecipe(entry)}
+                    onRemove={() => handleRemove(slot, entry.entryId)}
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData(
+                        "text/plain",
+                        `${slot}:${entry.entryId}`
+                      );
+                      setDragging({ slotName: slot, entryId: entry.entryId });
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.dataTransfer.dropEffect = "move";
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const position =
+                        e.clientX - rect.left < rect.width / 2
+                          ? "before"
+                          : "after";
+                      setDragOverTarget({
+                        slotName: slot,
+                        entryId: entry.entryId,
+                        position,
+                      });
+                    }}
+                    onDrop={(e) => {
+                      e.stopPropagation();
+                      handleDrop(e, slot, entry.entryId);
+                    }}
+                    onDragEnd={() => {
+                      setDragging(null);
+                      setDragOverTarget(null);
+                    }}
+                  />
+                ))}
+                <AddMealCard
+                  onClick={() =>
+                    setPickerTarget({ slot, dayName: DAY_NAMES[activeDay] })
+                  }
+                />
               </div>
             </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {group.items.map((item) => (
-                <MealCard
-                  key={item.id}
-                  item={item}
-                  isMenuOpen={openMenuId === item.id}
-                  onToggleMenu={() =>
-                    setOpenMenuId((prev) => (prev === item.id ? null : item.id))
-                  }
-                  onCloseMenu={() => setOpenMenuId(null)}
-                  onSeeRecipe={(recipe) => setSelectedRecipe(recipe)}
-                  draggable
-                  isDragging={dragging?.itemId === item.id}
-                  onDragStart={(e) => {
-                    e.dataTransfer.effectAllowed = "move";
-                    e.dataTransfer.setData(
-                      "text/plain",
-                      `${group.id}:${item.id}`,
-                    );
-                    setDragging({ groupId: group.id, itemId: item.id });
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const position =
-                      e.clientX - rect.left < rect.width / 2 ? "before" : "after";
-                    setDragOverTarget({ groupId: group.id, itemId: item.id, position });
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const payload = e.dataTransfer.getData("text/plain");
-                    if (!payload) return;
-                    const [fromGroupId, fromItemId] = payload.split(":");
-                    const toIndex = group.items.findIndex((i) => i.id === item.id);
-                    if (!fromGroupId || !fromItemId || toIndex === -1) return;
-                    setMealGroups((prev) =>
-                      prev.map((g) => {
-                        if (fromGroupId === group.id && g.id === group.id) {
-                          const fromIndex = g.items.findIndex((i) => i.id === fromItemId);
-                          if (fromIndex === -1 || fromIndex === toIndex) return g;
-                          const nextItems = [...g.items];
-                          const [moved] = nextItems.splice(fromIndex, 1);
-                          const hoverPos = dragOverTarget?.position ?? "before";
-                          const baseIndex = hoverPos === "after" ? toIndex + 1 : toIndex;
-                          const insertAt = fromIndex < baseIndex ? baseIndex - 1 : baseIndex;
-                          nextItems.splice(insertAt, 0, moved);
-                          return { ...g, items: nextItems };
-                        }
-                        if (g.id === fromGroupId) {
-                          const nextItems = g.items.filter((i) => i.id !== fromItemId);
-                          return { ...g, items: nextItems };
-                        }
-                        if (g.id === group.id) {
-                          const sourceGroup = prev.find((grp) => grp.id === fromGroupId);
-                          const moved = sourceGroup?.items.find((i) => i.id === fromItemId);
-                          if (!moved) return g;
-                          const nextItems = [...g.items];
-                          const hoverPos = dragOverTarget?.position ?? "before";
-                          const insertAt = hoverPos === "after" ? toIndex + 1 : toIndex;
-                          nextItems.splice(insertAt, 0, moved);
-                          return { ...g, items: nextItems };
-                        }
-                        return g;
-                      }),
-                    );
-                    setDragging(null);
-                    setDragOverTarget(null);
-                  }}
-                  onDragEnd={() => {
-                    setDragging(null);
-                    setDragOverTarget(null);
-                  }}
-                />
-              ))}
-              <AddMealCard />
-            </div>
-          </div>
-        ))}
+          ))}
+          </motion.div>
+        )}
+        </AnimatePresence>
       </div>
 
+      {/* Meal picker panel */}
+      <AnimatePresence>
+        {pickerTarget && mealPlanIdRef.current && (
+          <MealPickerPanel
+            key="meal-picker"
+            slot={pickerTarget.slot}
+            dayName={pickerTarget.dayName}
+            mealPlanId={mealPlanIdRef.current}
+            onSelect={handlePickerSelect}
+            onClose={() => setPickerTarget(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Recipe detail modal */}
       {selectedRecipe && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="h-16 w-16 rounded-full border-4 border-card bg-secondary shadow-md shrink-0">
-                  <img
-                    src={selectedRecipe.image}
-                    alt={selectedRecipe.title}
-                    className="h-full w-full rounded-full object-cover"
-                  />
+                <div className="h-16 w-16 rounded-full border-4 border-card bg-secondary shadow-md shrink-0 overflow-hidden">
+                  {selectedRecipe.imageUrl ? (
+                    <img
+                      src={selectedRecipe.imageUrl}
+                      alt={selectedRecipe.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-secondary" />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">
@@ -484,16 +727,12 @@ export function MealsContent() {
                   <p className="text-sm text-muted-foreground">
                     {selectedRecipe.description}
                   </p>
-                  <div className="mt-2 flex items-center gap-4 text-xs text-foreground/60">
-                    <span className="flex items-center gap-1">
+                  {selectedRecipe.cookingTime > 0 && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-foreground/60">
                       <Clock4 size={14} />
-                      {selectedRecipe.time}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Flame size={14} />
-                      {selectedRecipe.calories}
-                    </span>
-                  </div>
+                      {selectedRecipe.cookingTime} min
+                    </div>
+                  )}
                 </div>
               </div>
               <Button
@@ -505,12 +744,8 @@ export function MealsContent() {
                 <Plus className="rotate-45" size={16} />
               </Button>
             </div>
-
             <div className="mt-6 flex items-center justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setSelectedRecipe(null)}
-              >
+              <Button variant="secondary" onClick={() => setSelectedRecipe(null)}>
                 Close
               </Button>
               <Button variant="default">View full recipe</Button>
