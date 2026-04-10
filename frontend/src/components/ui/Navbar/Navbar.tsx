@@ -25,7 +25,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [selectedBtn, setSelectedBtn] = React.useState<string>("");
+  const [selectedBtn, setSelectedBtn] = React.useState<
+    "nav-main" | "nav-meals" | "nav-recipes" | "nav-settings" | "nav-calendar"
+  >("nav-main");
   const [isMoreOpen, setIsMoreOpen] = React.useState<boolean>(false);
   const [showMoreButton, setShowMoreButton] = React.useState<boolean>(false);
 
@@ -58,11 +60,27 @@ export default function Navbar() {
       return;
     }
 
-    const btnLabel = e.currentTarget.ariaLabel;
+    const btnLabel = e.currentTarget.ariaLabel as
+      | "Dashboard"
+      | "Calendar"
+      | "Recipes"
+      | "Meals"
+      | "Settings";
+
+    const buttonMap: Record<
+      "Dashboard" | "Calendar" | "Recipes" | "Meals" | "Settings",
+      "nav-main" | "nav-meals" | "nav-recipes" | "nav-settings" | "nav-calendar"
+    > = {
+      Dashboard: "nav-main",
+      Calendar: "nav-calendar",
+      Recipes: "nav-recipes",
+      Meals: "nav-meals",
+      Settings: "nav-settings",
+    };
 
     navigate("/dashboard");
     window.location.hash = hash;
-    setSelectedBtn(`nav-${btnLabel?.toLowerCase()}`);
+    setSelectedBtn(buttonMap[btnLabel]);
     setIsMoreOpen(false);
   };
 
@@ -77,7 +95,7 @@ export default function Navbar() {
       }
     }
 
-    setSelectedBtn("");
+    setSelectedBtn("nav-main");
     logout();
   };
 
@@ -95,7 +113,7 @@ export default function Navbar() {
             <button
               onClick={(e) => goToDashboardPage(e, "main", true)}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                selectedBtn === "nav-dashboard"
+                selectedBtn === "nav-main"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
@@ -103,10 +121,10 @@ export default function Navbar() {
               aria-label="Dashboard"
             >
               <LayoutGrid
-                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-main" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
               <span
-                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-dashboard" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-main" ? "text-primary-foreground" : "text-muted-foreground"}`}
               >
                 Home
               </span>
@@ -118,7 +136,7 @@ export default function Navbar() {
                   disabled={!userConnected}
                   onClick={(e) => goToDashboardPage(e, "calendar", true)}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-saved"
+                    selectedBtn === "nav-calendar"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
@@ -126,10 +144,10 @@ export default function Navbar() {
                   aria-label="Calendar"
                 >
                   <Calendar
-                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
                   <span
-                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     Calendar
                   </span>
@@ -139,7 +157,7 @@ export default function Navbar() {
                   disabled={!userConnected}
                   onClick={(e) => goToDashboardPage(e, "recipe", true)}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-upload"
+                    selectedBtn === "nav-recipes"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
@@ -147,10 +165,10 @@ export default function Navbar() {
                   aria-label="Recipes"
                 >
                   <FileText
-                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
                   <span
-                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     Recipes
                   </span>
@@ -230,11 +248,11 @@ export default function Navbar() {
                 <button
                   disabled={!userConnected}
                   onClick={() => {
-                    setSelectedBtn("nav-saved");
+                    setSelectedBtn("nav-calendar");
                     setIsMoreOpen(false);
                   }}
                   className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                    selectedBtn === "nav-saved"
+                    selectedBtn === "nav-calendar"
                       ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                       : "bg-secondary hover:bg-muted"
                   }`}
@@ -242,10 +260,10 @@ export default function Navbar() {
                   aria-label="Calendar"
                 >
                   <Calendar
-                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   />
                   <span
-                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-saved" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-calendar" ? "text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     Calendar
                   </span>
@@ -323,7 +341,7 @@ export default function Navbar() {
               disabled={!userConnected}
               onClick={(e) => goToDashboardPage(e, "recipe", true)}
               className={`flex w-12 h-15 flex-col items-center justify-center gap-0.5 cursor-pointer rounded-xl transition-all duration-300 ${
-                selectedBtn === "nav-upload"
+                selectedBtn === "nav-recipes"
                   ? "bg-linear-to-br from-brand-primary to-primary shadow-lg shadow-primary/30"
                   : "bg-secondary hover:bg-muted"
               }`}
@@ -331,10 +349,10 @@ export default function Navbar() {
               aria-label="Recipes"
             >
               <FileText
-                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`w-5 h-5 transition-all duration-300 delay-100 pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
               />
               <span
-                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-upload" ? "text-primary-foreground" : "text-muted-foreground"}`}
+                className={`text-[9px] leading-none pointer-events-none ${selectedBtn === "nav-recipes" ? "text-primary-foreground" : "text-muted-foreground"}`}
               >
                 Recipes
               </span>
