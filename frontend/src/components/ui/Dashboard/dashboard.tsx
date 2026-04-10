@@ -188,15 +188,7 @@ export default function Dashboard() {
           <div className="dashboard-header-left w-full h-full flex items-center justify-baseline relative gap-4">
             <button
               onClick={() => {
-                if (activeDashboard === "settings" || activeDashboard === "meals" || activeDashboard === "recipe" || activeDashboard === "calendar") {
-                  handleDashboardChange("main");
-                  return;
-                } else if (activeDashboard === "main") {
-                  navigate(lastPage);
-                  return;
-                }
-
-                handleDashboardChange("main");
+                window.history.back();
               }}
               className="header-return w-12 h-12 rounded-full bg-input/80 flex items-center justify-center relative border-border/40 border-2 shadow-sm shadow-border/30 hover:bg-input hover:border-border/60 transition-all duration-300 cursor-pointer"
             >

@@ -78,8 +78,11 @@ export default function Navbar() {
       Settings: "nav-settings",
     };
 
-    navigate("/dashboard");
-    window.location.hash = hash;
+    if (window.location.pathname !== "/dashboard") {
+      navigate(`/dashboard#${hash}`);
+    } else {
+      window.location.hash = hash;
+    }
     setSelectedBtn(buttonMap[btnLabel]);
     setIsMoreOpen(false);
   };
