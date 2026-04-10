@@ -1,19 +1,11 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
 import TiltedCard from "@components/TiltedCard";
 import { Button } from "@/components/ui/button";
-import {
-  CookingPot,
-  Clock4,
-  SignalHigh,
-  Share2,
-  Pencil,
-  Trash2,
-  CookieIcon,
-} from "lucide-react";
-
 import { Recipe } from "@masterchef/shared";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { CookingPot, Clock4, SignalHigh, Share2, Pencil, Trash2, CookieIcon } from "lucide-react";
 
 export interface RecipeContainerProps {
   recipes: Recipe[];

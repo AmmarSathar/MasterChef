@@ -1,26 +1,16 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, CookieIcon, Plus } from "lucide-react";
-import {
-  DAYS_OF_WEEK,
-  MEAL_TYPES,
-  MONTH_NAMES,
-} from "@masterchef/shared/constants";
 import { AnimatePresence, motion } from "framer-motion";
-import { useUser } from "@/context/UserContext";
+
 import { Button } from "@/components/ui/button";
-import {
-  assignCalendarEntry,
-  type CalendarMealType,
-  type CalendarDayData,
-  type CalendarSlotEntry,
-} from "@/lib/api/calendar";
-import {
-  fetchMealPlanWeek,
-  toMondayIso,
-  type MealEntry,
-  type SlotName,
-  type DayName,
-} from "@/lib/api/meal-plan";
+import { useUser } from "@/context/UserContext";
+import { DAYS_OF_WEEK, MEAL_TYPES, MONTH_NAMES } from "@masterchef/shared/constants";
+import { assignCalendarEntry } from "@/lib/api/calendar";
+import { fetchMealPlanWeek, toMondayIso } from "@/lib/api/meal-plan";
+
+import { ArrowLeft, CookieIcon, Plus } from "lucide-react";
+
+import { type CalendarMealType, type CalendarDayData, type CalendarSlotEntry } from "@/lib/api/calendar";
+import { type MealEntry, type SlotName, type DayName } from "@/lib/api/meal-plan";
 
 export type MealSlot = CalendarMealType;
 

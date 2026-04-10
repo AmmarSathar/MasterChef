@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Plus, Minus, Camera, ChefHat } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  DietaryOption,
-  SKILL_LEVELS,
-  allFoodNames,
-  dietaryOptions,
-} from "@masterchef/shared";
-import toast from "react-hot-toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Spinner } from "@/components/ui/spinner";
-
-import { Recipe } from "@masterchef/shared";
-
 import { useUser } from "@/context/UserContext";
+import { DietaryOption, SKILL_LEVELS, allFoodNames, dietaryOptions, Recipe } from "@masterchef/shared";
+import toast from "react-hot-toast";
+
+import { X, Plus, Minus, Camera, ChefHat } from "lucide-react";
 
 interface Ingredient {
   id: string;

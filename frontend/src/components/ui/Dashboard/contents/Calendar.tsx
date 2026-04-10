@@ -1,31 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { CalendarDayView } from "./calendar/CalendarDayView";
-import CalendarWeekView, {
-  CalendarWeekViewSkeleton,
-} from "./calendar/CalendarWeekView";
+import CalendarWeekView, { CalendarWeekViewSkeleton } from "./calendar/CalendarWeekView";
+import { CalendarPicker } from "./calendar/CalendarPicker";
 import RecipeCreator from "@/components/ui/RecipeCreator";
 import RecipeView from "@/components/ui/RecipeView";
-import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
-import { CalendarPicker } from "./calendar/CalendarPicker";
-import {
-  emptyCalendarDay,
-  fetchCalendarWeek,
-  toSundayIso,
-  type CalendarDayData,
-  type CalendarSlotEntry,
-} from "@/lib/api/calendar";
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
+import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
+import { emptyCalendarDay, fetchCalendarWeek, toSundayIso } from "@/lib/api/calendar";
+
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { type Recipe } from "@masterchef/shared/types";
-import { useNavigate } from "react-router-dom";
+import { type CalendarDayData, type CalendarSlotEntry } from "@/lib/api/calendar";
 
 const RECIPES_API_BASE = "/api/recipes";
 
@@ -46,7 +36,7 @@ const toDateKey = (date: Date): string => {
 
 const getWeekDates = (baseDate: Date): Date[] => {
   const start = new Date(baseDate);
-  start.setDate(baseDate.getDate() - baseDate.getDay()); // roll back to Sunday
+  start.setDate(baseDate.getDate() - baseDate.getDay());
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
@@ -120,17 +110,12 @@ export function CalendarContent() {
     }
   };
 
-  // Fetch actual calendar assignments whenever the view or date changes.
-  // Skip re-fetching when entering day view — the data is already loaded from
-  // the weekly view, and a background re-fetch would race with the user's
-  // recipe selection and overwrite it.
   useEffect(() => {
     if (viewMode === "day") return;
 
     setLoading(true);
 
     if (activeTimeFilter === "monthly") {
-      // Fetch all calendar weeks covering the displayed month grid (42 dates).
       const monthDates = getMonthGridDates(selectedDate);
       const uniqueSundays = [...new Set(monthDates.map((d) => toSundayIso(d)))];
 
@@ -149,7 +134,6 @@ export function CalendarContent() {
       return;
     }
 
-    // Weekly fetch: one fetchCalendarWeek call covers the full Sun–Sat week.
     fetchCalendarWeek(toSundayIso(selectedDate))
       .then((data) => {
         setCalendarDays(data.days);
