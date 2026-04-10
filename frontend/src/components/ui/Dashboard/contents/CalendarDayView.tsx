@@ -1,21 +1,30 @@
-import { ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Plus } from "lucide-react";
 import {
   DAYS_OF_WEEK,
   MEAL_TYPES,
   MONTH_NAMES,
-  type MealType,
 } from "@masterchef/shared/constants";
-import type { Recipe } from "@masterchef/shared/types";
+import { AnimatePresence, motion } from "framer-motion";
+import { useUser } from "@/context/UserContext";
+import { Button } from "@/components/ui/button";
+import {
+  assignCalendarEntry,
+  type CalendarMealType,
+  type CalendarDayData,
+  type CalendarSlotEntry,
+} from "@/lib/api/calendar";
+import {
+  fetchMealPlanWeek,
+  toMondayIso,
+  type MealEntry,
+  type SlotName,
+  type DayName,
+} from "@/lib/api/meal-plan";
 
-import { motion } from "framer-motion";
+export type MealSlot = CalendarMealType;
 
-export type MealSlot = Exclude<MealType, "snack">;
-
-export type MealPrepOption = Pick<Recipe, "id" | "title"> & {
-  imageUrl: string;
-  duration: string;
-  kcal: number;
-};
+export type MealPrepOption = CalendarSlotEntry;
 
 const _dayLabels = DAYS_OF_WEEK.map((d) => d.label.slice(0, 3));
 const WEEKDAY_SHORT = [_dayLabels[6], ..._dayLabels.slice(0, 6)];
@@ -30,93 +39,25 @@ const SLOT_LABELS: Record<MealSlot, string> = {
   dinner: "Supper Selections",
 };
 
-export const EXAMPLE_MEALPLAN: Record<MealSlot, MealPrepOption[]> = {
-  breakfast: [
-    {
-      id: "b1",
-      title: "Artisan Avocado and Poached Egg",
-      imageUrl:
-        "https://images.unsplash.com/photo-1494859802809-d069c3b71a8a?w=1200",
-      duration: "15 mins",
-      kcal: 380,
-    },
-    {
-      id: "b2",
-      title: "Honey and Blueberry Granola Bowl",
-      imageUrl:
-        "https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=1200",
-      duration: "5 mins",
-      kcal: 320,                   
-    },
-    {
-      id: "b3",
-      title: "Power Smoothie",
-      imageUrl:
-        "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=1200",
-      duration: "10 mins",
-      kcal: 290,
-    },
-  ],
-  lunch: [
-    {
-      id: "l1",
-      title: "Grilled Chicken Greek Salad",
-      imageUrl:
-        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200",
-      duration: "20 mins",
-      kcal: 520,
-    },
-    {
-      id: "l2",
-      title: "Roasted Veggie Harvest Bowl",
-      imageUrl:
-        "https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=1200",
-      duration: "25 mins",
-      kcal: 480,
-    },
-    {
-      id: "l3",
-      title: "Tomato Basil and Sourdough Toast",
-      imageUrl:
-        "https://images.unsplash.com/photo-1506280754576-f6fa8a873550?w=1200",
-      duration: "15 mins",
-      kcal: 460,
-    },
-  ],
-  dinner: [
-    {
-      id: "d1",
-      title: "Pan-Seared Salmon and Greens",
-      imageUrl:
-        "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=1200",
-      duration: "30 mins",
-      kcal: 610,
-    },
-    {
-      id: "d2",
-      title: "Slow-Braised Short Ribs",
-      imageUrl:
-        "https://images.unsplash.com/photo-1544025162-d76694265947?w=1200",
-      duration: "120 mins",
-      kcal: 750,
-    },
-    {
-      id: "d3",
-      title: "Wild Mushroom Risotto",
-      imageUrl:
-        "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1200",
-      duration: "45 mins",
-      kcal: 580,
-    },
-  ],
-};
+const DAY_NAMES: DayName[] = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+const toDateStr = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 interface Props {
   date: Date;
-  meals: Partial<Record<MealSlot, MealPrepOption>>;
+  meals: CalendarDayData;
   onBack: () => void;
   onNewRecipe: () => void;
-  onChooseMeal: (slot: MealSlot, option: MealPrepOption) => void;
+  onMealsChange: (meals: CalendarDayData) => void;
 }
 
 export function CalendarDayView({
@@ -124,8 +65,41 @@ export function CalendarDayView({
   meals,
   onBack,
   onNewRecipe,
-  onChooseMeal,
+  onMealsChange,
 }: Props) {
+  const { user } = useUser();
+  const dateStr = toDateStr(date);
+  const dayName = DAY_NAMES[date.getDay()];
+
+  const [slotEntries, setSlotEntries] = useState<Record<SlotName, MealEntry[]>>({
+    breakfast: [],
+    lunch: [],
+    dinner: [],
+  });
+  const [loadingMeals, setLoadingMeals] = useState(true);
+  const [warningSlot, setWarningSlot] = useState<MealSlot | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setLoadingMeals(true);
+    fetchMealPlanWeek(toMondayIso(date))
+      .then((data) => {
+        const day = data.days[dayName];
+        setSlotEntries({
+          breakfast: day?.breakfast ?? [],
+          lunch: day?.lunch ?? [],
+          dinner: day?.dinner ?? [],
+        });
+      })
+      .catch(console.error)
+      .finally(() => setLoadingMeals(false));
+  }, [user?.id, dateStr]);
+
+  const handleChoose = async (slot: MealSlot, entry: MealEntry) => {
+    const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
+    onMealsChange({ ...meals, [slot]: result });
+  };
+
   return (
     <motion.div className="day-view w-full h-full flex gap-6 relative">
       <section className="day-main w-full h-full flex flex-col relative">
@@ -156,48 +130,95 @@ export function CalendarDayView({
         </div>
 
         <div className="meal-plan-choices flex flex-col gap-6 overflow-y-scroll pr-1 h-full w-full relative">
-          {MEAL_SLOTS.map((slot) => (
-            <div className="meal-section" key={slot}>
-              <h3 className="meal-plan-label text-2xl italic mb-3 text-foreground/90">
-                {SLOT_LABELS[slot]}
-              </h3>
-              <div className="meal-options grid grid-cols-3 gap-3">
-                {EXAMPLE_MEALPLAN[slot].map((option) => {
-                  const active = meals[slot]?.id === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => onChooseMeal(slot, option)}
-                      className={`rounded-xl overflow-hidden text-left border transition cursor-pointer ${
-                        active
-                          ? "border-accent ring-2 ring-accent/50"
-                          : "border-border hover:border-accent/50"
-                      }`}
-                    >
-                      <div className="option-card h-44 relative pointer-events-none">
-                        <img
-                          src={option.imageUrl}
-                          alt={option.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="option-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-3 flex flex-col justify-end">
-                          <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent">
-                            {option.duration}
-                          </p>
-                          <p className="font-semibold leading-tight">
-                            {option.title}
-                          </p>
-                          <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent text-accent-foreground rounded px-2 py-1 w-fit">
-                            {!active ? "Select Choice" : "Selected"}
-                          </span>
+          <AnimatePresence mode="wait">
+          {loadingMeals ? (
+            <motion.div
+              key="day-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-6"
+            >
+              {MEAL_SLOTS.map((slot) => (
+                <div className="meal-section" key={slot}>
+                  <div className="h-8 w-44 rounded-lg bg-muted animate-pulse mb-3" />
+                  <div className="grid grid-cols-3 gap-3">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="rounded-xl h-44 bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="day-content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-6"
+            >
+          {MEAL_SLOTS.map((slot) => {
+            const entries = slotEntries[slot as SlotName];
+            const active = meals[slot];
+
+            return (
+              <div className="meal-section" key={slot}>
+                <h3 className="meal-plan-label text-2xl italic mb-3 text-foreground/90">
+                  {SLOT_LABELS[slot]}
+                </h3>
+                <div className="meal-options grid grid-cols-3 gap-3">
+                  {entries.map((entry) => {
+                    const isActive = active?.recipeId === entry.recipeId;
+                    return (
+                      <button
+                        key={entry.entryId}
+                        onClick={() => handleChoose(slot, entry)}
+                        className={`rounded-xl overflow-hidden text-left border transition cursor-pointer ${
+                          isActive
+                            ? "border-accent ring-2 ring-accent/50"
+                            : "border-border hover:border-accent/50"
+                        }`}
+                      >
+                        <div className="option-card h-44 relative pointer-events-none">
+                          <img
+                            src={entry.imageUrl ?? ""}
+                            alt={entry.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="option-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-3 flex flex-col justify-end">
+                            <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent">
+                              {entry.cookingTime ?? 0} mins
+                            </p>
+                            <p className="font-semibold leading-tight">
+                              {entry.title}
+                            </p>
+                            <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent text-accent-foreground rounded px-2 py-1 w-fit">
+                              {!isActive ? "Select Choice" : "Selected"}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      </button>
+                    );
+                  })}
+                  {entries.length < 3 && (
+                    <button
+                      onClick={() => setWarningSlot(slot)}
+                      className="rounded-xl h-44 border border-dashed border-border flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-accent/50 transition cursor-pointer"
+                    >
+                      <Plus size={20} />
+                      <span className="text-xs uppercase tracking-[0.15em]">Add Meal</span>
                     </button>
-                  );
-                })}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+            </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       </section>
 
@@ -258,6 +279,39 @@ export function CalendarDayView({
           </button>
         </div>
       </aside>
+
+      <AnimatePresence>
+        {warningSlot && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: "blur(0px)", y: 2 }}
+            animate={{ opacity: 1, backdropFilter: "blur(4px)", y: 0 }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)", y: 2 }}
+            className="fixed inset-0 z-100 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
+              <h4 className="text-base font-semibold text-accent/90">Add Meal</h4>
+              <p className="mt-2 text-sm text-foreground/75">
+                This will redirect you to the meal prep page where you can add a meal to this slot.
+              </p>
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <Button type="button" variant="secondary" onClick={() => setWarningSlot(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    window.location.hash = `meals?date=${dateStr}&slot=${warningSlot}`;
+                    setWarningSlot(null);
+                  }}
+                >
+                  Go to Meal Prep
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
