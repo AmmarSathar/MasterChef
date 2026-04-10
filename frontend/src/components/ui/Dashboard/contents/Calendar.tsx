@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { CalendarDayView } from "./CalendarDayView";
-import CalendarWeekView, { CalendarWeekViewSkeleton } from "./CalendarWeekView";
+import { CalendarDayView } from "./calendar/CalendarDayView";
+import CalendarWeekView, { CalendarWeekViewSkeleton } from "./calendar/CalendarWeekView";
 import RecipeCreator from "@/components/ui/RecipeCreator";
 import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
-import { CalendarPicker } from "./CalendarPicker";
+import { CalendarPicker } from "./calendar/CalendarPicker";
 import {
   emptyCalendarDay,
   type CalendarDayData,
@@ -16,6 +16,13 @@ import {
   toMondayIso,
   type DayName,
 } from "@/lib/api/meal-plan";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
 
 type TimeFilter = "weekly" | "monthly" | "yearly";
 type ViewMode = "calendar" | "day";
@@ -63,6 +70,23 @@ const getMonthGridDates = (baseDate: Date): Date[] => {
 const getYearDates = (baseDate: Date): Date[] =>
   Array.from({ length: 12 }, (_, i) => new Date(baseDate.getFullYear(), i, 1));
 
+const DAYNAME_BY_GETDAY: DayName[] = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+const toEntry = (
+  days: Record<string, Record<string, CalendarSlotEntry[]>>,
+  date: Date,
+): CalendarDayData => {
+  const dayName = DAYNAME_BY_GETDAY[date.getDay()];
+  const daySlots = days[dayName];
+  return {
+    breakfast: (daySlots?.breakfast?.[0] as CalendarSlotEntry) ?? null,
+    lunch: (daySlots?.lunch?.[0] as CalendarSlotEntry) ?? null,
+    dinner: (daySlots?.dinner?.[0] as CalendarSlotEntry) ?? null,
+  };
+};
+
 const yearVariants = {
   enter: (dir: number) => ({ x: dir * 24, opacity: 0 }),
   center: { x: 0, opacity: 1 },
@@ -85,38 +109,42 @@ export function CalendarContent() {
   const [loading, setLoading] = useState(false);
   const [yearDir, setYearDir] = useState(0);
 
-  // Fetch meal plan data whenever the displayed week changes.
-  // The calendar week is Sun–Sat (Sunday-based); the meal plan week is Mon–Sun
-  // (Monday-based). Sunday always belongs to the *previous* meal-plan week, so
-  // we fetch two weeks and merge them.
+  // Fetch meal plan data whenever the view or date changes.
   useEffect(() => {
     setLoading(true);
-    const calWeek = getWeekDates(selectedDate); // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+
+    if (activeTimeFilter === "monthly") {
+      // Fetch all weeks covering the displayed month grid (42 dates).
+      const monthDates = getMonthGridDates(selectedDate);
+      const uniqueMondays = [...new Set(monthDates.map((d) => toMondayIso(d)))];
+
+      Promise.all(uniqueMondays.map((monday) => fetchMealPlanWeek(monday)))
+        .then((results) => {
+          const result: Record<string, CalendarDayData> = {};
+          for (const date of monthDates) {
+            const mondayIso = toMondayIso(date);
+            const idx = uniqueMondays.indexOf(mondayIso);
+            if (idx === -1) continue;
+            result[toDateKey(date)] = toEntry(results[idx].days as never, date);
+          }
+          setCalendarDays((prev) => ({ ...prev, ...result }));
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    // Weekly fetch: calendar week is Sun–Sat; meal plan week is Mon–Sun.
+    // Sunday belongs to the *previous* Monday-based week, so fetch two weeks.
+    const calWeek = getWeekDates(selectedDate);
     const sundayDate = calWeek[0];
     const mondayDate = calWeek[1];
-    // Each Sunday is the LAST day of the previous Monday-based week
-    const prevMondayIso = toMondayIso(sundayDate); // e.g. March 31 for Sunday April 6
-    const mainMondayIso = toMondayIso(mondayDate); // e.g. April 7
-
-    const DAYNAME_BY_GETDAY: DayName[] = [
-      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-    ];
-    const toEntry = (
-      days: Record<string, Record<string, CalendarSlotEntry[]>>,
-      date: Date,
-    ): CalendarDayData => {
-      const dayName = DAYNAME_BY_GETDAY[date.getDay()];
-      const daySlots = days[dayName];
-      return {
-        breakfast: (daySlots?.breakfast?.[0] as CalendarSlotEntry) ?? null,
-        lunch: (daySlots?.lunch?.[0] as CalendarSlotEntry) ?? null,
-        dinner: (daySlots?.dinner?.[0] as CalendarSlotEntry) ?? null,
-      };
-    };
+    const prevMondayIso = toMondayIso(sundayDate);
+    const mainMondayIso = toMondayIso(mondayDate);
 
     Promise.all([
-      fetchMealPlanWeek(prevMondayIso), // Sunday's data
-      fetchMealPlanWeek(mainMondayIso), // Mon–Sat data
+      fetchMealPlanWeek(prevMondayIso),
+      fetchMealPlanWeek(mainMondayIso),
     ])
       .then(([prevData, mainData]) => {
         const result: Record<string, CalendarDayData> = {};
@@ -128,7 +156,7 @@ export function CalendarContent() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedDate]);
+  }, [selectedDate, activeTimeFilter]);
 
   const displayedDates = useMemo(() => {
     if (activeTimeFilter === "weekly") return getWeekDates(selectedDate);
@@ -279,31 +307,63 @@ export function CalendarContent() {
                       <div
                         className={`period-grid grid gap-3 ${activeTimeFilter === "monthly" ? "grid-cols-7" : "grid-cols-4"}`}
                       >
-                        {displayedDates.map((date) => (
-                          <div
-                            key={`${activeTimeFilter}-${toDateKey(date)}`}
-                            onClick={() => {
-                              setSelectedDate(date);
-                              setActiveTimeFilter(
-                                activeTimeFilter === "yearly"
-                                  ? "monthly"
-                                  : "weekly",
-                              );
-                            }}
-                            className={`flex items-baseline justify-baseline flex-col bg-card rounded-xl border border-border p-3 min-h-30 cursor-pointer hover:bg-secondary transition ${date.getMonth() !== selectedDate.getMonth() ? "opacity-70 bg-card/50" : ""}`}
-                          >
-                            <p className="text-xs scale-95 text-left text-muted-foreground pointer-events-none">
-                              {activeTimeFilter === "monthly"
-                                ? WEEKDAY_SHORT[date.getDay()]
-                                : MONTH_NAMES[date.getMonth()]}
-                            </p>
-                            <p className="text-2xl font-semibold mt-1 pointer-events-none">
-                              {activeTimeFilter === "yearly"
-                                ? date.getFullYear()
-                                : date.getDate()}
-                            </p>
-                          </div>
-                        ))}
+                        {displayedDates.map((date) => {
+                          const dateKey = toDateKey(date);
+                          const dayData = activeTimeFilter === "monthly"
+                            ? (calendarDays[dateKey] ?? emptyCalendarDay())
+                            : null;
+                          const meals = dayData
+                            ? [dayData.breakfast, dayData.lunch, dayData.dinner].filter(
+                                (m): m is CalendarSlotEntry => m !== null,
+                              )
+                            : [];
+                          const MAX_VISIBLE = 4;
+                          const visibleMeals = meals.slice(0, MAX_VISIBLE);
+                          const overflow = meals.length - MAX_VISIBLE;
+
+                          return (
+                            <div
+                              key={`${activeTimeFilter}-${dateKey}`}
+                              onClick={() => {
+                                setSelectedDate(date);
+                                setActiveTimeFilter(
+                                  activeTimeFilter === "yearly"
+                                    ? "monthly"
+                                    : "weekly",
+                                );
+                              }}
+                              className={`flex items-start flex-col bg-card rounded-xl border border-border p-3 min-h-30 cursor-pointer hover:bg-secondary transition ${date.getMonth() !== selectedDate.getMonth() ? "opacity-70 bg-card/50" : ""}`}
+                            >
+                              <p className="text-xs scale-95 text-left text-muted-foreground pointer-events-none">
+                                {activeTimeFilter === "monthly"
+                                  ? WEEKDAY_SHORT[date.getDay()]
+                                  : MONTH_NAMES[date.getMonth()]}
+                              </p>
+                              <p className="text-2xl font-semibold mt-1 pointer-events-none">
+                                {activeTimeFilter === "yearly"
+                                  ? date.getFullYear()
+                                  : date.getDate()}
+                              </p>
+                              {visibleMeals.length > 0 && (
+                                <AvatarGroup className="mt-auto pt-2 pointer-events-none">
+                                  {visibleMeals.map((meal) => (
+                                    <Avatar key={meal.recipeId} size="sm">
+                                      <AvatarImage src={meal.imageUrl} alt={meal.title} />
+                                      <AvatarFallback className="text-[10px]">
+                                        {meal.title.charAt(0).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  ))}
+                                  {overflow > 0 && (
+                                    <AvatarGroupCount className="text-[10px]">
+                                      +{overflow}
+                                    </AvatarGroupCount>
+                                  )}
+                                </AvatarGroup>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </>
                   )}

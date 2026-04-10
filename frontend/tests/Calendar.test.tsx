@@ -23,11 +23,12 @@ vi.mock("framer-motion", async (importOriginal) => {
 });
 
 // Calendar API mock (must be hoisted above imports)
-const { mockFetchCalendarWeek, mockAssignCalendarEntry, mockClearCalendarEntry } =
+const { mockFetchCalendarWeek, mockAssignCalendarEntry, mockClearCalendarEntry, mockFetchMealPlanWeek } =
   vi.hoisted(() => ({
     mockFetchCalendarWeek: vi.fn(),
     mockAssignCalendarEntry: vi.fn(),
     mockClearCalendarEntry: vi.fn(),
+    mockFetchMealPlanWeek: vi.fn(),
   }));
 
 vi.mock("@/lib/api/calendar", () => ({
@@ -38,6 +39,11 @@ vi.mock("@/lib/api/calendar", () => ({
   emptyCalendarDay: vi.fn(() => ({ breakfast: null, lunch: null, dinner: null })),
 }));
 
+vi.mock("@/lib/api/meal-plan", () => ({
+  fetchMealPlanWeek: mockFetchMealPlanWeek,
+  toMondayIso: vi.fn((d: Date) => d.toISOString().split("T")[0]),
+}));
+
 vi.mock("@/components/ui/RecipeCreator", () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="recipe-creator">
@@ -46,7 +52,7 @@ vi.mock("@/components/ui/RecipeCreator", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/Dashboard/contents/CalendarPicker", () => ({
+vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarPicker", () => ({
   CalendarPicker: ({ onDaySelect }: { onDaySelect: (d: Date) => void }) => (
     <div data-testid="calendar-picker">
       <button onClick={() => onDaySelect(new Date("2026-05-04"))}>Pick May 4</button>
@@ -54,7 +60,7 @@ vi.mock("@/components/ui/Dashboard/contents/CalendarPicker", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/Dashboard/contents/CalendarDayView", () => ({
+vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarDayView", () => ({
   CalendarDayView: ({ onBack }: { onBack: () => void }) => (
     <div data-testid="calendar-day-view">
       <button onClick={onBack}>Back</button>
@@ -64,7 +70,7 @@ vi.mock("@/components/ui/Dashboard/contents/CalendarDayView", () => ({
 }));
 
 // Stub CalendarSlotPicker so CalendarWeekView tests don't need useUser context
-vi.mock("@/components/ui/Dashboard/contents/CalendarSlotPicker", () => ({
+vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarSlotPicker", () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="calendar-slot-picker">
       <button onClick={onClose}>Close Picker</button>
@@ -87,6 +93,7 @@ describe("CalendarContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetchCalendarWeek.mockResolvedValue(emptyWeekData());
+    mockFetchMealPlanWeek.mockResolvedValue({ days: {} });
   });
 
   it("renders the three time-filter tabs", () => {
@@ -173,7 +180,7 @@ describe("CalendarContent", () => {
 // Use vi.importActual to bypass the (non-existent) module mock and test
 // the real CalendarWeekView component directly.
 
-import type { CalendarDayData, CalendarSlotEntry, CalendarMealType } from "@/lib/api/calendar";
+import type { CalendarDayData, CalendarSlotEntry } from "@/lib/api/calendar";
 import type { ComponentType } from "react";
 
 type WeekViewProps = {
@@ -196,7 +203,7 @@ describe("CalendarWeekView", () => {
 
   beforeAll(async () => {
     const mod = await vi.importActual<{ default: ComponentType<WeekViewProps> }>(
-      "@/components/ui/Dashboard/contents/CalendarWeekView"
+      "@/components/ui/Dashboard/contents/calendar/CalendarWeekView"
     );
     CalendarWeekView = mod.default;
   });

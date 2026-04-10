@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, CookieIcon, Plus } from "lucide-react";
 import {
   DAYS_OF_WEEK,
   MEAL_TYPES,
@@ -71,11 +71,13 @@ export function CalendarDayView({
   const dateStr = toDateStr(date);
   const dayName = DAY_NAMES[date.getDay()];
 
-  const [slotEntries, setSlotEntries] = useState<Record<SlotName, MealEntry[]>>({
-    breakfast: [],
-    lunch: [],
-    dinner: [],
-  });
+  const [slotEntries, setSlotEntries] = useState<Record<SlotName, MealEntry[]>>(
+    {
+      breakfast: [],
+      lunch: [],
+      dinner: [],
+    },
+  );
   const [loadingMeals, setLoadingMeals] = useState(true);
   const [warningSlot, setWarningSlot] = useState<MealSlot | null>(null);
 
@@ -93,7 +95,7 @@ export function CalendarDayView({
       })
       .catch(console.error)
       .finally(() => setLoadingMeals(false));
-  }, [user?.id, dateStr]);
+  }, [user, dateStr, date, dayName]);
 
   const handleChoose = async (slot: MealSlot, entry: MealEntry) => {
     const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
@@ -131,93 +133,107 @@ export function CalendarDayView({
 
         <div className="meal-plan-choices flex flex-col gap-6 overflow-y-scroll pr-1 h-full w-full relative">
           <AnimatePresence mode="wait">
-          {loadingMeals ? (
-            <motion.div
-              key="day-skeleton"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col gap-6"
-            >
-              {MEAL_SLOTS.map((slot) => (
-                <div className="meal-section" key={slot}>
-                  <div className="h-8 w-44 rounded-lg bg-muted animate-pulse mb-3" />
-                  <div className="grid grid-cols-3 gap-3">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="rounded-xl h-44 bg-muted animate-pulse" />
-                    ))}
+            {loadingMeals ? (
+              <motion.div
+                key="day-skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-6"
+              >
+                {MEAL_SLOTS.map((slot) => (
+                  <div className="meal-section" key={slot}>
+                    <div className="h-8 w-44 rounded-lg bg-muted/90 animate-pulse mb-3" />
+                    <div className="grid grid-cols-3 gap-3 pr-15">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className="rounded-xl h-44 bg-muted/90 animate-pulse"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="day-content"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col gap-6"
-            >
-          {MEAL_SLOTS.map((slot) => {
-            const entries = slotEntries[slot as SlotName];
-            const active = meals[slot];
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="day-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-6"
+              >
+                {MEAL_SLOTS.map((slot) => {
+                  const entries = slotEntries[slot as SlotName];
+                  const active = meals[slot];
 
-            return (
-              <div className="meal-section" key={slot}>
-                <h3 className="meal-plan-label text-2xl italic mb-3 text-foreground/90">
-                  {SLOT_LABELS[slot]}
-                </h3>
-                <div className="meal-options grid grid-cols-3 gap-3">
-                  {entries.map((entry) => {
-                    const isActive = active?.recipeId === entry.recipeId;
-                    return (
-                      <button
-                        key={entry.entryId}
-                        onClick={() => handleChoose(slot, entry)}
-                        className={`rounded-xl overflow-hidden text-left border transition cursor-pointer ${
-                          isActive
-                            ? "border-accent ring-2 ring-accent/50"
-                            : "border-border hover:border-accent/50"
-                        }`}
-                      >
-                        <div className="option-card h-44 relative pointer-events-none">
-                          <img
-                            src={entry.imageUrl ?? ""}
-                            alt={entry.title}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="option-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-3 flex flex-col justify-end">
-                            <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent">
-                              {entry.cookingTime ?? 0} mins
-                            </p>
-                            <p className="font-semibold leading-tight">
-                              {entry.title}
-                            </p>
-                            <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent text-accent-foreground rounded px-2 py-1 w-fit">
-                              {!isActive ? "Select Choice" : "Selected"}
+                  return (
+                    <div className="meal-section" key={slot}>
+                      <h3 className="meal-plan-label text-2xl italic mb-3 text-foreground/90">
+                        {SLOT_LABELS[slot]}
+                      </h3>
+                      <div className="meal-options grid grid-cols-3 gap-3">
+                        {entries.map((entry) => {
+                          const isActive = active?.recipeId === entry.recipeId;
+                          return (
+                            <button
+                              key={entry.entryId}
+                              onClick={() => handleChoose(slot, entry)}
+                              className={`rounded-xl overflow-hidden text-left border transition cursor-pointer ${
+                                isActive
+                                  ? "border-accent ring-2 ring-accent/50"
+                                  : "border-border hover:border-accent/50"
+                              }`}
+                            >
+                              <div className="option-card h-44 relative pointer-events-none">
+                                {entry.imageUrl ? (
+                                  <img
+                                    src={entry.imageUrl ?? ""}
+                                    alt={entry.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-card/50 flex items-center justify-center">
+                                    <CookieIcon
+                                      size={32}
+                                      className="text-foreground/20"
+                                    />
+                                  </div>
+                                )}
+                                <div className="option-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-3 flex flex-col justify-end">
+                                  <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent">
+                                    {entry.cookingTime ?? 0} mins
+                                  </p>
+                                  <p className="font-semibold leading-tight">
+                                    {entry.title}
+                                  </p>
+                                  <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent text-accent-foreground rounded px-2 py-1 w-fit">
+                                    {!isActive ? "Select Choice" : "Selected"}
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {entries.length < 3 && (
+                          <button
+                            onClick={() => setWarningSlot(slot)}
+                            className="rounded-xl h-44 border border-dashed border-border flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-accent/50 transition cursor-pointer"
+                          >
+                            <Plus size={20} className="pointer-events-none" />
+                            <span className="text-xs uppercase tracking-[0.15em] pointer-events-none">
+                              Add Meal
                             </span>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {entries.length < 3 && (
-                    <button
-                      onClick={() => setWarningSlot(slot)}
-                      className="rounded-xl h-44 border border-dashed border-border flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-accent/50 transition cursor-pointer"
-                    >
-                      <Plus size={20} />
-                      <span className="text-xs uppercase tracking-[0.15em]">Add Meal</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-            </motion.div>
-          )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </section>
@@ -289,12 +305,19 @@ export function CalendarDayView({
             className="fixed inset-0 z-100 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4"
           >
             <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-xl">
-              <h4 className="text-base font-semibold text-accent/90">Add Meal</h4>
+              <h4 className="text-base font-semibold text-accent/90">
+                Add Meal
+              </h4>
               <p className="mt-2 text-sm text-foreground/75">
-                This will redirect you to the meal prep page where you can add a meal to this slot.
+                This will redirect you to the meal prep page where you can add a
+                meal to this slot.
               </p>
               <div className="mt-6 flex items-center justify-end gap-3">
-                <Button type="button" variant="secondary" onClick={() => setWarningSlot(null)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setWarningSlot(null)}
+                >
                   Cancel
                 </Button>
                 <Button

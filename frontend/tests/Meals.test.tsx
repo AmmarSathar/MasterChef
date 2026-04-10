@@ -126,7 +126,7 @@ describe("MealsContent", () => {
 
     render(<MealsContent />);
 
-    expect(screen.getByText("Loading…")).toBeInTheDocument();
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 
   it("hides loading state after fetch resolves", async () => {

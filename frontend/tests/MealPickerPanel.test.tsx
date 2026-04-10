@@ -1,7 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import React from "react";
 
 // ── Mocks ──────────────────────────────────────────────────────
+
+// Framer-motion stub (same as other test files)
+vi.mock("framer-motion", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("framer-motion")>();
+  return {
+    ...actual,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    motion: new Proxy(actual.motion, {
+      get: (_target, prop: string) => {
+        const Tag = prop as keyof React.JSX.IntrinsicElements;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const Comp = ({ children: c, ...rest }: any) => <Tag {...rest}>{c}</Tag>;
+        Comp.displayName = `motion.${prop}`;
+        return Comp;
+      },
+    }),
+  };
+});
 
 const { mockUseUser, mockAddMealPlanEntry } = vi.hoisted(() => ({
   mockUseUser: vi.fn(),
@@ -89,7 +108,7 @@ describe("MealPickerPanel", () => {
 
     render(<MealPickerPanel {...DEFAULT_PROPS} />);
 
-    expect(screen.getByText("Loading…")).toBeInTheDocument();
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 
   it("shows empty state when the user has no recipes", async () => {

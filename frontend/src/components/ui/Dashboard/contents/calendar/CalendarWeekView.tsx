@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Cookie, CookieIcon, Plus } from "lucide-react";
 import { DAYS_OF_WEEK } from "@masterchef/shared/constants";
 import { MEAL_SLOTS } from "./CalendarDayView";
 import {
@@ -49,7 +49,7 @@ export default function CalendarWeekView({
   onDayClick,
 }: CalendarWeekViewProps) {
   return (
-    <div className="week-grid grid grid-cols-7 gap-3">
+    <div className="week-grid grid grid-cols-7 gap-0">
       {dates.map((date) => {
         const key = toDateKey(date);
         const dayMeals = selectionsByDay[key] ?? emptyCalendarDay();
@@ -57,7 +57,7 @@ export default function CalendarWeekView({
           <div
             key={key}
             onClick={() => onDayClick(date)}
-            className="day-col cursor-pointer hover:bg-secondary/30 transition duration-300 rounded-2xl flex flex-col"
+            className="day-col cursor-pointer hover:bg-secondary/30 transition duration-300 rounded-2xl flex flex-col p-2 pt-5"
           >
             <div className="day-label mb-2 text-center pointer-events-none">
               <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.22em] text-muted-foreground">
@@ -73,10 +73,17 @@ export default function CalendarWeekView({
                     key={slot}
                     className="meal-card h-28 rounded-xl overflow-hidden relative p-0"
                   >
-                    <img
-                      src={meal.imageUrl}
-                      className="w-full h-full object-cover m-0 pointer-events-auto cursor-pointer"
-                    />
+                    {meal.imageUrl ? (
+                      <img
+                        src={meal.imageUrl}
+                        alt={meal.title}
+                        className="w-full h-full object-cover m-0 pointer-events-auto cursor-pointer"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-card/50 pointer-events-auto cursor-pointer">
+                        <CookieIcon size={32} className="text-foreground/20" />
+                      </div>
+                    )}
                     <div className="meal-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-2 flex flex-col justify-end pointer-events-none">
                       <span className="text-[9px] uppercase tracking-[0.2em] text-accent">
                         {slot}
