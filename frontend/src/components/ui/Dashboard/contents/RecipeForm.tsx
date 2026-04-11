@@ -160,7 +160,6 @@ export function RecipeTitle() {
 
 export function RecipeContent() {
   const { user, loading } = useUser();
-  const { user, loading } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -335,7 +334,6 @@ export function RecipeContent() {
                     isShared:
                       typeof updated?.isShared === "boolean"
                         ? updated.isShared
-                        : (data.isShared ?? r.isShared),
                         : (data.isShared ?? r.isShared),
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
@@ -680,23 +678,14 @@ export function RecipeContent() {
     mode: "view" | "edit" | "new" | null;
     id: string | null;
   } => {
-  const parseRecipeHash = (): {
-    mode: "view" | "edit" | "new" | null;
-    id: string | null;
-  } => {
     const raw = window.location.hash.startsWith("#")
       ? window.location.hash.slice(1)
       : window.location.hash;
 
     // console.log(raw);
-
-
-    // console.log(raw);
-
     if (!raw.startsWith("recipe")) return { mode: "view", id: null };
 
     const query = raw.split("?")[1] ?? "";
-    // console.log(query)
     // console.log(query)
     const params = new URLSearchParams(query);
     console.log(params);
@@ -772,7 +761,6 @@ export function RecipeContent() {
       if (!id) return;
 
       // ?edit=...id should show creator with target recipe
-      // ?edit=...id should show creator with target recipe
       if (mode === "edit") {
         const found = recipes.find((r) => r.id === id);
         console.log(found);
@@ -784,20 +772,11 @@ export function RecipeContent() {
           const res = await fetch(
             `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
           );
-          const res = await fetch(
-            `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
-          );
           const json = await res.json();
-          if (!res.ok)
-            throw new Error(json?.message || "Failed to load recipe");
           if (!res.ok)
             throw new Error(json?.message || "Failed to load recipe");
           handleStartEdit(normalizeRecipe(json?.data as Recipe));
         } catch (err: unknown) {
-          const msg =
-            err instanceof Error
-              ? err.message
-              : "Could not open recipe for editing";
           const msg =
             err instanceof Error
               ? err.message
@@ -807,7 +786,6 @@ export function RecipeContent() {
         return;
       }
 
-      // ?id=...id or ?view=...id should open target recipe in view mode
       // ?id=...id or ?view=...id should open target recipe in view mode
       const found = recipes.find((r) => r.id === id);
       if (found) {
@@ -821,9 +799,6 @@ export function RecipeContent() {
         const res = await fetch(
           `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
         );
-        const res = await fetch(
-          `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
-        );
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || "Failed to load recipe");
         const remoteRecipe = normalizeRecipe(json?.data as Recipe);
@@ -832,8 +807,6 @@ export function RecipeContent() {
         setOpenedRecipe(remoteRecipe);
         window.setTimeout(() => setViewOpen(true), 120);
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "Could not open this recipe";
         const msg =
           err instanceof Error ? err.message : "Could not open this recipe";
         toast.error(msg);
@@ -1038,9 +1011,6 @@ export function RecipeContent() {
               </span>
               <div className="flex items-center gap-2">
                 {SKILL_LEVELS.map((level, index) => {
-                  const isActive = activeFilters.skillLevel.includes(
-                    level.value,
-                  );
                   const isActive = activeFilters.skillLevel.includes(
                     level.value,
                   );
