@@ -38,8 +38,7 @@ const INITIAL_FORM_DATA: Recipe = {
   prepingTime: 0,
   cookingTime: 0,
   servings: 0,
-  skillLevel:
-    SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
+  skillLevel: SKILL_LEVELS[0].value.toLowerCase() as Recipe["skillLevel"],
   dietaryTags: [] as DietaryOption[],
   isShared: true,
 };
@@ -108,7 +107,7 @@ export default function RecipeCreator({
 
   const handleFormChange = (
     field: keyof typeof formData,
-    value: string | number | string[],
+    value: string | number | string[] | boolean,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -603,21 +602,38 @@ export default function RecipeCreator({
                             <span className="text-xs text-foreground/60 rotate-30 font-medium pointer-events-none">
                               Qtn.
                             </span>
-                            <motion.span
+                            <input
                               key={`${ingredient.id}-amount`}
-                              initial={{ scale: 0.8, y: -3, opacity: 0 }}
-                              animate={{ scale: 1, y: 0, opacity: 1 }}
-                              exit={{ scale: 0.8, y: 3, opacity: 0 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 20,
-                                duration: 0.3,
+                              value={ingredient.amount}
+                              placeholder="0"
+                              type="number"
+                              inputMode="numeric"
+                              onKeyDown={(e) => {
+                                if (
+                                  !/[0-9.]/.test(e.key) &&
+                                  ![
+                                    "Backspace",
+                                    "Delete",
+                                    "ArrowLeft",
+                                    "ArrowRight",
+                                    "Tab",
+                                  ].includes(e.key)
+                                ) {
+                                  e.preventDefault();
+                                }
                               }}
-                              className="text-sm text-foreground/80 font-medium text-center rotate-30 pointer-events-none"
-                            >
-                              {ingredient.amount || "0"}
-                            </motion.span>
+                              onChange={(e) =>
+                                !formDisabled &&
+                                updateIngredient(
+                                  ingredient.id,
+                                  "amount",
+                                  e.target.value === ""
+                                    ? ""
+                                    : Number(e.target.value),
+                                )
+                              }
+                              className="text-sm text-foreground/80 font-medium text-center rotate-30 w-10 bg-transparent outline-none"
+                            />
                           </div>
 
                           <button
@@ -665,7 +681,6 @@ export default function RecipeCreator({
                           >
                             <Plus size={16} className="pointer-events-none" />
                           </button>
-
                           <ToggleGroup
                             type="single"
                             size="sm"
@@ -895,7 +910,7 @@ export default function RecipeCreator({
                   type="button"
                   disabled={formDisabled}
                   onClick={() =>
-                    handleFormChange("isShared", !Boolean(formData.isShared))
+                    handleFormChange("isShared", !(formData.isShared ?? false))
                   }
                   className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
                     formData.isShared ? "bg-primary" : "bg-secondary"
