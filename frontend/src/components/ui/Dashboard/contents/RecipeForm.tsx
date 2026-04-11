@@ -436,6 +436,7 @@ export function RecipeContent() {
         skillLevel: "intermediate",
         dietaryTags: ["Gluten-Free"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Spaghetti", amount: 200, unit: "g" },
           { foodItem: "Pancetta", amount: 100, unit: "g" },
@@ -467,6 +468,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: ["Gluten-Free"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Chicken Breast", amount: 400, unit: "g" },
           { foodItem: "Bell Peppers", amount: 2, unit: "pcs" },
@@ -499,6 +501,7 @@ export function RecipeContent() {
         skillLevel: "intermediate",
         dietaryTags: ["Vegetarian"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Pizza Dough", amount: 500, unit: "g" },
           { foodItem: "Tomato Sauce", amount: 200, unit: "ml" },
@@ -530,6 +533,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: ["Vegetarian"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Romaine Lettuce", amount: 1, unit: "head" },
           { foodItem: "Parmesan Cheese", amount: 75, unit: "g" },
@@ -561,6 +565,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: ["Vegetarian"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Butter", amount: 115, unit: "g" },
           { foodItem: "Brown Sugar", amount: 200, unit: "g" },
@@ -593,6 +598,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: [],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Ground Beef", amount: 500, unit: "g" },
           { foodItem: "Taco Seasoning", amount: 2, unit: "tbsp" },

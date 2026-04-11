@@ -35,7 +35,7 @@ export interface Recipe {
   dietaryTags: DietaryOption[];
   /** Union of all ingredients' contains[] — computed on create/update */
   containsAllergens: string[];
-  isShared?: boolean;
+  isShared: boolean;
   createdBy: string;
   createdByName?: string;
   createdAt: Date;
