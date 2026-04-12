@@ -907,7 +907,7 @@ export function RecipeContent() {
           className={`filter-menu w-full flex flex-col gap-3 -mb-10 transition-all duration-300 ease-out ${
             filterOpen
               ? "opacity-100 mt-0 pointer-events-auto"
-              : "opacity-0 -mt-14 pointer-events-none"
+              : "opacity-0 -mt-20 pointer-events-none"
           }`}
         >
           <div className="filter-header flex items-center gap-2 px-1">
