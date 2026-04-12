@@ -37,6 +37,12 @@ import {
   type DayName,
   type WeekDays,
 } from "@/lib/api/meal-plan";
+import {
+  type MealEntry,
+  type SlotName,
+  type DayName,
+  type WeekDays,
+} from "@/lib/api/meal-plan";
 
 const RECIPES_API_BASE = import.meta.env.VITE_BASE_API_URL as string;
 
@@ -374,6 +380,32 @@ function MealsRecipeViewer({
   );
 }
 
+function MealsRecipeViewer({
+  recipe,
+  onClose,
+}: {
+  recipe: Recipe;
+  onClose: () => void;
+}) {
+  const { user } = useUser();
+
+  return (
+    <RecipeView
+      recipe={recipe}
+      isOwner={!!user && recipe.createdBy === user.id}
+      onClose={onClose}
+      onEdit={() => {
+        onClose();
+        window.location.hash = `recipe?edit=${recipe.id}`;
+      }}
+      onDelete={() => {
+        onClose();
+        window.location.hash = `recipe?view=${recipe.id}`;
+      }}
+    />
+  );
+}
+
 export function MealsContent() {
   const [activeDay, setActiveDay] = useState<number>(() => {
     const date = getHashDate() ?? new Date();
@@ -581,6 +613,9 @@ export function MealsContent() {
       console.error("[MealPlan] Sync failed:", err);
       toast.error("Couldn't save changes. Refreshing…");
       try {
+        const fresh = await fetchMealPlanWeek(
+          toMondayIso(weekStartRef.current),
+        );
         const fresh = await fetchMealPlanWeek(
           toMondayIso(weekStartRef.current),
         );
@@ -909,6 +944,7 @@ export function MealsContent() {
 
       <AnimatePresence>
         {viewedRecipe && (
+          <MealsRecipeViewer
           <MealsRecipeViewer
             key={viewedRecipe.id}
             recipe={viewedRecipe}

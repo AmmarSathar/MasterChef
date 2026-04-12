@@ -256,6 +256,8 @@ export function RecipeContent() {
   };
 
   const handleStartEdit = (recipe: Recipe) => {
+    if (!currentUserId || recipe.createdBy !== currentUserId) return;
+    console.log(recipe)
     if (
       !currentUserId ||
       getRecipeOwnerId(recipe.createdBy) !== currentUserId
@@ -381,6 +383,8 @@ export function RecipeContent() {
             typeof created?.isShared === "boolean"
               ? created.isShared
               : (data.isShared ?? true),
+          ingredients: created.ingredients ?? [],
+          steps: created.steps ?? [],
           containsAllergens: created.containsAllergens ?? [],
         };
 
@@ -683,21 +687,22 @@ export function RecipeContent() {
       : window.location.hash;
 
     // console.log(raw);
-    if (!raw.startsWith("recipe")) return { mode: "view", id: null };
 
+    if (!raw.startsWith("recipe")) return { mode: "view", id: null };
+    
     const query = raw.split("?")[1] ?? "";
     // console.log(query)
     const params = new URLSearchParams(query);
-    console.log(params);
+    console.log(params)
 
     if (params.get("new")) return { mode: "new", id: null }; // sHould show new no matter the value. Just show new..
-
+    
     const editId = params.get("edit");
-    console.log("edit id: ", editId);
+    console.log("edit id: ", editId)
     if (editId) return { mode: "edit", id: editId };
-
+    
     const id = params.get("id") || params.get("view");
-    console.log("view id: ", id);
+    console.log("view id: ", id)
     return { mode: "view", id: id || null };
   };
 
@@ -744,14 +749,14 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
-    if (loading) return;
+    if(loading) return
 
     const openFromHashAsync = async () => {
       const { mode, id } = parseRecipeHash();
 
       if (mode === null) return;
 
-      console.log(mode);
+      console.log(mode)
 
       if (mode === "new") {
         openCreateModal();
@@ -763,7 +768,7 @@ export function RecipeContent() {
       // ?edit=...id should show creator with target recipe
       if (mode === "edit") {
         const found = recipes.find((r) => r.id === id);
-        console.log(found);
+        console.log(found)
         if (found) {
           handleStartEdit(found);
           return;
@@ -1088,11 +1093,6 @@ export function RecipeContent() {
               <div className="text-center text-foreground/50 flex items-center justify-center gap-2">
                 <span className="text-sm">No recipes found</span>
                 <span className="text-xl mb-1">
-                  {
-                    SAD_KAOMOJIS[
-                      Math.floor(Math.random() * SAD_KAOMOJIS.length)
-                    ]
-                  }
                   {
                     SAD_KAOMOJIS[
                       Math.floor(Math.random() * SAD_KAOMOJIS.length)
