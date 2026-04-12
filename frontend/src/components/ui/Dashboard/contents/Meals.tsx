@@ -348,6 +348,32 @@ function MealsRecipeViewer({
   );
 }
 
+function MealsRecipeViewer({
+  recipe,
+  onClose,
+}: {
+  recipe: Recipe;
+  onClose: () => void;
+}) {
+  const { user } = useUser();
+
+  return (
+    <RecipeView
+      recipe={recipe}
+      isOwner={!!user && recipe.createdBy === user.id}
+      onClose={onClose}
+      onEdit={() => {
+        onClose();
+        window.location.hash = `recipe?edit=${recipe.id}`;
+      }}
+      onDelete={() => {
+        onClose();
+        window.location.hash = `recipe?view=${recipe.id}`;
+      }}
+    />
+  );
+}
+
 export function MealsContent() {
   const [activeDay, setActiveDay] = useState<number>(() => {
     const date = getHashDate() ?? new Date();
