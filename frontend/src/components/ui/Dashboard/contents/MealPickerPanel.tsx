@@ -262,7 +262,7 @@ export default function MealPickerPanel({
                       key="add-recipe"
                       type="button"
                       onClick={() => {
-                        window.location.hash = "recipe";
+                        window.location.hash = "recipe?new=true";
                         onClose();
                       }}
                       className="w-full h-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/50 bg-card/40 text-foreground/50 hover:border-accent/60 hover:text-foreground transition-all duration-200 cursor-pointer"

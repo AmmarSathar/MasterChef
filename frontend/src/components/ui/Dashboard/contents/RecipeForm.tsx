@@ -122,7 +122,7 @@ export function RecipeTitle() {
 }
 
 export function RecipeContent() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -216,6 +216,7 @@ export function RecipeContent() {
 
   const handleStartEdit = (recipe: Recipe) => {
     if (!currentUserId || recipe.createdBy !== currentUserId) return;
+    console.log(recipe)
     setEditingRecipe(recipe);
     setRecipeCreateOpen(true);
   };
@@ -288,7 +289,7 @@ export function RecipeContent() {
                     isShared:
                       typeof updated?.isShared === "boolean"
                         ? updated.isShared
-                        : data.isShared ?? r.isShared,
+                        : (data.isShared ?? r.isShared),
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
                     steps: updated?.steps ?? recipePayload.steps,
@@ -342,7 +343,7 @@ export function RecipeContent() {
           isShared:
             typeof created?.isShared === "boolean"
               ? created.isShared
-              : data.isShared ?? true,
+              : (data.isShared ?? true),
           ingredients: created.ingredients ?? [],
           steps: created.steps ?? [],
           containsAllergens: [],
@@ -623,17 +624,31 @@ export function RecipeContent() {
   //   if (recipes.length === 0 && !loading) setExampleRecipes();
   // }, [recipes.length, loading]);
 
-  const parseRecipeHash = (): { mode: "view" | "edit" | "new"; id: string | null } => {
+  const parseRecipeHash = (): {
+    mode: "view" | "edit" | "new" | null;
+    id: string | null;
+  } => {
     const raw = window.location.hash.startsWith("#")
       ? window.location.hash.slice(1)
       : window.location.hash;
+
+    // console.log(raw);
+
     if (!raw.startsWith("recipe")) return { mode: "view", id: null };
+    
     const query = raw.split("?")[1] ?? "";
+    // console.log(query)
     const params = new URLSearchParams(query);
-    if (params.get("new") === "true") return { mode: "new", id: null };
+    console.log(params)
+
+    if (params.get("new")) return { mode: "new", id: null }; // sHould show new no matter the value. Just show new..
+    
     const editId = params.get("edit");
+    console.log("edit id: ", editId)
     if (editId) return { mode: "edit", id: editId };
-    const id = params.get("id");
+    
+    const id = params.get("id") || params.get("view");
+    console.log("view id: ", id)
     return { mode: "view", id: id || null };
   };
 
@@ -680,10 +695,15 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
+    if(loading) return
+
     const openFromHashAsync = async () => {
       const { mode, id } = parseRecipeHash();
 
-      // ?new=true → open creator in new mode
+      if (mode === null) return;
+
+      console.log(mode)
+
       if (mode === "new") {
         openCreateModal();
         return;
@@ -691,26 +711,33 @@ export function RecipeContent() {
 
       if (!id) return;
 
-      // ?edit=<id> → open creator pre-filled with the recipe
+      // ?edit=...id should show creator with target recipe
       if (mode === "edit") {
         const found = recipes.find((r) => r.id === id);
+        console.log(found)
         if (found) {
           handleStartEdit(found);
           return;
         }
         try {
-          const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
+          const res = await fetch(
+            `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
+          );
           const json = await res.json();
-          if (!res.ok) throw new Error(json?.message || "Failed to load recipe");
+          if (!res.ok)
+            throw new Error(json?.message || "Failed to load recipe");
           handleStartEdit(normalizeRecipe(json?.data as Recipe));
         } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Could not open recipe for editing";
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Could not open recipe for editing";
           toast.error(msg);
         }
         return;
       }
 
-      // ?id=<id> → open recipe in view mode (existing behaviour)
+      // ?id=...id or ?view=...id should open target recipe in view mode
       const found = recipes.find((r) => r.id === id);
       if (found) {
         setRecipeCreateOpen(false);
@@ -720,7 +747,9 @@ export function RecipeContent() {
         return;
       }
       try {
-        const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
+        const res = await fetch(
+          `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
+        );
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || "Failed to load recipe");
         const remoteRecipe = normalizeRecipe(json?.data as Recipe);
@@ -729,7 +758,8 @@ export function RecipeContent() {
         setOpenedRecipe(remoteRecipe);
         window.setTimeout(() => setViewOpen(true), 120);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Could not open this recipe";
+        const msg =
+          err instanceof Error ? err.message : "Could not open this recipe";
         toast.error(msg);
       }
     };
@@ -932,7 +962,9 @@ export function RecipeContent() {
               </span>
               <div className="flex items-center gap-2">
                 {SKILL_LEVELS.map((level, index) => {
-                  const isActive = activeFilters.skillLevel.includes(level.value);
+                  const isActive = activeFilters.skillLevel.includes(
+                    level.value,
+                  );
                   return (
                     <button
                       key={level.value}
@@ -1007,7 +1039,11 @@ export function RecipeContent() {
               <div className="text-center text-foreground/50 flex items-center justify-center gap-2">
                 <span className="text-sm">No recipes found</span>
                 <span className="text-xl mb-1">
-                  {SAD_KAOMOJIS[Math.floor(Math.random() * SAD_KAOMOJIS.length)]}
+                  {
+                    SAD_KAOMOJIS[
+                      Math.floor(Math.random() * SAD_KAOMOJIS.length)
+                    ]
+                  }
                 </span>
               </div>
             </motion.div>

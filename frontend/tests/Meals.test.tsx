@@ -339,12 +339,12 @@ describe("MealsContent", () => {
 
   // ── 5-second debounce sync ───────────────────────────────────
 
-  describe("5s debounce sync (fake timers)", () => {
+  describe("1.5s debounce sync (fake timers)", () => {
     afterEach(() => {
       vi.useRealTimers();
     });
 
-    it("does NOT call the sync API before 5 seconds", async () => {
+    it("does NOT call the sync API before 1.5 seconds", async () => {
       vi.useFakeTimers();
       mockFetchMealPlanWeek.mockResolvedValue(fakePlan(weekWithEntry()));
 
@@ -366,13 +366,13 @@ describe("MealsContent", () => {
         if (removeBtn) fireEvent.click(removeBtn);
       }
 
-      // 4 seconds pass — no sync yet
-      act(() => vi.advanceTimersByTime(4000));
+      // 1 second passes — no sync yet
+      act(() => vi.advanceTimersByTime(1000));
 
       expect(mockRemoveMealPlanEntry).not.toHaveBeenCalled();
     });
 
-    it("calls the sync API after 5 seconds", async () => {
+    it("calls the sync API after 1.5 seconds", async () => {
       vi.useFakeTimers();
 
       // Only put entry on MONDAY so removing it makes it disappear from all state
@@ -415,10 +415,10 @@ describe("MealsContent", () => {
         fireEvent.click(screen.getByText("Remove"));
       });
 
-      // Advance past 5s
+      // Advance past 1.5s
       mockFetchMealPlanWeek.mockResolvedValue(fakePlan(emptyWeekDays()));
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(5500);
+        await vi.advanceTimersByTimeAsync(2000);
       });
 
       expect(mockRemoveMealPlanEntry).toHaveBeenCalledWith("e1");
