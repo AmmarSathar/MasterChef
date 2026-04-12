@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { CalendarDayView } from "./calendar/CalendarDayView";
@@ -75,9 +74,33 @@ export function CalendarTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Weekly Curations</h1>;
 }
 
-export function CalendarContent() {
-  const navigate = useNavigate();
+function CalendarRecipeViewer({
+  recipe,
+  onClose,
+}: {
+  recipe: Recipe;
+  onClose: () => void;
+}) {
   const { user } = useUser();
+
+  return (
+    <RecipeView
+      recipe={recipe}
+      isOwner={!!user && recipe.createdBy === user.id}
+      onClose={onClose}
+      onEdit={() => {
+        onClose();
+        window.location.hash = `recipe?edit=${recipe.id}`;
+      }}
+      onDelete={() => {
+        onClose();
+        window.location.hash = `recipe?view=${recipe.id}`;
+      }}
+    />
+  );
+}
+
+export function CalendarContent() {
   const [activeTimeFilter, setActiveTimeFilter] =
     useState<TimeFilter>("weekly");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -453,19 +476,10 @@ export function CalendarContent() {
 
       <AnimatePresence>
         {viewedRecipe && (
-          <RecipeView
+          <CalendarRecipeViewer
             key={viewedRecipe.id}
             recipe={viewedRecipe}
-            isOwner={!!user && viewedRecipe.createdBy === user.id}
             onClose={() => setViewedRecipe(null)}
-            onEdit={() => {
-              navigate(`/dashboard#recipe?edit=${viewedRecipe.id}`);
-              setViewedRecipe(null);
-            }}
-            onDelete={() => {
-              navigate(`/dashboard#recipe?view=${viewedRecipe.id}`);
-              setViewedRecipe(null);
-            }}
           />
         )}
       </AnimatePresence>

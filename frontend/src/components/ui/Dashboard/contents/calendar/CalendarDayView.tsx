@@ -11,6 +11,7 @@ import { ArrowLeft, CookieIcon, Plus } from "lucide-react";
 
 import { type CalendarMealType, type CalendarDayData, type CalendarSlotEntry } from "@/lib/api/calendar";
 import { type MealEntry, type SlotName, type DayName } from "@/lib/api/meal-plan";
+import toast from "react-hot-toast";
 
 export type MealSlot = CalendarMealType;
 
@@ -88,11 +89,15 @@ export function CalendarDayView({
   }, [user, dateStr, date, dayName]);
 
   const handleChoose = async (slot: MealSlot, entry: MealEntry) => {
+    toast.loading("Assigning meal...", { id: "assign" });
+
     try {
       const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
       onMealsChange({ ...meals, [slot]: result });
+      toast.success("Assigned!", { id: "assign" });
     } catch (err) {
       console.error("[CalendarDayView] Failed to assign calendar entry:", err);
+      toast.error("Could not assign Meal!", { id: "assign" });
     }
   };
 
@@ -178,7 +183,7 @@ export function CalendarDayView({
                             <button
                               key={entry.entryId}
                               onClick={() => handleChoose(slot, entry)}
-                              className={`rounded-xl overflow-hidden text-left border transition cursor-pointer ${
+                              className={`rounded-xl overflow-hidden text-left border transition cursor-pointer m-1 ${
                                 isActive
                                   ? "border-accent ring-2 ring-accent/50"
                                   : "border-border hover:border-accent/50"
@@ -199,14 +204,14 @@ export function CalendarDayView({
                                     />
                                   </div>
                                 )}
-                                <div className="option-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-3 flex flex-col justify-end">
-                                  <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent">
+                                <div className="option-overlay absolute inset-0 bg-linear-to-t from-card-foreground/50 to-transparent p-3 flex flex-col justify-end">
+                                  <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent brightness-100">
                                     {entry.cookingTime ?? 0} mins
                                   </p>
-                                  <p className="font-semibold leading-tight">
+                                  <p className="font-semibold leading-tight text-foreground/90 truncate">
                                     {entry.title}
                                   </p>
-                                  <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent text-accent-foreground rounded px-2 py-1 w-fit">
+                                  <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent brightness-125 text-accent-foreground rounded px-2 py-1 w-fit">
                                     {!isActive ? "Select Choice" : "Selected"}
                                   </span>
                                 </div>
