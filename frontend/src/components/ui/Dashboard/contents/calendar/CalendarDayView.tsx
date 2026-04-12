@@ -6,6 +6,8 @@ import {
   MONTH_NAMES,
 } from "@masterchef/shared/constants";
 import { AnimatePresence, motion } from "framer-motion";
+import axios from "axios";
+import toast from "react-hot-toast";
 import { useUser } from "@/context/UserContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -130,8 +132,17 @@ export function CalendarDayView({
   }, [user?.id, date, meals]);
 
   const handleChoose = async (slot: MealSlot, entry: MealEntry) => {
-    const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
-    onMealsChange({ ...meals, [slot]: result });
+    try {
+      const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
+      onMealsChange({ ...meals, [slot]: result });
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        toast.error(err.response.data?.message || "This meal is already assigned this week.");
+        return;
+      }
+
+      toast.error("Failed to assign meal. Please try again.");
+    }
   };
 
   return (

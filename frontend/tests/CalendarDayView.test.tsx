@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import React from "react";
+import axios from "axios";
 import type { CalendarDayData } from "@/lib/api/calendar";
 
 vi.mock("framer-motion", async (importOriginal) => {
@@ -30,6 +31,12 @@ const { mockUseUser, mockFetchCalendarWeek, mockAssignCalendarEntry, mockFetchMe
     mockFetchMealPlanWeek: vi.fn(),
   }));
 
+vi.mock("react-hot-toast", () => ({
+  default: {
+    error: vi.fn(),
+  },
+}));
+
 vi.mock("@/context/UserContext", () => ({
   useUser: mockUseUser,
 }));
@@ -46,6 +53,7 @@ vi.mock("@/lib/api/meal-plan", () => ({
 }));
 
 import { CalendarDayView } from "@/components/ui/Dashboard/contents/calendar/CalendarDayView";
+import toast from "react-hot-toast";
 
 const mondayMeals: CalendarDayData = {
   breakfast: null,
@@ -129,5 +137,47 @@ describe("CalendarDayView", () => {
 
     expect(screen.getByText("This Week")).toBeInTheDocument();
     expect(screen.getAllByText("This Week")).toHaveLength(1);
+  });
+
+  it("shows the full backend duplicate message in a toast on 409", async () => {
+    mockAssignCalendarEntry.mockRejectedValue(
+      axios.AxiosError.from(
+        new Error("Conflict"),
+        "ERR_BAD_REQUEST",
+        undefined,
+        undefined,
+        {
+          status: 409,
+          statusText: "Conflict",
+          headers: {},
+          config: {} as never,
+          data: {
+            message: "This meal was already assigned to this week.",
+          },
+        },
+      ),
+    );
+
+    render(
+      <CalendarDayView
+        date={new Date("2026-04-13T12:00:00")}
+        meals={mondayMeals}
+        onBack={vi.fn()}
+        onNewRecipe={vi.fn()}
+        onMealsChange={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("French Toast")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /french toast/i }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "This meal was already assigned to this week.",
+      );
+    });
   });
 });
