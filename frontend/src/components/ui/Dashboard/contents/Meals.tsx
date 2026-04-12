@@ -1,5 +1,4 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -8,12 +7,28 @@ import RecipeView from "@components/ui/RecipeView";
 import MealPickerPanel from "./MealPickerPanel";
 import toast from "react-hot-toast";
 import { useUser } from "@/context/UserContext";
-import { fetchMealPlanWeek, addMealPlanEntry, removeMealPlanEntry, toMondayIso } from "@/lib/api/meal-plan";
+import {
+  fetchMealPlanWeek,
+  addMealPlanEntry,
+  removeMealPlanEntry,
+  toMondayIso,
+} from "@/lib/api/meal-plan";
 
-import { ChevronLeft, ChevronRight, Clock4, MoreHorizontal, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock4,
+  MoreHorizontal,
+  Plus,
+} from "lucide-react";
 
 import { type Recipe } from "@masterchef/shared/types";
-import { type MealEntry, type SlotName, type DayName, type WeekDays } from "@/lib/api/meal-plan";
+import {
+  type MealEntry,
+  type SlotName,
+  type DayName,
+  type WeekDays,
+} from "@/lib/api/meal-plan";
 
 const RECIPES_API_BASE = import.meta.env.VITE_BASE_API_URL as string;
 
@@ -281,9 +296,33 @@ export function MealsTitle() {
   return <h1 className="text-xl font-bold text-accent/80">Meals</h1>;
 }
 
-export function MealsContent() {
+function MealsRecipeViewer({
+  recipe,
+  onClose,
+}: {
+  recipe: Recipe;
+  onClose: () => void;
+}) {
   const { user } = useUser();
-  const navigate = useNavigate();
+
+  return (
+    <RecipeView
+      recipe={recipe}
+      isOwner={!!user && recipe.createdBy === user.id}
+      onClose={onClose}
+      onEdit={() => {
+        onClose();
+        window.location.hash = `recipe?edit=${recipe.id}`;
+      }}
+      onDelete={() => {
+        onClose();
+        window.location.hash = `recipe?view=${recipe.id}`;
+      }}
+    />
+  );
+}
+
+export function MealsContent() {
 
   const [activeDay, setActiveDay] = useState<number>(() => {
     const hash = window.location.hash.replace(/^#/, "");
@@ -426,6 +465,12 @@ export function MealsContent() {
     isDirtyRef.current = false;
     setSyncing(true);
 
+    window.addEventListener("beforeunload", (e) => {
+      if (isDirtyRef.current) {
+        e.preventDefault();
+      }
+    });
+
     const mealPlanId = mealPlanIdRef.current;
 
     try {
@@ -492,7 +537,9 @@ export function MealsContent() {
       console.error("[MealPlan] Sync failed:", err);
       toast.error("Couldn't save changes. Refreshing…");
       try {
-        const fresh = await fetchMealPlanWeek(toMondayIso(weekStartRef.current));
+        const fresh = await fetchMealPlanWeek(
+          toMondayIso(weekStartRef.current),
+        );
         setDays(fresh.days);
         mealPlanIdRef.current = fresh.id;
         originalDaysRef.current = fresh.days;
@@ -805,19 +852,10 @@ export function MealsContent() {
 
       <AnimatePresence>
         {viewedRecipe && (
-          <RecipeView
+          <MealsRecipeViewer
             key={viewedRecipe.id}
             recipe={viewedRecipe}
-            isOwner={!!user && viewedRecipe.createdBy === user.id}
             onClose={() => setViewedRecipe(null)}
-            onEdit={() => {
-              navigate(`/dashboard#recipe?edit=${viewedRecipe.id}`);
-              setViewedRecipe(null);
-            }}
-            onDelete={() => {
-              navigate(`/dashboard#recipe?view=${viewedRecipe.id}`);
-              setViewedRecipe(null);
-            }}
           />
         )}
       </AnimatePresence>

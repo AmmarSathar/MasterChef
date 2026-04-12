@@ -38,6 +38,30 @@ export default function Navbar() {
   }, [user]);
 
   useEffect(() => {
+    const hash = location.hash;
+
+    switch (hash.replace("#", "")) {
+      case "main":
+        setSelectedBtn("nav-main");
+        break;
+      case "calendar":
+        setSelectedBtn("nav-calendar");
+        break;
+      case "recipe":
+        setSelectedBtn("nav-recipes");
+        break;
+      case "meals":
+        setSelectedBtn("nav-meals");
+        break;
+      case "settings":
+        setSelectedBtn("nav-settings");
+        break;
+      default:
+        setSelectedBtn("nav-main");
+    }
+  }, [location, selectedBtn]);
+
+  useEffect(() => {
     const handleResize = () => {
       setShowMoreButton(window.innerHeight < 700);
       if (window.innerHeight >= 700) {
