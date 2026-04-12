@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, CookieIcon, Plus } from "lucide-react";
+import { ArrowLeft, Check, CookieIcon, Plus } from "lucide-react";
 import {
   DAYS_OF_WEEK,
   MEAL_TYPES,
@@ -7,9 +7,12 @@ import {
 } from "@masterchef/shared/constants";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   assignCalendarEntry,
+  fetchCalendarWeek,
+  toSundayIso,
   type CalendarMealType,
   type CalendarDayData,
   type CalendarSlotEntry,
@@ -80,6 +83,9 @@ export function CalendarDayView({
   );
   const [loadingMeals, setLoadingMeals] = useState(true);
   const [warningSlot, setWarningSlot] = useState<MealSlot | null>(null);
+  const [assignedRecipeIds, setAssignedRecipeIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     if (!user?.id) return;
@@ -96,6 +102,32 @@ export function CalendarDayView({
       .catch(console.error)
       .finally(() => setLoadingMeals(false));
   }, [user, dateStr, date, dayName]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    fetchCalendarWeek(toSundayIso(date))
+      .then((data) => {
+        const weeklyRecipeIds = new Set<string>();
+
+        Object.values(data.days).forEach((day) => {
+          Object.values(day).forEach((meal) => {
+            if (meal?.recipeId) {
+              weeklyRecipeIds.add(meal.recipeId);
+            }
+          });
+        });
+
+        Object.values(meals).forEach((meal) => {
+          if (meal?.recipeId) {
+            weeklyRecipeIds.add(meal.recipeId);
+          }
+        });
+
+        setAssignedRecipeIds(weeklyRecipeIds);
+      })
+      .catch(console.error);
+  }, [user?.id, date, meals]);
 
   const handleChoose = async (slot: MealSlot, entry: MealEntry) => {
     const result = await assignCalendarEntry(dateStr, slot, entry.recipeId);
@@ -177,6 +209,9 @@ export function CalendarDayView({
                       <div className="meal-options grid grid-cols-3 gap-3">
                         {entries.map((entry) => {
                           const isActive = active?.recipeId === entry.recipeId;
+                          const isAssignedThisWeek = assignedRecipeIds.has(
+                            entry.recipeId,
+                          );
                           return (
                             <button
                               key={entry.entryId}
@@ -201,6 +236,12 @@ export function CalendarDayView({
                                       className="text-foreground/20"
                                     />
                                   </div>
+                                )}
+                                {isAssignedThisWeek && (
+                                  <Badge className="absolute top-3 right-3 bg-emerald-500/90 text-white shadow-sm">
+                                    <Check size={12} />
+                                    This Week
+                                  </Badge>
                                 )}
                                 <div className="option-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-3 flex flex-col justify-end">
                                   <p className="text-xs scale-95 -ml-1 uppercase tracking-[0.2em] text-accent">
