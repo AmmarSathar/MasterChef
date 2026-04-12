@@ -122,7 +122,7 @@ export function RecipeTitle() {
 }
 
 export function RecipeContent() {
-  const { user } = useUser();
+  const { user, loading } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -758,7 +758,8 @@ export function RecipeContent() {
         setOpenedRecipe(remoteRecipe);
         window.setTimeout(() => setViewOpen(true), 120);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Could not open this recipe";
+        const msg =
+          err instanceof Error ? err.message : "Could not open this recipe";
         toast.error(msg);
       }
     };

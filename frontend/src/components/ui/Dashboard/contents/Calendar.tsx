@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { CalendarDayView } from "./calendar/CalendarDayView";
@@ -102,8 +101,6 @@ function CalendarRecipeViewer({
 }
 
 export function CalendarContent() {
-  const navigate = useNavigate();
-  const { user } = useUser();
   const [activeTimeFilter, setActiveTimeFilter] =
     useState<TimeFilter>("weekly");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
