@@ -354,58 +354,6 @@ function MealsRecipeViewer({
   );
 }
 
-function MealsRecipeViewer({
-  recipe,
-  onClose,
-}: {
-  recipe: Recipe;
-  onClose: () => void;
-}) {
-  const { user } = useUser();
-
-  return (
-    <RecipeView
-      recipe={recipe}
-      isOwner={!!user && recipe.createdBy === user.id}
-      onClose={onClose}
-      onEdit={() => {
-        onClose();
-        window.location.hash = `recipe?edit=${recipe.id}`;
-      }}
-      onDelete={() => {
-        onClose();
-        window.location.hash = `recipe?view=${recipe.id}`;
-      }}
-    />
-  );
-}
-
-function MealsRecipeViewer({
-  recipe,
-  onClose,
-}: {
-  recipe: Recipe;
-  onClose: () => void;
-}) {
-  const { user } = useUser();
-
-  return (
-    <RecipeView
-      recipe={recipe}
-      isOwner={!!user && recipe.createdBy === user.id}
-      onClose={onClose}
-      onEdit={() => {
-        onClose();
-        window.location.hash = `recipe?edit=${recipe.id}`;
-      }}
-      onDelete={() => {
-        onClose();
-        window.location.hash = `recipe?view=${recipe.id}`;
-      }}
-    />
-  );
-}
-
 export function MealsContent() {
   const [activeDay, setActiveDay] = useState<number>(() => {
     const date = getHashDate() ?? new Date();
@@ -420,6 +368,8 @@ export function MealsContent() {
   const [days, setDays] = useState<WeekDays | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncWarn, setSyncWarn] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [loadingRecipeId, setLoadingRecipeId] = useState<string | null>(null);
