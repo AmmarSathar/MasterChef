@@ -91,8 +91,8 @@ export default function CalendarWeekView({
                         <CookieIcon size={32} className="text-foreground/20" />
                       </div>
                     )}
-                    <div className="meal-overlay absolute inset-0 bg-linear-to-t from-foreground/75 to-transparent p-2 flex flex-col gap-0 justify-end transition-all duration-500 delay-100 ease-out-expo hover:pb-3 cursor-pointer">
-                      <span className="text-[9px] uppercase tracking-[0.2em] brightness-200 text-accent pointer-events-none">
+                    <div className="meal-overlay absolute inset-0 bg-linear-to-tr from-foreground/75 to-transparent p-2 flex flex-col gap-0 justify-end transition-all duration-500 delay-100 ease-out-expo hover:pb-3 cursor-pointer">
+                      <span className="text-[10px] uppercase tracking-[0.2em] brightness-200 text-accent pointer-events-none">
                         {slot}
                       </span>
                       <span className="text-xs leading-tight font-medium text-grain3 pointer-events-none brightness-125">

@@ -22,6 +22,7 @@ import {
 
 import {
   AlertTriangle,
+  BadgeQuestionMark,
   ChevronLeft,
   ChevronRight,
   Clock4,
@@ -227,7 +228,9 @@ function MealCard({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="h-full w-full bg-secondary" />
+          <div className="flex h-full w-full items-center justify-center bg-secondary/60">
+            <BadgeQuestionMark size={28} className="text-foreground/50" />
+          </div>
         )}
       </div>
 
@@ -359,8 +362,6 @@ export function MealsContent() {
   const [days, setDays] = useState<WeekDays | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncWarn, setSyncWarn] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [loadingRecipeId, setLoadingRecipeId] = useState<string | null>(null);
@@ -386,11 +387,12 @@ export function MealsContent() {
   const isDirtyRef = useRef(false);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  let syncWarningTimeout: ReturnType<typeof setTimeout>;
+  let syncToastWarn: string | undefined;
 
   useEffect(() => {
     daysRef.current = days;
   }, [days]);
+
   useEffect(() => {
     weekStartRef.current = weekStart;
   }, [weekStart]);
@@ -454,10 +456,14 @@ export function MealsContent() {
     )
       return;
 
-    clearTimeout(syncWarningTimeout);
     isDirtyRef.current = false;
     setSyncing(true);
-    setIsSyncing(true);
+    
+    toast.dismiss(syncToastWarn as string);
+    syncToastWarn = toast.loading("Saving changes...", {
+      position: "bottom-right",
+    });
+
 
     window.addEventListener("beforeunload", (e) => {
       if (isDirtyRef.current) {
@@ -505,7 +511,7 @@ export function MealsContent() {
         } catch (err) {
           console.error("Failed to clear calendar entry:", err);
         }
-        
+
         await assignCalendarEntry(
           dateStr,
           currPos.mealType as CalendarMealType,
@@ -561,15 +567,23 @@ export function MealsContent() {
       }
     } finally {
       setSyncing(false);
-      syncWarningTimeout = setTimeout(() => {
-        setSyncWarn(false);
-        setIsSyncing(false);
-      }, 500);
+      toast.dismiss(syncToastWarn as string);
+
+      toast.success("Changes saved!", {
+        position: "bottom-right",
+      });
     }
   };
 
   const scheduleSyncTimer = () => {
-    setSyncWarn(true);
+    syncToastWarn = toast.error(
+      "Please wait, the selection has unsaved changes...",
+      {
+        position: "bottom-right",
+        duration: Infinity,
+      },
+    );
+
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(syncPendingChanges, 1500);
   };
@@ -877,7 +891,7 @@ export function MealsContent() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {syncWarn && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -919,7 +933,7 @@ export function MealsContent() {
             </AnimatePresence>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
     </div>
   );
 }
