@@ -24,7 +24,12 @@ import {
   Users2,
 } from "lucide-react";
 
-type settingTabs = "account" | "preferences" | "appearance" | "privacy" | "terms";
+type settingTabs =
+  | "account"
+  | "preferences"
+  | "appearance"
+  | "privacy"
+  | "terms";
 
 function Skeleton({ className }: { className?: string }) {
   return (
@@ -85,15 +90,20 @@ export function SettingsContent() {
   ];
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.hash.replace("#", "").split("?")[1]);
+    const params = new URLSearchParams(
+      window.location.hash.replace("#", "").split("?")[1],
+    );
     const setting = params.get("setting") as settingTabs | null;
 
-    console.log("received setting: ", setting, params)
+    console.log("received setting: ", setting, params);
 
-    if (setting && Settings.some((s) => s.id === setting.toLowerCase().trim())) {
+    if (
+      setting &&
+      Settings.some((s) => s.id === setting.toLowerCase().trim())
+    ) {
       setSelectedSetting(setting);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (!loading && user) {
@@ -232,7 +242,9 @@ export function SettingsContent() {
                   <button
                     key={setting.id}
                     className={`setting-option h-15 w-full flex items-center justify-between px-6 py-2 pointer-events-auto rounded-none ${index === 0 ? "rounded-t-2xl" : index === Settings.length - 1 ? "rounded-b-2xl" : ""} hover:bg-accent/5 border-l-5 ${setting.id === selectedSetting ? "border-destructive text-destructive brightness-125 font-bold" : "border-destructive/0 text-foreground/80"} transition-all duration-200 cursor-pointer`}
-                    onClick={() => setSelectedSetting(setting.id as settingTabs)}
+                    onClick={() =>
+                      setSelectedSetting(setting.id as settingTabs)
+                    }
                   >
                     <div className="h-full flex items-center justify-center relative pointer-events-none">
                       {setting.icon && (
