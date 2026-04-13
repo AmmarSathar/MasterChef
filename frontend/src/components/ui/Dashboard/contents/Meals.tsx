@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, sync } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -13,8 +13,15 @@ import {
   removeMealPlanEntry,
   toMondayIso,
 } from "@/lib/api/meal-plan";
+import {
+  assignCalendarEntry,
+  clearCalendarEntry,
+  toDateStr,
+  type CalendarMealType,
+} from "@/lib/api/calendar";
 
 import {
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Clock4,
@@ -86,6 +93,22 @@ function findEntryInDays(
       if (found) return found;
     }
   }
+}
+
+function getHashDate(): Date | null {
+  const params = new URLSearchParams(window.location.hash.split("?")[1] ?? "");
+  const raw = params.get("date");
+  if (!raw) return null;
+  const [y, m, d] = raw.split("-").map(Number);
+  return y && m && d ? new Date(y, m - 1, d) : null;
+}
+
+function toMonday(date: Date): Date {
+  const day = date.getDay();
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
 }
 
 function MealCard({
@@ -323,54 +346,21 @@ function MealsRecipeViewer({
 }
 
 export function MealsContent() {
-
   const [activeDay, setActiveDay] = useState<number>(() => {
-    const hash = window.location.hash.replace(/^#/, "");
-    const qIdx = hash.indexOf("?");
-    if (qIdx !== -1) {
-      const params = new URLSearchParams(hash.slice(qIdx + 1));
-      const dateParam = params.get("date");
-      if (dateParam) {
-        const [y, m, d] = dateParam.split("-").map(Number);
-        if (y && m && d) {
-          const target = new Date(y, m - 1, d);
-          const day = target.getDay();
-          return day === 0 ? 6 : day - 1; // Mon=0..Sun=6
-        }
-      }
-    }
-    const d = new Date().getDay(); // 0 = Sun
-    return d === 0 ? 6 : d - 1; // convert to Mon=0..Sun=6
+    const date = getHashDate() ?? new Date();
+    const day = date.getDay();
+    return day === 0 ? 6 : day - 1;
   });
-  const [weekStart, setWeekStart] = useState<Date>(() => {
-    const hash = window.location.hash.replace(/^#/, "");
-    const qIdx = hash.indexOf("?");
-    if (qIdx !== -1) {
-      const params = new URLSearchParams(hash.slice(qIdx + 1));
-      const dateParam = params.get("date");
-      if (dateParam) {
-        const [y, m, d] = dateParam.split("-").map(Number);
-        if (y && m && d) {
-          const target = new Date(y, m - 1, d);
-          const day = target.getDay();
-          const monday = new Date(target);
-          monday.setDate(target.getDate() + (day === 0 ? -6 : 1 - day));
-          monday.setHours(0, 0, 0, 0);
-          return monday;
-        }
-      }
-    }
-    const today = new Date();
-    const diff = today.getDay() === 0 ? -6 : 1 - today.getDay();
-    const start = new Date(today);
-    start.setDate(today.getDate() + diff);
-    start.setHours(0, 0, 0, 0);
-    return start;
-  });
+
+  const [weekStart, setWeekStart] = useState<Date>(() =>
+    toMonday(getHashDate() ?? new Date()),
+  );
 
   const [days, setDays] = useState<WeekDays | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncWarn, setSyncWarn] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [loadingRecipeId, setLoadingRecipeId] = useState<string | null>(null);
@@ -395,6 +385,8 @@ export function MealsContent() {
   const originalDaysRef = useRef<WeekDays | null>(null);
   const isDirtyRef = useRef(false);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  let syncWarningTimeout: ReturnType<typeof setTimeout>;
 
   useEffect(() => {
     daysRef.current = days;
@@ -462,8 +454,10 @@ export function MealsContent() {
     )
       return;
 
+    clearTimeout(syncWarningTimeout);
     isDirtyRef.current = false;
     setSyncing(true);
+    setIsSyncing(true);
 
     window.addEventListener("beforeunload", (e) => {
       if (isDirtyRef.current) {
@@ -499,6 +493,24 @@ export function MealsContent() {
           notes: entry.notes || undefined,
         });
         renames.set(entryId, newEntryId);
+
+        const d = new Date(weekStartRef.current);
+        d.setDate(d.getDate() + DAY_NAMES.indexOf(currPos.dayOfWeek));
+        const dateStr = toDateStr(d);
+        try {
+          await clearCalendarEntry(
+            dateStr,
+            origPos.mealType as CalendarMealType,
+          );
+        } catch (err) {
+          console.error("Failed to clear calendar entry:", err);
+        }
+        
+        await assignCalendarEntry(
+          dateStr,
+          currPos.mealType as CalendarMealType,
+          entry.recipeId,
+        );
       }
 
       for (const entryId of Object.keys(orig)) {
@@ -549,10 +561,15 @@ export function MealsContent() {
       }
     } finally {
       setSyncing(false);
+      syncWarningTimeout = setTimeout(() => {
+        setSyncWarn(false);
+        setIsSyncing(false);
+      }, 500);
     }
   };
 
   const scheduleSyncTimer = () => {
+    setSyncWarn(true);
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(syncPendingChanges, 1500);
   };
@@ -671,7 +688,7 @@ export function MealsContent() {
         <div className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4">
           <div className="flex items-center justify-between gap-3 pb-3">
             <div className="flex items-center gap-3 text-sm text-foreground/70">
-              <span className="font-semibold">
+              <span className="font-semibold pointer-events-none">
                 Week of{" "}
                 {weekDates[0]?.dateValue.toLocaleString("en-US", {
                   month: "short",
@@ -718,16 +735,16 @@ export function MealsContent() {
                 key={i}
                 type="button"
                 onClick={() => setActiveDay(i)}
-                className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border text-xs font-semibold transition-all duration-300 ${
+                className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border text-xs font-semibold transition-all duration-300 hover:animate-pulse ${
                   i === activeDay
                     ? "border-accent bg-accent/20 text-accent shadow-sm"
                     : "border-border/50 bg-card text-foreground/70 hover:border-accent/50 hover:text-foreground"
                 }`}
               >
-                <span className="text-[11px] uppercase tracking-wide">
+                <span className="text-[11px] uppercase tracking-wide pointer-events-none">
                   {label}
                 </span>
-                <span className="text-base">{dateNum}</span>
+                <span className="text-base pointer-events-none">{dateNum}</span>
               </button>
             ))}
           </div>
@@ -857,6 +874,50 @@ export function MealsContent() {
             recipe={viewedRecipe}
             onClose={() => setViewedRecipe(null)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {syncWarn && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`${isSyncing ? "h-15 w-60" : "h-15 w-105"} transition-all duration-500 ease-out-cubic bg-linear-to-br from-accent/20 to-transparent backdrop-opacity-10 flex p-3 rounded-xl ring-2 ring-border/30 shadow-lg shadow-accent/10 flex-col items-center justify-center gap-2 fixed bottom-4 right-4 z-50`}
+          >
+            <div
+              className="backdrop-ping animate-ping h-full w-full rounded-xl absolute top-0 left-1/2 -translate-x-1/2 bg-border/30 z-[-1]"
+              style={{ maxWidth: "60%", maxHeight: "200px" }}
+            />
+            <AnimatePresence>
+              <motion.span
+                key="syncing"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="text-sm font-bold text-foreground/80 flex items-center pl-6 whitespace-nowrap"
+              >
+                {isSyncing ? (
+                  <>
+                    <Spinner
+                      size={26}
+                      className="text-accent brightness-125 animate-spin absolute top-4 left-4"
+                    />
+                    Syncing changes...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle
+                      size={26}
+                      className="text-destructive brightness-200 animate-pulse absolute top-4 left-4"
+                    ></AlertTriangle>
+                    Please wait, the selection has unsaved changes...
+                  </>
+                )}
+              </motion.span>
+            </AnimatePresence>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

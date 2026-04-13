@@ -78,24 +78,24 @@ export default function CalendarWeekView({
                   <div
                     key={slot}
                     onClick={(e) => { e.stopPropagation(); onMealClick?.(meal); }}
-                    className="meal-card h-28 rounded-xl overflow-hidden relative p-0 cursor-pointer"
+                    className="meal-card h-28 rounded-xl overflow-hidden relative p-0 cursor-pointer pointer-events-auto hover:shadow-md hover:scale-[1.05] transition-all duration-500 ease-out-cubic"
                   >
                     {meal.imageUrl ? (
                       <img
                         src={meal.imageUrl}
                         alt={meal.title}
-                        className="w-full h-full object-cover m-0 pointer-events-none"
+                        className="w-full h-full object-cover m-0"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-card/50 pointer-events-none">
                         <CookieIcon size={32} className="text-foreground/20" />
                       </div>
                     )}
-                    <div className="meal-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-2 flex flex-col justify-end pointer-events-none">
-                      <span className="text-[9px] uppercase tracking-[0.2em] text-accent">
+                    <div className="meal-overlay absolute inset-0 bg-linear-to-t from-foreground/75 to-transparent p-2 flex flex-col gap-0 justify-end transition-all duration-500 delay-100 ease-out-expo hover:pb-3 cursor-pointer">
+                      <span className="text-[9px] uppercase tracking-[0.2em] brightness-200 text-accent pointer-events-none">
                         {slot}
                       </span>
-                      <span className="text-xs leading-tight font-medium">
+                      <span className="text-xs leading-tight font-medium text-grain3 pointer-events-none brightness-125">
                         {meal.title}
                       </span>
                     </div>
