@@ -54,7 +54,7 @@ const dashboardRoutes: Record<
     Title: CalendarTitle,
     Content: CalendarContent,
   },
-}; 
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -72,10 +72,16 @@ export default function Dashboard() {
   const parseHashRoute = (hashValue: string): DashboardRouteKey => {
     const raw = hashValue.startsWith("#") ? hashValue.slice(1) : hashValue;
     const route = raw.split("?")[0];
-    if (route === "main" || route === "settings" || route === "recipe" || route === "meals" || route === "calendar")
+    if (
+      route === "main" ||
+      route === "settings" ||
+      route === "recipe" ||
+      route === "meals" ||
+      route === "calendar"
+    )
       return route as DashboardRouteKey;
 
-    console.log("passed there")
+    console.log("passed there");
     return "main";
   };
 
@@ -285,7 +291,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="user-details relative w-full flex flex-col items-center justify-center gap-1 p-1">
-                  <span className="user-username font-bold text-3xl text-accent">
+                  <span className="user-username font-bold text-3xl text-accent text-shadow-lg shadow-accent">
                     {user?.name || "Unknown User"}
                   </span>
                   <span className="user-cooking-level font-semibold text-sm text-foreground">
@@ -297,10 +303,16 @@ export default function Dashboard() {
                 </div>
 
                 <div className="user-description relative w-full flex items-center justify-center p-1 mt-2">
-                  <span className="text-center text-sm text-foreground/80 line-clamp-2 max-w-60">
-                    {user?.bio ||
-                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip "}
-                  </span>
+                  {user?.bio ? (
+                    <span className="text-center text-sm text-foreground/80 line-clamp-2 max-w-60">
+                      {user.bio}
+                    </span>
+                  ) : (
+                    <button onClick={() => {window.location.href = "/dashboard#settings?setting=account"}} className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-secondary/20 transition-all duration-300 text-sm font-semibold text-foreground/60 hover:text-foreground/80">
+                      <Plus size={16} className="pointer-events-none" />
+                      Add bio
+                    </button>
+                  )}
                 </div>
 
                 <div className="user-actions relative w-full flex flex-col items-center justify-center gap-5 p-1 mt-4">
@@ -376,7 +388,7 @@ export default function Dashboard() {
               </motion.div>
             )}
           </AnimatePresence>,
-          document.body
+          document.body,
         )}
       </div>
     </motion.div>

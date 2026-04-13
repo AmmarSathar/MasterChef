@@ -24,6 +24,8 @@ import {
   Users2,
 } from "lucide-react";
 
+type settingTabs = "account" | "preferences" | "appearance" | "privacy" | "terms";
+
 function Skeleton({ className }: { className?: string }) {
   return (
     <div
@@ -39,7 +41,9 @@ export function SettingsContent() {
   const { user, refetchUser, loading } = useUser();
 
   const [busy, setbusy] = useState(true);
-  const [selectedSetting, setSelectedSetting] = useState(null as string | null);
+  const [selectedSetting, setSelectedSetting] = useState(
+    null as settingTabs | null,
+  );
   const [pfpChangeOpen, setPfpChangeOpen] = useState(false);
 
   const Settings: Array<{
@@ -81,6 +85,17 @@ export function SettingsContent() {
   ];
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.replace("#", "").split("?")[1]);
+    const setting = params.get("setting") as settingTabs | null;
+
+    console.log("received setting: ", setting, params)
+
+    if (setting && Settings.some((s) => s.id === setting.toLowerCase().trim())) {
+      setSelectedSetting(setting);
+    }
+  }, [])
+
+  useEffect(() => {
     if (!loading && user) {
       setbusy(false);
     }
@@ -92,14 +107,15 @@ export function SettingsContent() {
     try {
       const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
-      const res = await axios.put(`${BASE_API_URL}/user/profile`, {
-        pfp,
-        isCustomized: true,
-      }, { withCredentials: true });
+      await axios.put(
+        `${BASE_API_URL}/user/profile`,
+        {
+          pfp,
+          isCustomized: true,
+        },
+        { withCredentials: true },
+      );
 
-      const updatedUser = res.data.user;
-
-      // Update the global user var
       refetchUser();
 
       toast.dismiss(loadingToast);
@@ -108,10 +124,7 @@ export function SettingsContent() {
       toast.dismiss(loadingToast);
 
       if (axios.isAxiosError(err)) {
-        toast.error(
-          err?.response?.data?.message ||
-            "Failed to save profile",
-        );
+        toast.error(err?.response?.data?.message || "Failed to save profile");
       } else {
         toast.error("An unexpected error occurred.");
       }
@@ -219,7 +232,7 @@ export function SettingsContent() {
                   <button
                     key={setting.id}
                     className={`setting-option h-15 w-full flex items-center justify-between px-6 py-2 pointer-events-auto rounded-none ${index === 0 ? "rounded-t-2xl" : index === Settings.length - 1 ? "rounded-b-2xl" : ""} hover:bg-accent/5 border-l-5 ${setting.id === selectedSetting ? "border-destructive text-destructive brightness-125 font-bold" : "border-destructive/0 text-foreground/80"} transition-all duration-200 cursor-pointer`}
-                    onClick={() => setSelectedSetting(setting.id)}
+                    onClick={() => setSelectedSetting(setting.id as settingTabs)}
                   >
                     <div className="h-full flex items-center justify-center relative pointer-events-none">
                       {setting.icon && (
