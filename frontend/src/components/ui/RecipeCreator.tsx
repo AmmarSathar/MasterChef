@@ -31,6 +31,23 @@ interface Step {
   content: string;
 }
 
+function normalizeSkillLevel(
+  value: unknown,
+): (typeof SKILL_LEVELS)[number]["value"] {
+  if (typeof value === "string") {
+    return value as (typeof SKILL_LEVELS)[number]["value"];
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.value === "string") {
+      return record.value as (typeof SKILL_LEVELS)[number]["value"];
+    }
+  }
+
+  return SKILL_LEVELS[0].value;
+}
+
 const INITIAL_FORM_DATA: Recipe = {
   id: "",
   ingredients: [],
@@ -81,7 +98,13 @@ export default function RecipeCreator({
   const [isIngredientClicked, setIsIngredientClicked] = useState("");
 
   const [formData, setFormData] = useState<Recipe>(
-    () => initialData || INITIAL_FORM_DATA,
+    () =>
+      initialData
+        ? {
+            ...initialData,
+            skillLevel: normalizeSkillLevel(initialData.skillLevel),
+          }
+        : INITIAL_FORM_DATA,
   );
 
   const [ingredients, setIngredients] = useState<Ingredient[]>(() =>
@@ -335,7 +358,7 @@ export default function RecipeCreator({
       prepingTime: Number(formData.prepingTime),
       cookingTime: Number(formData.cookingTime),
       servings: Number(formData.servings) || 1,
-      skillLevel: formData.skillLevel,
+      skillLevel: normalizeSkillLevel(formData.skillLevel),
       isShared: Boolean(formData.isShared),
       dietaryTags: formData.dietaryTags,
       imageUrl: coverImage,

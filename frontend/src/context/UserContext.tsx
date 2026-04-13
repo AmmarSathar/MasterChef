@@ -16,11 +16,30 @@ export interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+function normalizeUser(sessionUser: unknown): User | null {
+  if (!sessionUser || typeof sessionUser !== "object") return null;
+
+  const record = sessionUser as Record<string, unknown>;
+  const resolvedId =
+    typeof record.id === "string"
+      ? record.id
+      : typeof record._id === "string"
+        ? record._id
+        : undefined;
+
+  if (!resolvedId) return null;
+
+  return {
+    ...(record as unknown as User),
+    id: resolvedId,
+  };
+}
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending, refetch } = authClient.useSession();
 
   // Map BetterAuth session user to our User type
-  const user = session?.user ? (session.user as unknown as User) : null;
+  const user = normalizeUser(session?.user);
   const loading = isPending;
 
   const logout = async () => {

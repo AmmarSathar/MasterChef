@@ -49,12 +49,49 @@ const TIME_RANGES = [
   { label: "1+ hours", value: "over60", icon: Timer },
 ];
 
+function getRecipeOwnerId(createdBy: unknown): string {
+  if (typeof createdBy === "string") return createdBy;
+
+  if (createdBy && typeof createdBy === "object") {
+    const record = createdBy as Record<string, unknown>;
+    if (typeof record.id === "string") return record.id;
+    if (typeof record._id === "string") return record._id;
+  }
+
+  return "";
+}
+
+function getResolvedUserId(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.id === "string") return record.id;
+  if (typeof record._id === "string") return record._id;
+
+  return "";
+}
+
+function normalizeSkillLevel(value: unknown): Recipe["skillLevel"] {
+  if (typeof value === "string") {
+    return value as Recipe["skillLevel"];
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.value === "string") {
+      return record.value as Recipe["skillLevel"];
+    }
+  }
+
+  return "beginner";
+}
+
 function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
   const now = new Date();
 
   return {
     id: recipe.id ?? "",
-    createdBy: recipe.createdBy ?? "",
+    createdBy: getRecipeOwnerId(recipe.createdBy),
     createdByName: recipe.createdByName,
     createdAt: recipe.createdAt ?? now,
     updatedAt: recipe.updatedAt ?? now,
@@ -64,7 +101,7 @@ function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
     prepingTime: recipe.prepingTime ?? 0,
     cookingTime: recipe.cookingTime ?? 0,
     servings: recipe.servings ?? 1,
-    skillLevel: recipe.skillLevel ?? "beginner",
+    skillLevel: normalizeSkillLevel(recipe.skillLevel),
     dietaryTags: recipe.dietaryTags ?? [],
     isShared: recipe.isShared ?? true,
     ingredients: recipe.ingredients ?? [],
@@ -160,19 +197,23 @@ export function RecipeContent() {
   }>({ mealType: [], skillLevel: [], cookingTime: [] });
 
   useEffect(() => {
-    if (user?.id) setCurrentUserId(user.id);
+    const resolvedUserId = getResolvedUserId(user);
+    if (resolvedUserId) setCurrentUserId(resolvedUserId);
   }, [user?.id]);
 
   useEffect(() => {
+    if (getResolvedUserId(user)) return;
+
     const storedUser = localStorage.getItem("user");
     if (!storedUser) return;
     try {
-      const parsedUser = JSON.parse(storedUser) as { id?: string };
-      if (parsedUser.id) setCurrentUserId(parsedUser.id);
+      const parsedUser = JSON.parse(storedUser) as Record<string, unknown>;
+      const resolvedUserId = getResolvedUserId(parsedUser);
+      if (resolvedUserId) setCurrentUserId(resolvedUserId);
     } catch {
-      setCurrentUserId("");
+      // Ignore stale local storage and keep the current in-memory session value.
     }
-  }, []);
+  }, [user]);
 
   // useEffect(() => {
   //   const timeout = window.setTimeout(
@@ -225,7 +266,9 @@ export function RecipeContent() {
   };
 
   const handleStartEdit = (recipe: Recipe) => {
-    if (!currentUserId || recipe.createdBy !== currentUserId) return;
+    if (!currentUserId || getRecipeOwnerId(recipe.createdBy) !== currentUserId) {
+      return;
+    }
     setEditingRecipe(recipe);
     setRecipeCreateOpen(true);
   };
@@ -334,28 +377,18 @@ export function RecipeContent() {
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || "Create failed");
 
-        const created = json?.data;
-        const now = created?.createdAt ?? new Date();
+        const created = normalizeRecipe(json?.data as Partial<Recipe>);
         const newRecipe: Recipe = {
-          id: created.id,
-          createdBy: created.createdBy,
-          createdAt: now,
-          updatedAt: created.updatedAt ?? now,
-          title: created.title,
-          description: created.description,
+          ...created,
           imageUrl: data.imageUrl || created.imageUrl || "",
           prepingTime: created.prepingTime ?? data.prepingTime,
           cookingTime: created.cookingTime ?? data.cookingTime,
-          servings: created.servings ?? 1,
-          skillLevel: created.skillLevel,
           dietaryTags: created.dietaryTags ?? data.dietaryTags ?? [],
           isShared:
             typeof created?.isShared === "boolean"
               ? created.isShared
               : data.isShared ?? true,
-          ingredients: created.ingredients ?? [],
-          steps: created.steps ?? [],
-          containsAllergens: [],
+          containsAllergens: created.containsAllergens ?? [],
         };
 
         setRecipes((prev) => [newRecipe, ...prev]);
@@ -388,7 +421,9 @@ export function RecipeContent() {
 
   const handleRequestDelete = (recipeId: string) => {
     const targetRecipe = recipes.find((r) => r.id === recipeId);
-    if (!targetRecipe || targetRecipe.createdBy !== currentUserId) return;
+    if (!targetRecipe || getRecipeOwnerId(targetRecipe.createdBy) !== currentUserId) {
+      return;
+    }
     setPendingDeleteRecipeId(recipeId);
   };
 
@@ -398,7 +433,7 @@ export function RecipeContent() {
     (async () => {
       const recipeId = pendingDeleteRecipeId;
       const targetRecipe = recipes.find((r) => r.id === recipeId);
-      if (!targetRecipe || targetRecipe.createdBy !== currentUserId) {
+      if (!targetRecipe || getRecipeOwnerId(targetRecipe.createdBy) !== currentUserId) {
         setPendingDeleteRecipeId(null);
         return;
       }
@@ -417,6 +452,13 @@ export function RecipeContent() {
 
         setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
         if (editingRecipe?.id === recipeId) closeModal();
+        if (openedRecipe?.id === recipeId) {
+          setViewOpen(false);
+          setOpenedRecipe(null);
+          if (window.location.hash.startsWith("#recipe")) {
+            window.location.hash = "recipe";
+          }
+        }
         toast.success("Recipe deleted");
       } catch (err: unknown) {
         console.error("Delete recipe error", err);
@@ -1056,7 +1098,7 @@ export function RecipeContent() {
           <RecipeView
             key={`recipe-view-${openedRecipe.id}`}
             recipe={openedRecipe}
-            isOwner={openedRecipe.createdBy === currentUserId}
+            isOwner={getRecipeOwnerId(openedRecipe.createdBy) === currentUserId}
             isAddingToCollection={isAddingToCollection}
             onClose={() => {
               setViewOpen(false);
