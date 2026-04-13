@@ -33,9 +33,10 @@
 
 | Date | Task | Description | Time Spent |
 |------|------|-------------|------------|
-| 2026-04-07 | Presentation and Report | Worked on presentation slides (section 1) and final report (sections 1 to 3) | 3h |
-| 2026-04-13 | Presentation and Report | Updated final report (sections 1 to 3) | 0.5h |
-| 2026-04-13 | GitHub Repository | Updated missing tags on all tasks (story points, iteration #s, target dates) in Projects > MasterChef | 0.5h |
-| 2026-04-13 | Meeting Minutes | Added meeting minutes for April 4th and April 0th | 0.5h |
+| 2026-04-07 | Presentation & Final Report | Work on presentation slides (section 1) and final report (sections 1 to 3) | 3h |
+| 2026-04-13 | Final Report | Update final report | 0.5h |
+| 2026-04-13 | GitHub Repository | Update missing tags on all tasks (story points, iteration #s, target dates) in Projects > MasterChef | 0.5h |
+| 2026-04-13 | Meeting Minutes | Add missing meeting minutes for Sprint 4 | 0.5h |
+| 2026-04-14 | Final Report | Update final report; final check of contribution numbers per team member | 0.5h |
 
-**Total Time:** 4.5h
+**Total Time:** 5h
