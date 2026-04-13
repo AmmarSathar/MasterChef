@@ -290,6 +290,22 @@ export async function updateMealPlanEntry(
     throw error;
   }
 
+  const duplicateRecipe = await MealPlanEntry.findOne({
+    _id: { $ne: entryId },
+    mealPlanId: entry.mealPlanId,
+    recipeId,
+    mealType: { $ne: entry.mealType },
+  });
+
+  if (duplicateRecipe) {
+    const error: ApiError = new Error("This recipe is already assigned to ${duplicateRecipe.dayOfWeek}, ${duplicateRecipe.mealType} this week.");
+  error.statusCode = 409;
+  (error as ApiError & { details?: { existingMealType?: string } }).details = {
+    existingMealType: duplicateRecipe.mealType,
+  };
+  throw error;
+}
+  
   entry.recipeId = new mongoose.Types.ObjectId(recipeId);
   if (notes !== undefined) {
     entry.notes = notes;
