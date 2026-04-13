@@ -1,22 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+const DARK_THEMES = new Set(['dark', 'dark-old', 'rosemary', 'blue-apron', 'truffle']);
 
-  useEffect(() => {
-    // Check for saved theme preference or default to light
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-    
-    setTheme(initialTheme);
-    document.documentElement.setAttribute('data-theme', initialTheme);
-  }, []);
+export function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? DARK_THEMES.has(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+    const newTheme = isDark ? 'light' : 'dark';
+    setIsDark(!isDark);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
   };
@@ -28,19 +23,19 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
     >
       <div className="absolute inset-0 rounded-full overflow-hidden">
-        <div 
+        <div
           className={`absolute inset-0 bg-accent transition-transform duration-500 ease-in-out ${
-            theme === 'dark' ? 'translate-x-0' : '-translate-x-full'
+            isDark ? 'translate-x-0' : '-translate-x-full'
           }`}
         />
       </div>
-      
-      <div 
+
+      <div
         className={`absolute top-1 w-6 h-6 bg-background rounded-full shadow-md transition-all duration-500 ease-in-out flex items-center justify-center ${
-          theme === 'dark' ? 'left-5' : 'left-1'
+          isDark ? 'left-5' : 'left-1'
         }`}
       >
-        {theme === 'dark' ? (
+        {isDark ? (
           <Moon className="w-3.5 h-3.5 text-accent transition-all duration-300" />
         ) : (
           <Sun className="w-3.5 h-3.5 text-muted-foreground transition-all duration-300" />

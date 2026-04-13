@@ -1,26 +1,41 @@
 import { useState, useEffect } from "react";
-import { Paintbrush, Languages, CalendarDays, Sun, Moon, Monitor } from "lucide-react";
+import { Paintbrush, Languages, CalendarDays, Monitor } from "lucide-react";
 
-type ThemeValue = "light" | "dark" | "system";
+type ThemeValue =
+  | "light"
+  | "dark"
+  | "dark-old"
+  | "rosemary"
+  | "saffron"
+  | "sage"
+  | "blue-apron"
+  | "truffle"
+  | "lavender"
+  | "system";
+
 type LangValue = "English" | "French" | "Spanish" | "Arabic" | "Chinese" | "Japanese";
 type DateFormatValue = "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
 
-const THEME_OPTIONS: { label: string; value: ThemeValue; icon: React.ReactNode }[] = [
-  { label: "Light", value: "light", icon: <Sun size={22} /> },
-  { label: "Dark", value: "dark", icon: <Moon size={22} /> },
-  { label: "System", value: "system", icon: <Monitor size={22} /> },
+const THEME_OPTIONS: { label: string; value: ThemeValue; bg: string; accent: string }[] = [
+  { label: "Cookwise Light", value: "light",      bg: "#f1eee8", accent: "#785976" },
+  { label: "Cookwise Dark",  value: "dark",       bg: "#120f0e", accent: "#c4a484" },
+  { label: "Origins Dark",   value: "dark-old",   bg: "#0e0e0e", accent: "#ffdab9" },
+  { label: "Rosemary",       value: "rosemary",   bg: "#160a0b", accent: "#bf7484" },
+  { label: "Saffron",        value: "saffron",    bg: "#fdf5d8", accent: "#b87010" },
+  { label: "Sage",           value: "sage",       bg: "#edf6ef", accent: "#3c9a58" },
+  { label: "Blue Apron",     value: "blue-apron", bg: "#090d1c", accent: "#4a84be" },
+  { label: "Truffle",        value: "truffle",    bg: "#0c0c0e", accent: "#a4a4b2" },
+  { label: "Lavender",       value: "lavender",   bg: "#f3eefb", accent: "#7040c0" },
+  { label: "System",         value: "system",     bg: "linear-gradient(135deg, #f1eee8 50%, #120f0e 50%)", accent: "#888" },
 ];
 
 const LANGUAGES: LangValue[] = ["English", "French", "Spanish", "Arabic", "Chinese", "Japanese"];
-
 const DATE_FORMATS: DateFormatValue[] = ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"];
 
 function applyTheme(value: ThemeValue) {
   const resolved =
     value === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
       : value;
   document.documentElement.setAttribute("data-theme", resolved);
 }
@@ -37,6 +52,7 @@ export default function AppearanceSettings() {
     setTheme(savedTheme);
     setLang(savedLang);
     setDateFormat(savedFormat);
+    applyTheme(savedTheme);
   }, []);
 
   const selectTheme = (value: ThemeValue) => {
@@ -77,18 +93,31 @@ export default function AppearanceSettings() {
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          {THEME_OPTIONS.map(({ label, value, icon }) => (
+          {THEME_OPTIONS.map(({ label, value, bg, accent }) => (
             <button
               key={value}
               type="button"
               onClick={() => selectTheme(value)}
-              className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl transition-all duration-300 ${
                 theme === value
                   ? "bg-accent text-card shadow-md"
                   : "bg-input/80 text-foreground/60 hover:bg-input"
               }`}
             >
-              <span className={theme === value ? "opacity-100" : "opacity-60"}>{icon}</span>
+              {value === "system" ? (
+                <Monitor size={20} className={theme === value ? "opacity-100" : "opacity-60"} />
+              ) : (
+                <div className="flex gap-1.5">
+                  <span
+                    className="h-4 w-4 rounded-full border border-white/10"
+                    style={{ background: bg }}
+                  />
+                  <span
+                    className="h-4 w-4 rounded-full border border-white/10"
+                    style={{ background: accent }}
+                  />
+                </div>
+              )}
               <span className="pointer-events-none text-xs font-semibold uppercase tracking-wide">
                 {label}
               </span>
