@@ -37,12 +37,6 @@ import {
   type DayName,
   type WeekDays,
 } from "@/lib/api/meal-plan";
-import {
-  type MealEntry,
-  type SlotName,
-  type DayName,
-  type WeekDays,
-} from "@/lib/api/meal-plan";
 
 const RECIPES_API_BASE = import.meta.env.VITE_BASE_API_URL as string;
 
@@ -564,9 +558,6 @@ export function MealsContent() {
         const fresh = await fetchMealPlanWeek(
           toMondayIso(weekStartRef.current),
         );
-        const fresh = await fetchMealPlanWeek(
-          toMondayIso(weekStartRef.current),
-        );
         setDays(fresh.days);
         mealPlanIdRef.current = fresh.id;
         originalDaysRef.current = fresh.days;
@@ -892,7 +883,6 @@ export function MealsContent() {
 
       <AnimatePresence>
         {viewedRecipe && (
-          <MealsRecipeViewer
           <MealsRecipeViewer
             key={viewedRecipe.id}
             recipe={viewedRecipe}
