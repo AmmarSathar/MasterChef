@@ -104,7 +104,7 @@ export async function getCalendarWeek(
 }
 
 /**
- * Assigns (or replaces) a recipe to a specific date + meal slot.
+ * Assigns recipe to a specific date/meal slot.
  * Uses findOneAndUpdate with upsert so calling it twice for the same slot
  * simply swaps the recipe rather than throwing a conflict.
  */

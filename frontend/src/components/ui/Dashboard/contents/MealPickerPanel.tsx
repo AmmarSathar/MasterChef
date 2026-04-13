@@ -1,34 +1,28 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock4,
-  CookingPot,
-  CookieIcon,
-  Plus,
-} from "lucide-react";
-import axios from "axios";
-import { type Recipe } from "@masterchef/shared/types";
+
+import { Spinner } from "@/components/ui/spinner";
 import { useUser } from "@/context/UserContext";
-import {
-  addMealPlanEntry,
-  type MealEntry,
-  type SlotName,
-  type DayName,
-} from "@/lib/api/meal-plan";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { addMealPlanEntry } from "@/lib/api/meal-plan";
+
+import { ChevronLeft, ChevronRight, Clock4, CookingPot, CookieIcon, Plus } from "lucide-react";
+
+import { type Recipe } from "@masterchef/shared/types";
+import { type MealEntry, type SlotName, type DayName } from "@/lib/api/meal-plan";
 
 const BASE = import.meta.env.VITE_BASE_API_URL as string;
 const PAGE_SIZE = 6;
 
-// ── Recipe card derived from StandardCard, selection-only ─────
-
 function RecipePickerCard({
   recipe,
   onSelect,
+  isSubmitting,
 }: {
   recipe: Recipe;
   onSelect: () => void;
+  isSubmitting: boolean;
 }) {
   const [isHovering, setIsHovering] = useState(false);
   return (
@@ -36,9 +30,10 @@ function RecipePickerCard({
       type="button"
       whileTap={{ scale: 0.96, opacity: 0.8 }}
       onClick={onSelect}
+      disabled={isSubmitting}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      className="w-full h-full flex flex-col rounded-xl overflow-hidden bg-card border border-border/50 grayscale-25 brightness-95 shadow-sm hover:shadow-md hover:scale-[1.02] hover:grayscale-0 hover:brightness-100 transition-all duration-200 cursor-pointer text-left"
+      className="relative w-full h-full flex flex-col rounded-xl overflow-hidden bg-card border border-border/50 grayscale-25 brightness-95 shadow-sm hover:shadow-md hover:scale-[1.02] hover:grayscale-0 hover:brightness-100 transition-all duration-200 cursor-pointer text-left"
     >
       <div
         className={`w-full ${isHovering ? "h-35" : "h-30"} shrink-0 bg-secondary/40 flex items-center justify-center overflow-hidden pointer-events-none transition-all duration-300 ease-out-cubic`}
@@ -55,7 +50,6 @@ function RecipePickerCard({
         )}
       </div>
 
-      {/* Info */}
       <div className="flex flex-col gap-1 px-3 py-3 pb-4 flex-1 pointer-events-none">
         <span className="text-sm font-semibold text-foreground/80 leading-tight line-clamp-2">
           {recipe.title}
@@ -71,6 +65,20 @@ function RecipePickerCard({
           </span>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isSubmitting && (
+          <motion.div
+            initial={{ backdropFilter: "blur(0px)", scale: "0.95", opacity: 0 }}
+            animate={{ backdropFilter: "blur(2px)", scale: "1", opacity: 1 }}
+            exit={{ backdropFilter: "blur(0px)", scale: "0.95", opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-card/50"
+          >
+            <Spinner variant="infinite" size={28} className="text-accent" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.button>
   );
 }
@@ -88,12 +96,11 @@ function RecipePickerCardSkeleton() {
   );
 }
 
-// ── Panel ─────────────────────────────────────────────────────
-
 export interface MealPickerPanelProps {
   slot: SlotName;
   dayName: DayName;
   mealPlanId: string;
+  existingRecipeIds?: Set<string>;
   onSelect: (entry: MealEntry) => void;
   onClose: () => void;
 }
@@ -102,6 +109,7 @@ export default function MealPickerPanel({
   slot,
   dayName,
   mealPlanId,
+  existingRecipeIds = new Set<string>(),
   onSelect,
   onClose,
 }: MealPickerPanelProps) {
@@ -110,9 +118,8 @@ export default function MealPickerPanel({
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
 
-  // Fetch user's recipes on page change
   useEffect(() => {
     if (!user?.id) return;
     setLoading(true);
@@ -136,8 +143,14 @@ export default function MealPickerPanel({
   }, [page, user?.id]);
 
   const handleSelect = async (recipe: Recipe) => {
-    if (submitting) return;
-    setSubmitting(true);
+    if (submittingId) return;
+
+    if (existingRecipeIds.has(recipe.id)) {
+      toast.error("This meal is already in your plan!");
+      return;
+    }
+
+    setSubmittingId(recipe.id);
     try {
       const { entryId } = await addMealPlanEntry(mealPlanId, {
         dayOfWeek: dayName,
@@ -158,12 +171,12 @@ export default function MealPickerPanel({
       onSelect(newEntry);
     } catch (err) {
       console.error("[MealPicker] Failed to assign recipe:", err);
-      setSubmitting(false);
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      toast.error(msg ?? "Failed to add recipe. Please try again.");
+      setSubmittingId(null);
     }
   };
 
-  // Fill empty slots so the grid is always 2×3.
-  // On the last page, the first empty slot becomes an "add recipe" button.
   type GridItem = Recipe | "add" | null;
   const isLastPage = page >= totalPages;
   const gridItems: GridItem[] = [...recipes];
@@ -172,7 +185,6 @@ export default function MealPickerPanel({
 
   return (
     <>
-      {/* Backdrop */}
       <motion.div
         key="meal-picker-backdrop"
         initial={{ opacity: 0 }}
@@ -180,10 +192,9 @@ export default function MealPickerPanel({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-40 bg-black/20"
-        onClick={onClose}
+        onClick={submittingId ? undefined : onClose}
       />
 
-      {/* Slide-in panel */}
       <motion.div
         key="meal-picker-panel"
         initial={{ x: "100%" }}
@@ -192,14 +203,12 @@ export default function MealPickerPanel({
         transition={{ type: "spring", stiffness: 340, damping: 36 }}
         className="fixed top-0 right-0 h-screen w-[30%] min-w-64 bg-card border-l border-border/50 shadow-2xl z-50 flex flex-col p-3 py-5"
       >
-        {/* Header */}
         <div className="p-3 py-4 shrink-0 border-b border-border/40">
           <h2 className="text-2xl font-bold text-accent/70 tracking-wide uppercase">
             Recipes
           </h2>
         </div>
 
-        {/* Recipe grid */}
         <div className="flex-1 overflow-hidden p-2 py-6 mt-4 px-6 relative">
           <div className="grid-backdrop absolute flex flex-col items-center justify-between px-3 py-2 w-full h-full rounded-xl border-none top-0 left-0 pointer-events-none">
             <div className="w-full h-10 flex items-center justify-between relative">
@@ -253,19 +262,22 @@ export default function MealPickerPanel({
                       key="add-recipe"
                       type="button"
                       onClick={() => {
-                        window.location.hash = "recipe";
+                        window.location.hash = "recipe?new=true";
                         onClose();
                       }}
                       className="w-full h-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/50 bg-card/40 text-foreground/50 hover:border-accent/60 hover:text-foreground transition-all duration-200 cursor-pointer"
                     >
-                      <Plus size={18} className="pointer-events-none"/>
-                      <span className="text-xs font-semibold pointer-events-none">New Recipe</span>
+                      <Plus size={18} className="pointer-events-none" />
+                      <span className="text-xs font-semibold pointer-events-none">
+                        New Recipe
+                      </span>
                     </button>
                   ) : item ? (
                     <RecipePickerCard
                       key={item.id}
                       recipe={item}
                       onSelect={() => handleSelect(item)}
+                      isSubmitting={submittingId === item.id}
                     />
                   ) : (
                     <div
@@ -279,14 +291,13 @@ export default function MealPickerPanel({
           </AnimatePresence>
         </div>
 
-        {/* Pagination */}
         <div className="p-2 shrink-0 flex items-center justify-end gap-1 border-t border-border/40">
           <span className="text-[10px] text-muted-foreground mr-auto">
             {page} / {totalPages}
           </span>
           <button
             type="button"
-            disabled={page <= 1}
+            disabled={!!submittingId || page <= 1}
             onClick={() => setPage((p) => p - 1)}
             className="p-1.5 rounded-lg hover:bg-secondary transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
@@ -294,7 +305,7 @@ export default function MealPickerPanel({
           </button>
           <button
             type="button"
-            disabled={page >= totalPages}
+            disabled={!!submittingId || page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
             className="p-1.5 rounded-lg hover:bg-secondary transition disabled:opacity-30 disabled:cursor-not-allowed"
           >

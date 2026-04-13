@@ -19,15 +19,21 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { useUser } from "@/context/UserContext";
 
+type dashboardLocations =
+  | "nav-main"
+  | "nav-meals"
+  | "nav-recipes"
+  | "nav-settings"
+  | "nav-calendar";
+
 export default function Navbar() {
   const { user, logout } = useUser();
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [selectedBtn, setSelectedBtn] = React.useState<
-    "nav-main" | "nav-meals" | "nav-recipes" | "nav-settings" | "nav-calendar"
-  >("nav-main");
+  const [selectedBtn, setSelectedBtn] =
+    React.useState<dashboardLocations>("nav-main");
   const [isMoreOpen, setIsMoreOpen] = React.useState<boolean>(false);
   const [showMoreButton, setShowMoreButton] = React.useState<boolean>(false);
 
@@ -36,6 +42,26 @@ export default function Navbar() {
   useEffect(() => {
     setUserConnected(!!user);
   }, [user]);
+
+  useEffect(() => {
+    const currentUrl = window.location.href;
+    const [restOfUrl, hash] = currentUrl.split("#");
+
+    if (!hash) return;
+
+    const path = restOfUrl.split("/").pop();
+    const convertedDashboardInstance: dashboardLocations = [
+      "nav-main",
+      "nav-meals",
+      "nav-recipes",
+      "nav-settings",
+      "nav-calendar",
+    ].filter((val) => val.includes(hash.toLowerCase().split("?")[0]))[0] as dashboardLocations;
+
+    if (path === "dashboard") {
+      setSelectedBtn(convertedDashboardInstance || "nav-main");
+    }
+  }, [location]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -69,7 +95,7 @@ export default function Navbar() {
 
     const buttonMap: Record<
       "Dashboard" | "Calendar" | "Recipes" | "Meals" | "Settings",
-      "nav-main" | "nav-meals" | "nav-recipes" | "nav-settings" | "nav-calendar"
+      dashboardLocations
     > = {
       Dashboard: "nav-main",
       Calendar: "nav-calendar",

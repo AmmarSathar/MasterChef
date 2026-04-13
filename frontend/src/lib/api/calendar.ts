@@ -26,6 +26,10 @@ export type CalendarWeekData = {
 
 // ── Helpers ───────────────────────────────────────────────────
 
+export function toDateStr(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 /** Returns the ISO date string (YYYY-MM-DD) of the Sunday of a given date's week. */
 export function toSundayIso(date: Date): string {
   const d = new Date(date);

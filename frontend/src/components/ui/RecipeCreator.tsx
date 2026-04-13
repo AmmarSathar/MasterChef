@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Plus, Minus, Camera, ChefHat } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  DietaryOption,
-  SKILL_LEVELS,
-  allFoodNames,
-  dietaryOptions,
-} from "@masterchef/shared";
-import toast from "react-hot-toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Spinner } from "@/components/ui/spinner";
-
-import { Recipe } from "@masterchef/shared";
-
 import { useUser } from "@/context/UserContext";
+import { DietaryOption, SKILL_LEVELS, allFoodNames, dietaryOptions, Recipe } from "@masterchef/shared";
+import toast from "react-hot-toast";
+
+import { X, Plus, Minus, Camera, ChefHat } from "lucide-react";
 
 interface Ingredient {
   id: string;
@@ -61,8 +55,7 @@ const INITIAL_FORM_DATA: Recipe = {
   prepingTime: 0,
   cookingTime: 0,
   servings: 0,
-  skillLevel:
-    SKILL_LEVELS[0] as unknown as (typeof SKILL_LEVELS)[number]["value"],
+  skillLevel: SKILL_LEVELS[0].value.toLowerCase() as Recipe["skillLevel"],
   dietaryTags: [] as DietaryOption[],
   isShared: true,
 };
@@ -231,7 +224,7 @@ export default function RecipeCreator({
 
   const handleFormChange = (
     field: keyof typeof formData,
-    value: string | number | string[],
+    value: string | number | string[] | boolean,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -455,7 +448,7 @@ export default function RecipeCreator({
                 value={formData.title}
                 onChange={(e) => handleFormChange("title", e.target.value)}
                 rows={1}
-                className="outline-none transition-all duration-200 rounded-xl p-2 py-4 focus:pl-5 mb-1 w-full bg-none text-4xl leading-tight font-bold text-foreground/60 focus:text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden break-words whitespace-pre-wrap"
+                className="outline-none transition-all duration-200 rounded-xl p-2 py-4 focus:pl-5 mb-1 w-full bg-none text-4xl leading-tight font-bold text-foreground/60 focus:text-foreground/90 border-border/30 border-dashed ring-1 ring-ring/10 focus:ring-4 focus:ring-ring/60 resize-none overflow-hidden wrap-break-words whitespace-pre-wrap"
               />
 
               <p className="text-sm text-accent/70 mt-0.5">
@@ -528,13 +521,13 @@ export default function RecipeCreator({
                   type="button"
                   disabled={formDisabled}
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-44 h-full rounded-xl border-2 border-dashed border-border/50 hover:border-accent/50 bg-input/20 hover:bg-input/40 flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground/60 transition-all duration-200 overflow-hidden"
+                  className="w-44 h-full rounded-xl border-2 border-dashed border-border/50 hover:border-accent/50 bg-input/20 hover:bg-input/40 flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground/60 transition-all duration-200 overflow-hidden relative"
                 >
                   {coverImage ? (
                     <img
                       src={coverImage}
                       alt="Cover"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover m-0 p-0 absolute top-0 left-0 pointer-events-none"
                     />
                   ) : (
                     <>
@@ -765,21 +758,38 @@ export default function RecipeCreator({
                             <span className="text-xs text-foreground/60 rotate-30 font-medium pointer-events-none">
                               Qtn.
                             </span>
-                            <motion.span
+                            <input
                               key={`${ingredient.id}-amount`}
-                              initial={{ scale: 0.8, y: -3, opacity: 0 }}
-                              animate={{ scale: 1, y: 0, opacity: 1 }}
-                              exit={{ scale: 0.8, y: 3, opacity: 0 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 20,
-                                duration: 0.3,
+                              value={ingredient.amount}
+                              placeholder="0"
+                              type="number"
+                              inputMode="numeric"
+                              onKeyDown={(e) => {
+                                if (
+                                  !/[0-9.]/.test(e.key) &&
+                                  ![
+                                    "Backspace",
+                                    "Delete",
+                                    "ArrowLeft",
+                                    "ArrowRight",
+                                    "Tab",
+                                  ].includes(e.key)
+                                ) {
+                                  e.preventDefault();
+                                }
                               }}
-                              className="text-sm text-foreground/80 font-medium text-center rotate-30 pointer-events-none"
-                            >
-                              {ingredient.amount || "0"}
-                            </motion.span>
+                              onChange={(e) =>
+                                !formDisabled &&
+                                updateIngredient(
+                                  ingredient.id,
+                                  "amount",
+                                  e.target.value === ""
+                                    ? ""
+                                    : Number(e.target.value),
+                                )
+                              }
+                              className="text-sm text-foreground/80 font-medium text-center rotate-30 w-10 bg-transparent outline-none"
+                            />
                           </div>
 
                           <button
@@ -827,7 +837,6 @@ export default function RecipeCreator({
                           >
                             <Plus size={16} className="pointer-events-none" />
                           </button>
-
                           <ToggleGroup
                             type="single"
                             size="sm"
@@ -1057,7 +1066,7 @@ export default function RecipeCreator({
                   type="button"
                   disabled={formDisabled}
                   onClick={() =>
-                    handleFormChange("isShared", !Boolean(formData.isShared))
+                    handleFormChange("isShared", !(formData.isShared ?? false))
                   }
                   className={`relative inline-flex h-7 w-13 items-center rounded-full transition-colors duration-200 ${
                     formData.isShared ? "bg-primary" : "bg-secondary"

@@ -1,11 +1,13 @@
-import { Cookie, CookieIcon, Plus } from "lucide-react";
-import { DAYS_OF_WEEK } from "@masterchef/shared/constants";
+import { motion, AnimatePresence } from "framer-motion";
+
 import { MEAL_SLOTS } from "./CalendarDayView";
-import {
-  emptyCalendarDay,
-  type CalendarDayData,
-  type CalendarMealType,
-} from "@/lib/api/calendar";
+import { Spinner } from "@/components/ui/spinner";
+import { DAYS_OF_WEEK } from "@masterchef/shared/constants";
+import { emptyCalendarDay } from "@/lib/api/calendar";
+
+import { CookieIcon, Plus } from "lucide-react";
+
+import { type CalendarDayData, type CalendarMealType } from "@/lib/api/calendar";
 
 const _dayLabels = DAYS_OF_WEEK.map((d) => d.label.slice(0, 3));
 const WEEKDAY_SHORT = [_dayLabels[6], ..._dayLabels.slice(0, 6)];
@@ -41,12 +43,16 @@ interface CalendarWeekViewProps {
   dates: Date[];
   selectionsByDay: Record<string, CalendarDayData>;
   onDayClick: (date: Date) => void;
+  onMealClick?: (meal: NonNullable<CalendarDayData[CalendarMealType]>) => void;
+  loadingMealId?: string | null;
 }
 
 export default function CalendarWeekView({
   dates,
   selectionsByDay,
   onDayClick,
+  onMealClick,
+  loadingMealId,
 }: CalendarWeekViewProps) {
   return (
     <div className="week-grid grid grid-cols-7 gap-0">
@@ -71,27 +77,41 @@ export default function CalendarWeekView({
                 return meal ? (
                   <div
                     key={slot}
-                    className="meal-card h-28 rounded-xl overflow-hidden relative p-0"
+                    onClick={(e) => { e.stopPropagation(); onMealClick?.(meal); }}
+                    className="meal-card h-28 rounded-xl overflow-hidden relative p-0 cursor-pointer pointer-events-auto hover:shadow-md hover:scale-[1.05] transition-all duration-500 ease-out-cubic"
                   >
                     {meal.imageUrl ? (
                       <img
                         src={meal.imageUrl}
                         alt={meal.title}
-                        className="w-full h-full object-cover m-0 pointer-events-auto cursor-pointer"
+                        className="w-full h-full object-cover m-0"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-card/50 pointer-events-auto cursor-pointer">
+                      <div className="w-full h-full flex items-center justify-center bg-card/50 pointer-events-none">
                         <CookieIcon size={32} className="text-foreground/20" />
                       </div>
                     )}
-                    <div className="meal-overlay absolute inset-0 bg-linear-to-t from-black/85 to-transparent p-2 flex flex-col justify-end pointer-events-none">
-                      <span className="text-[9px] uppercase tracking-[0.2em] text-accent">
+                    <div className="meal-overlay absolute inset-0 bg-linear-to-tr from-foreground/75 to-transparent p-2 flex flex-col gap-0 justify-end transition-all duration-500 delay-100 ease-out-expo hover:pb-3 cursor-pointer">
+                      <span className="text-[10px] uppercase tracking-[0.2em] brightness-200 text-accent pointer-events-none">
                         {slot}
                       </span>
-                      <span className="text-xs leading-tight font-medium">
+                      <span className="text-xs leading-tight font-medium text-grain3 pointer-events-none brightness-125">
                         {meal.title}
                       </span>
                     </div>
+                    <AnimatePresence>
+                      {loadingMealId === meal.recipeId && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-sm bg-card/50"
+                        >
+                          <Spinner variant="infinite" size={24} className="text-accent" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ) : (
                   <div

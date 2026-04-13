@@ -1,19 +1,11 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
 import TiltedCard from "@components/TiltedCard";
 import { Button } from "@/components/ui/button";
-import {
-  CookingPot,
-  Clock4,
-  SignalHigh,
-  Share2,
-  Pencil,
-  Trash2,
-  CookieIcon,
-} from "lucide-react";
-
 import { Recipe } from "@masterchef/shared";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { CookingPot, Clock4, SignalHigh, Share2, Pencil, Trash2, CookieIcon } from "lucide-react";
 
 export interface RecipeContainerProps {
   recipes: Recipe[];
@@ -59,17 +51,17 @@ function StandardCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onRecipeSelect(recipe)}
-      className="recipe-standard-view rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-300 pointer-events-auto cursor-pointer"
+      className="recipe-standard-view rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm hover:shadow-md hover:scale-[1.04] transition-all ease-out-expo duration-300 pointer-events-auto cursor-pointer"
     >
       {recipe.imageUrl ? (
         <img
           src={recipe.imageUrl}
           
-          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} object-cover duration-300 ease-out-cubic transition-all pointer-events-none`}
+          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} object-cover duration-300 delay-50 ease-out-cubic transition-all pointer-events-none`}
         />
       ) : (
         <div
-          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} flex items-center justify-center duration-300 ease-out-cubic transition-all pointer-events-none`}
+          className={`w-full h-42 ${isHovered ? "h-46" : "h-42"} flex items-center justify-center duration-300 delay-50 ease-out-cubic transition-all pointer-events-none`}
         >
           <CookieIcon
             size={48}
@@ -79,7 +71,7 @@ function StandardCard({
       )}
 
       <div
-        className={`flex flex-col gap-2 px-3 py-3 ${isHovered ? "-mb-4" : "mb-0"} transition-all duration-300 ease-out-cubic pointer-events-none`}
+        className={`flex flex-col gap-2 px-3 py-3 ${isHovered ? "-mb-4" : "mb-0"} delay-50 transition-all duration-300 ease-out-cubic pointer-events-none`}
       >
         <span className="font-semibold text-foreground text-sm truncate">
           {recipe.title.length > 25
@@ -161,7 +153,6 @@ function TiltedRecipeCard({
   isOwner,
   onEdit,
   onDelete,
-  onRecipeSelect,
 }: {
   recipe: Recipe;
   isOwner: boolean;

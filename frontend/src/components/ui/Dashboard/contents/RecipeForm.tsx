@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
 import { RecipeContainer } from "@/components/ui/RecipeContainer";
 import RecipeCreator from "@/components/ui/RecipeCreator";
 import RecipeView from "@/components/ui/RecipeView";
+import { Badge } from "@components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useUser } from "@/context/UserContext";
+import { SKILL_LEVELS, SAD_KAOMOJIS, Recipe } from "@masterchef/shared";
+import toast from "react-hot-toast";
+import BeefTacos from "@/lib/images/beef-tacos.webp";
+import CaesarSalad from "@/lib/images/caesar-salad.webp";
+import Carbonara from "@/lib/images/carbonara.webp";
+import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
+import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
+import Margherita from "@/lib/images/margherita.webp";
 
 import {
   Plus,
@@ -15,23 +27,6 @@ import {
   Timer,
   SlidersHorizontal,
 } from "lucide-react";
-
-import { Badge } from "@components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SKILL_LEVELS } from "@masterchef/shared";
-import toast from "react-hot-toast";
-import { SAD_KAOMOJIS } from "@masterchef/shared";
-
-import BeefTacos from "@/lib/images/beef-tacos.webp";
-import CaesarSalad from "@/lib/images/caesar-salad.webp";
-import Carbonara from "@/lib/images/carbonara.webp";
-import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
-import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
-import Margherita from "@/lib/images/margherita.webp";
-
-import { Recipe } from "@masterchef/shared";
-
-import { useUser } from "@/context/UserContext";
 
 const RECIPES_API_BASE = "/api/recipes";
 
@@ -127,13 +122,9 @@ function SkillBars({ count }: { count: number }) {
 function RecipeCardSkeleton() {
   return (
     <div className="rounded-2xl overflow-hidden bg-card flex flex-col border border-border/50 shadow-sm">
-      {/* Image */}
       <div className="w-full h-42 bg-muted animate-pulse" />
-      {/* Body */}
       <div className="flex flex-col gap-2 px-3 py-3">
-        {/* Title */}
         <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-        {/* Detail rows */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <div className="h-3 w-12 rounded bg-muted animate-pulse" />
@@ -141,7 +132,6 @@ function RecipeCardSkeleton() {
           </div>
           <div className="h-3 w-14 rounded bg-muted animate-pulse" />
         </div>
-        {/* Action buttons row */}
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-2">
             <div className="h-7 w-7 rounded-full bg-muted animate-pulse" />
@@ -266,7 +256,12 @@ export function RecipeContent() {
   };
 
   const handleStartEdit = (recipe: Recipe) => {
-    if (!currentUserId || getRecipeOwnerId(recipe.createdBy) !== currentUserId) {
+    if (!currentUserId || recipe.createdBy !== currentUserId) return;
+    console.log(recipe)
+    if (
+      !currentUserId ||
+      getRecipeOwnerId(recipe.createdBy) !== currentUserId
+    ) {
       return;
     }
     setEditingRecipe(recipe);
@@ -281,7 +276,7 @@ export function RecipeContent() {
 
     const recipePayload: Partial<Recipe> & {
       dietaryTags?: string[];
-      isShared?: boolean;
+      isShared: boolean;
       imageUrl?: string;
     } = {
       title: data.title,
@@ -341,7 +336,7 @@ export function RecipeContent() {
                     isShared:
                       typeof updated?.isShared === "boolean"
                         ? updated.isShared
-                        : data.isShared ?? r.isShared,
+                        : (data.isShared ?? r.isShared),
                     ingredients:
                       updated?.ingredients ?? recipePayload.ingredients,
                     steps: updated?.steps ?? recipePayload.steps,
@@ -387,7 +382,9 @@ export function RecipeContent() {
           isShared:
             typeof created?.isShared === "boolean"
               ? created.isShared
-              : data.isShared ?? true,
+              : (data.isShared ?? true),
+          ingredients: created.ingredients ?? [],
+          steps: created.steps ?? [],
           containsAllergens: created.containsAllergens ?? [],
         };
 
@@ -421,7 +418,10 @@ export function RecipeContent() {
 
   const handleRequestDelete = (recipeId: string) => {
     const targetRecipe = recipes.find((r) => r.id === recipeId);
-    if (!targetRecipe || getRecipeOwnerId(targetRecipe.createdBy) !== currentUserId) {
+    if (
+      !targetRecipe ||
+      getRecipeOwnerId(targetRecipe.createdBy) !== currentUserId
+    ) {
       return;
     }
     setPendingDeleteRecipeId(recipeId);
@@ -433,7 +433,10 @@ export function RecipeContent() {
     (async () => {
       const recipeId = pendingDeleteRecipeId;
       const targetRecipe = recipes.find((r) => r.id === recipeId);
-      if (!targetRecipe || getRecipeOwnerId(targetRecipe.createdBy) !== currentUserId) {
+      if (
+        !targetRecipe ||
+        getRecipeOwnerId(targetRecipe.createdBy) !== currentUserId
+      ) {
         setPendingDeleteRecipeId(null);
         return;
       }
@@ -488,6 +491,7 @@ export function RecipeContent() {
         skillLevel: "intermediate",
         dietaryTags: ["Gluten-Free"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Spaghetti", amount: 200, unit: "g" },
           { foodItem: "Pancetta", amount: 100, unit: "g" },
@@ -519,6 +523,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: ["Gluten-Free"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Chicken Breast", amount: 400, unit: "g" },
           { foodItem: "Bell Peppers", amount: 2, unit: "pcs" },
@@ -551,6 +556,7 @@ export function RecipeContent() {
         skillLevel: "intermediate",
         dietaryTags: ["Vegetarian"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Pizza Dough", amount: 500, unit: "g" },
           { foodItem: "Tomato Sauce", amount: 200, unit: "ml" },
@@ -582,6 +588,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: ["Vegetarian"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Romaine Lettuce", amount: 1, unit: "head" },
           { foodItem: "Parmesan Cheese", amount: 75, unit: "g" },
@@ -613,6 +620,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: ["Vegetarian"],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Butter", amount: 115, unit: "g" },
           { foodItem: "Brown Sugar", amount: 200, unit: "g" },
@@ -645,6 +653,7 @@ export function RecipeContent() {
         skillLevel: "beginner",
         dietaryTags: [],
         containsAllergens: [],
+        isShared: true,
         ingredients: [
           { foodItem: "Ground Beef", amount: 500, unit: "g" },
           { foodItem: "Taco Seasoning", amount: 2, unit: "tbsp" },
@@ -669,15 +678,32 @@ export function RecipeContent() {
   //   if (recipes.length === 0 && !loading) setExampleRecipes();
   // }, [recipes.length, loading]);
 
-  const getRecipeIdFromHash = () => {
+  const parseRecipeHash = (): {
+    mode: "view" | "edit" | "new" | null;
+    id: string | null;
+  } => {
     const raw = window.location.hash.startsWith("#")
       ? window.location.hash.slice(1)
       : window.location.hash;
-    if (!raw.startsWith("recipe")) return null;
+
+    // console.log(raw);
+
+    if (!raw.startsWith("recipe")) return { mode: "view", id: null };
+    
     const query = raw.split("?")[1] ?? "";
+    // console.log(query)
     const params = new URLSearchParams(query);
-    const id = params.get("id");
-    return id || null;
+    console.log(params)
+
+    if (params.get("new")) return { mode: "new", id: null }; // sHould show new no matter the value. Just show new..
+    
+    const editId = params.get("edit");
+    console.log("edit id: ", editId)
+    if (editId) return { mode: "edit", id: editId };
+    
+    const id = params.get("id") || params.get("view");
+    console.log("view id: ", id)
+    return { mode: "view", id: id || null };
   };
 
   const handleAddToCollection = async (recipe: Recipe) => {
@@ -723,10 +749,49 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
+    if(loading) return
+
     const openFromHashAsync = async () => {
-      const id = getRecipeIdFromHash();
+      const { mode, id } = parseRecipeHash();
+
+      if (mode === null) return;
+
+      console.log(mode)
+
+      if (mode === "new") {
+        openCreateModal();
+        return;
+      }
+
       if (!id) return;
 
+      // ?edit=...id should show creator with target recipe
+      if (mode === "edit") {
+        const found = recipes.find((r) => r.id === id);
+        console.log(found)
+        if (found) {
+          handleStartEdit(found);
+          return;
+        }
+        try {
+          const res = await fetch(
+            `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
+          );
+          const json = await res.json();
+          if (!res.ok)
+            throw new Error(json?.message || "Failed to load recipe");
+          handleStartEdit(normalizeRecipe(json?.data as Recipe));
+        } catch (err: unknown) {
+          const msg =
+            err instanceof Error
+              ? err.message
+              : "Could not open recipe for editing";
+          toast.error(msg);
+        }
+        return;
+      }
+
+      // ?id=...id or ?view=...id should open target recipe in view mode
       const found = recipes.find((r) => r.id === id);
       if (found) {
         setRecipeCreateOpen(false);
@@ -735,13 +800,12 @@ export function RecipeContent() {
         window.setTimeout(() => setViewOpen(true), 120);
         return;
       }
-
       try {
-        const res = await fetch(`${RECIPES_API_BASE}/${encodeURIComponent(id)}`);
+        const res = await fetch(
+          `${RECIPES_API_BASE}/${encodeURIComponent(id)}`,
+        );
         const json = await res.json();
-        if (!res.ok) {
-          throw new Error(json?.message || "Failed to load recipe");
-        }
+        if (!res.ok) throw new Error(json?.message || "Failed to load recipe");
         const remoteRecipe = normalizeRecipe(json?.data as Recipe);
         setRecipeCreateOpen(false);
         setEditingRecipe(null);
@@ -897,7 +961,7 @@ export function RecipeContent() {
           className={`filter-menu w-full flex flex-col gap-3 -mb-10 transition-all duration-300 ease-out ${
             filterOpen
               ? "opacity-100 mt-0 pointer-events-auto"
-              : "opacity-0 -mt-14 pointer-events-none"
+              : "opacity-0 -mt-20 pointer-events-none"
           }`}
         >
           <div className="filter-header flex items-center gap-2 px-1">
@@ -952,7 +1016,9 @@ export function RecipeContent() {
               </span>
               <div className="flex items-center gap-2">
                 {SKILL_LEVELS.map((level, index) => {
-                  const isActive = activeFilters.skillLevel.includes(level.value);
+                  const isActive = activeFilters.skillLevel.includes(
+                    level.value,
+                  );
                   return (
                     <button
                       key={level.value}
@@ -1000,7 +1066,6 @@ export function RecipeContent() {
           </div>
         </div>
 
-        {/* Recipe list or empty state */}
         <AnimatePresence mode="wait">
           {loadingRecipes ? (
             <motion.div
@@ -1028,7 +1093,11 @@ export function RecipeContent() {
               <div className="text-center text-foreground/50 flex items-center justify-center gap-2">
                 <span className="text-sm">No recipes found</span>
                 <span className="text-xl mb-1">
-                  {SAD_KAOMOJIS[Math.floor(Math.random() * SAD_KAOMOJIS.length)]}
+                  {
+                    SAD_KAOMOJIS[
+                      Math.floor(Math.random() * SAD_KAOMOJIS.length)
+                    ]
+                  }
                 </span>
               </div>
             </motion.div>
@@ -1120,7 +1189,6 @@ export function RecipeContent() {
           />
         )}
       </AnimatePresence>
-      {/* Delete confirm */}
       <AnimatePresence>
         {pendingDeleteRecipeId && (
           <motion.div

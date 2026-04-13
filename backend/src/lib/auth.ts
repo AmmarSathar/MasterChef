@@ -10,7 +10,9 @@ export function getAuth() {
   if (!_auth) {
     const db = mongoose.connection.db;
     if (!db) {
-      throw new Error("MongoDB not connected. Ensure connectDatabase() has been called before handling requests.");
+      throw new Error(
+        "MongoDB not connected. Ensure connectDatabase() has been called before handling requests.",
+      );
     }
 
     _auth = betterAuth({
@@ -46,17 +48,23 @@ export function getAuth() {
 
       user: {
         additionalFields: {
-          pfp:             { type: "string",   nullable: true, input: true },
-          age:             { type: "number",   nullable: true, input: true },
-          birth:           { type: "string",   nullable: true, input: true },
-          weight:          { type: "number",   nullable: true, input: true },
-          height:          { type: "number",   nullable: true, input: true },
-          bio:             { type: "string",   nullable: true, input: true },
+          pfp: { type: "string", nullable: true, input: true },
+          age: { type: "number", nullable: true, input: true },
+          birth: { type: "string", nullable: true, input: true },
+          weight: { type: "number", nullable: true, input: true },
+          height: { type: "number", nullable: true, input: true },
+          bio: { type: "string", nullable: true, input: true },
           dietary_restric: { type: "string[]", nullable: true, input: true },
-          allergies:       { type: "string[]", nullable: true, input: true },
-          skill_level:     { type: "string",   nullable: true, input: true },
-          cuisines_pref:   { type: "string[]", nullable: true, input: true },
-          isCustomized:    { type: "boolean",  defaultValue: false, input: true },
+          allergies: { type: "string[]", nullable: true, input: true },
+          skill_level: { type: "string", nullable: true, input: true },
+          cuisines_pref: { type: "string[]", nullable: true, input: true },
+          isCustomized: { type: "boolean", defaultValue: false, input: true },
+        },
+        deleteUser: {
+          enabled: true,
+          beforeDelete: async () => {
+            // Idk how we'll do that, but we basically have make sure that no user owns a recipe of this user
+          },
         },
       },
 
@@ -69,7 +77,8 @@ export function getAuth() {
               return {
                 data: {
                   ...user,
-                  isCustomized: (user as Record<string, unknown>).isCustomized ?? false,
+                  isCustomized:
+                    (user as Record<string, unknown>).isCustomized ?? false,
                 },
               };
             },
