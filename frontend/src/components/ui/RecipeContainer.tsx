@@ -26,6 +26,18 @@ export interface RecipeContainerProps {
 
 type ViewMode = "3d" | "standard";
 
+function getRecipeOwnerId(createdBy: unknown): string {
+  if (typeof createdBy === "string") return createdBy;
+
+  if (createdBy && typeof createdBy === "object") {
+    const record = createdBy as Record<string, unknown>;
+    if (typeof record.id === "string") return record.id;
+    if (typeof record._id === "string") return record._id;
+  }
+
+  return "";
+}
+
 function StandardCard({
   recipe,
   isOwner,
@@ -271,7 +283,7 @@ export function RecipeContainer({
       <div className="recipe-container grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-4 w-full pt-10">
         <AnimatePresence>
           {recipes.map((recipe) => {
-            const isOwner = recipe.createdBy === currentUserId;
+            const isOwner = getRecipeOwnerId(recipe.createdBy) === currentUserId;
 
             if (effectiveMode === "standard") {
               return (

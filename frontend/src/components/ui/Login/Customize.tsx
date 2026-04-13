@@ -57,6 +57,16 @@ export default function Customize({ ready }: CustomizeProps) {
 
   const CustomizeRootElement = useRef<HTMLDivElement>(null);
 
+  const getResolvedUserId = (value: unknown): string => {
+    if (!value || typeof value !== "object") return "";
+
+    const record = value as Record<string, unknown>;
+    if (typeof record.id === "string") return record.id;
+    if (typeof record._id === "string") return record._id;
+
+    return "";
+  };
+
   const scrollFormToTop = () => {
     if (CustomizeRootElement.current) {
       CustomizeRootElement.current.scrollTo({ top: 0, behavior: "smooth" });
@@ -105,7 +115,7 @@ export default function Customize({ ready }: CustomizeProps) {
         return contextUser;
       }
     })();
-    const resolvedUserId = activeUser?.id;
+    const resolvedUserId = getResolvedUserId(activeUser);
 
     if (!resolvedUserId) {
       toast.dismiss(loadingToast);
