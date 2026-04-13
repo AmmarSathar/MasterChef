@@ -261,7 +261,7 @@ export function RecipeContainer({
     <div className="flex flex-col gap-4 w-full flex-1 overflow-y-auto overflow-x-hidden min-h-0 pb-6">
       <div className="recipe-container grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(12.5rem,1fr))] gap-4 w-full pt-10">
         <AnimatePresence>
-          {[...recipes, ...recipes, ...recipes, ...recipes, ...recipes, ...recipes, ...recipes, ...recipes, ...recipes, ...recipes, ...recipes].map((recipe) => {
+          {recipes.map((recipe) => {
             const isOwner = recipe.createdBy === currentUserId;
 
             if (effectiveMode === "standard") {

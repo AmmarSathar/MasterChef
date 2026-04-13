@@ -5,13 +5,20 @@ import "./index.css";
 import { preloadCursors } from "./lib/preloadCursors";
 import { UserProvider } from "./context/UserContext";
 
-// Preload all cursor SVGs on app initialization
-preloadCursors().finally(() => {
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-      <UserProvider>
-        <App />
-      </UserProvider>
-    </React.StrictMode>,
-  );
-});
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme && savedTheme !== "system") {
+  document.documentElement.setAttribute("data-theme", savedTheme);
+} else {
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+}
+
+preloadCursors();
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <UserProvider>
+      <App />
+    </UserProvider>
+  </React.StrictMode>,
+);
