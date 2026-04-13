@@ -368,8 +368,6 @@ export function MealsContent() {
   const [days, setDays] = useState<WeekDays | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncWarn, setSyncWarn] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [loadingRecipeId, setLoadingRecipeId] = useState<string | null>(null);
