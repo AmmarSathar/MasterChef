@@ -498,13 +498,13 @@ export default function RecipeCreator({
                   type="button"
                   disabled={formDisabled}
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-44 h-full rounded-xl border-2 border-dashed border-border/50 hover:border-accent/50 bg-input/20 hover:bg-input/40 flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground/60 transition-all duration-200 overflow-hidden"
+                  className="w-44 h-full rounded-xl border-2 border-dashed border-border/50 hover:border-accent/50 bg-input/20 hover:bg-input/40 flex flex-col items-center justify-center gap-2 text-foreground/40 hover:text-foreground/60 transition-all duration-200 overflow-hidden relative"
                 >
                   {coverImage ? (
                     <img
                       src={coverImage}
                       alt="Cover"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover m-0 p-0 absolute top-0 left-0 pointer-events-none"
                     />
                   ) : (
                     <>
