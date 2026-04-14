@@ -60,7 +60,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const userCardRef = useRef<HTMLDivElement>(null);
   const { user, logout, loading } = useUser();
-  const [lastPage, setLastPage] = useState<string>("/");
   const [userPressed, setUserPressed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeDashboard, setActiveDashboard] =
@@ -105,10 +104,6 @@ export default function Dashboard() {
       return;
     }
 
-    const storedLastPage = localStorage.getItem("lastPage");
-    if (storedLastPage) {
-      setLastPage(storedLastPage);
-    }
   }, [navigate, user, logout, loading]);
 
   useEffect(() => {
