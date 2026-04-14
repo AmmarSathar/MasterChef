@@ -132,9 +132,9 @@ describe("CalendarContent", () => {
 
   it("clicking a day column in weekly view transitions to day view", async () => {
     render(<CalendarContent />);
-    await waitFor(() => expect(document.querySelectorAll(".day-col").length).toBe(7));
+    await waitFor(() => expect(document.querySelectorAll(".day-col.cursor-pointer").length).toBe(7));
 
-    const firstDayCol = document.querySelector(".day-col") as HTMLElement;
+    const firstDayCol = document.querySelector(".day-col.cursor-pointer") as HTMLElement;
     fireEvent.click(firstDayCol!);
 
     expect(screen.getByTestId("calendar-day-view")).toBeInTheDocument();
@@ -142,9 +142,9 @@ describe("CalendarContent", () => {
 
 it("Back button in day view returns to calendar view", async () => {
   render(<CalendarContent />);
-  await waitFor(() => expect(document.querySelectorAll(".day-col").length).toBe(7));
+  await waitFor(() => expect(document.querySelectorAll(".day-col.cursor-pointer").length).toBe(7));
 
-  const firstDayCol = document.querySelector(".day-col") as HTMLElement;
+  const firstDayCol = document.querySelector(".day-col.cursor-pointer") as HTMLElement;
   fireEvent.click(firstDayCol!);
   expect(screen.getByTestId("calendar-day-view")).toBeInTheDocument();
 
