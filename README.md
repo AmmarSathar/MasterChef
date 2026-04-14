@@ -232,22 +232,6 @@ The project uses a layered automated testing strategy across the frontend and ba
 
 A current run of `npm test` passes with **23 frontend tests** and **63 backend tests**.
 
-#### Missing Unit Tests and How Quality Was Still Checked
-
-Some files do not have direct unit tests, but the gaps are in areas where isolated tests would provide limited value:
-
-- **`backend/src/services/recipe-import.service.ts`**, depends on external websites, Playwright browser automation, HTML scraping, proxy/network behavior, and optional OpenAI extraction. Non-deterministic dependencies make brittle live-network unit tests impractical; quality was validated through broader service and UI testing instead.
-- **`backend/src/index.ts`, `backend/src/config/database.ts`, route registration files**, thin bootstrap/wiring layers checked indirectly through backend integration tests and the CI pipeline, which would fail if application wiring were broken.
-- **Animated background and low-level UI wrapper components**, contain minimal business logic; quality was verified through manual UI verification and higher-level screen tests.
-
-Testing effort was prioritized on authentication, recipe management, search/filter logic, profile updates, and meal-planning rules, the highest-risk areas.
-
-#### Unusual or Unique Testing Aspects
-
-- Backend service tests use `mongodb-memory-server` to test validation, authorization, and persistence behavior against realistic MongoDB interactions without a permanent test database.
-- Frontend tests mock child components and network requests so container components can be tested in isolation, keeping tests focused on state transitions and user-facing behavior rather than unrelated rendering details.
-- Unit/service tests and Playwright browser tests run together in the same CI workflow, catching both isolated logic regressions and end-to-end failures on every pull request.
-
 #### 5 Important Unit Tests
 
 | Test File                                                                                                                                                      | Testing Objective                                                                                                                                       |
