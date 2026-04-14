@@ -8,7 +8,7 @@ import AccountPreferences from "./settings/AccountPreferences";
 import AppearanceSettings from "./settings/AppearanceSettings";
 import PrivacyPolicy from "./settings/PrivacyPolicy";
 import TermsOfService from "./settings/TermsOfService";
-import ProfilePictureChange from "@components/ui/ProfilePictureChange";
+import ProfilePictureChange from "@/components/features/recipe/ProfilePictureChange";
 import { Badge } from "@components/ui/badge";
 
 import { useUser } from "@context/UserContext";

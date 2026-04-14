@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { RecipeContainer } from "@/components/ui/RecipeContainer";
-import RecipeCreator from "@/components/ui/RecipeCreator";
-import RecipeView from "@/components/ui/RecipeView";
+import { RecipeContainer } from "@/components/features/recipe/RecipeContainer";
+import RecipeCreator from "@/components/features/recipe/RecipeCreator";
+import RecipeView from "@/components/features/recipe/RecipeView";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import { SKILL_LEVELS, SAD_KAOMOJIS, Recipe } from "@masterchef/shared";
 import toast from "react-hot-toast";
-import BeefTacos from "@/lib/images/beef-tacos.webp";
-import CaesarSalad from "@/lib/images/caesar-salad.webp";
-import Carbonara from "@/lib/images/carbonara.webp";
-import chickenStirFry from "@/lib/images/chicken-stir-fry.webp";
-import ChocolateCookie from "@/lib/images/chocolate-cookie.webp";
-import Margherita from "@/lib/images/margherita.webp";
+const BeefTacos = "/assets/images/beef-tacos.webp";
+const CaesarSalad = "/assets/images/caesar-salad.webp";
+const Carbonara = "/assets/images/carbonara.webp";
+const chickenStirFry = "/assets/images/chicken-stir-fry.webp";
+const ChocolateCookie = "/assets/images/chocolate-cookie.webp";
+const Margherita = "/assets/images/margherita.webp";
 
 import {
   Plus,

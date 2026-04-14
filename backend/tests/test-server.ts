@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import app from "../app.js";
+import app from "../src/app.js";
 
 const port = Number(process.env.PORT || 4000);
 

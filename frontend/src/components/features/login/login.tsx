@@ -15,8 +15,8 @@ import { Label } from "@components/ui/label";
 import { Checkbox } from "@components/ui/checkbox";
 import Footer from "@components/ui/footer";
 
-import Google from "@/lib/icons/google.svg";
-import Github from "@/lib/icons/github.svg";
+const Google = "/assets/icons/google.svg";
+const Github = "/assets/icons/github.svg";
 import { Eye, EyeOff, BadgeInfo } from "lucide-react";
 import "./login.css";
 
