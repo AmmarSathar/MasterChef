@@ -1,51 +1,51 @@
 /* ===== Tailwind Custom Cursors ===== */
 :root {
-  --cursor-idle: url('/src/lib/cursors/default/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/default/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/default/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/default/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/default/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/default/text.svg') 10 14, text;
 }
 
 [data-theme="dark"],
 [data-theme="dark-old"] {
-  --cursor-idle: url('/src/lib/cursors/dark/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/dark/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/dark/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/dark/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/dark/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/dark/text.svg') 10 14, text;
 }
 
 [data-theme="rosemary"] {
-  --cursor-idle: url('/src/lib/cursors/rosemary/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/rosemary/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/rosemary/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/rosemary/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/rosemary/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/rosemary/text.svg') 10 14, text;
 }
 
 [data-theme="blue-apron"] {
-  --cursor-idle: url('/src/lib/cursors/blue-apron/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/blue-apron/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/blue-apron/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/blue-apron/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/blue-apron/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/blue-apron/text.svg') 10 14, text;
 }
 
 [data-theme="truffle"] {
-  --cursor-idle: url('/src/lib/cursors/truffle/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/truffle/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/truffle/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/truffle/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/truffle/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/truffle/text.svg') 10 14, text;
 }
 
 [data-theme="saffron"] {
-  --cursor-idle: url('/src/lib/cursors/saffron/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/saffron/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/saffron/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/saffron/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/saffron/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/saffron/text.svg') 10 14, text;
 }
 
 [data-theme="sage"] {
-  --cursor-idle: url('/src/lib/cursors/sage/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/sage/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/sage/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/sage/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/sage/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/sage/text.svg') 10 14, text;
 }
 
 [data-theme="lavender"] {
-  --cursor-idle: url('/src/lib/cursors/lavender/idle.svg') 5 3, auto;
-  --cursor-pointer: url('/src/lib/cursors/lavender/pointer.svg') 14 14, pointer;
-  --cursor-text: url('/src/lib/cursors/lavender/text.svg') 10 14, text;
+  --cursor-idle: url('/assets/cursors/lavender/idle.svg') 5 3, auto;
+  --cursor-pointer: url('/assets/cursors/lavender/pointer.svg') 14 14, pointer;
+  --cursor-text: url('/assets/cursors/lavender/text.svg') 10 14, text;
 }
 
 *, *::before, *::after {

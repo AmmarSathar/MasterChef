@@ -29,7 +29,7 @@ vi.mock("@/lib/api/calendar", () => ({
   toSundayIso: mockToSundayIso,
 }));
 
-import { MainDashboardContent } from "@/components/ui/Dashboard/contents/DashboardMain";
+import { MainDashboardContent } from "@/components/features/dashboard/contents/DashboardMain";
 
 describe("MainDashboardContent", () => {
   beforeEach(() => {
