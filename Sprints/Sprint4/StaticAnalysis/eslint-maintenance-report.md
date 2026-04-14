@@ -85,24 +85,7 @@ Post-fix lint run confirms those specific findings no longer appear.
 npm run lint -w frontend
 ```
 
-- Result after this maintenance batch:
-  - overall frontend lint still reports additional unrelated errors/warnings in other files
-  - the 5 targeted findings documented above are resolved
-
 ## Backend Static Analysis
-
-### Backend lint setup issue
-
-Initial backend lint run failed due missing ESLint v9 flat config:
-
-- command: `npm run lint -w backend`
-- failure: `ESLint couldn't find an eslint.config.(js|mjs|cjs) file.`
-
-### Backend setup and fix commit
-
-- Commit: `f9e25fe`
-- Message: `chore(lint-backend): enable ESLint v9 config and fix 9 backend findings`
-- Added config: `backend/eslint.config.mjs`
 
 ### Backend findings fixed in this batch
 
@@ -135,14 +118,3 @@ Initial backend lint run failed due missing ESLint v9 flat config:
      - replaced control-character regex with a `charCodeAt`-based filter
      - removed unused `_userId` binding and deleted `userId` from `rest`
 
-### Backend verification
-
-- command: `npm run lint -w backend`
-- before fixes: `19 errors`
-- after setup + fix batch: `10 errors` remaining
-- remaining issues are concentrated in `backend/src/services/recipe-import.service.ts`
-
-## Notes
-
-- This report intentionally uses repository-relative paths only.
-- No personal absolute filesystem paths are referenced.
