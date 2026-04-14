@@ -188,9 +188,11 @@ export default function RecipeCreator({
     setImportNotice(null);
 
     try {
-      const res = await fetch("/api/recipes/parse-url", {
+      const apiBase = (import.meta.env.VITE_BASE_API_URL as string | undefined) ?? "/api";
+      const res = await fetch(`${apiBase}/recipes/parse-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ url: importUrl.trim() }),
       });
       const json = await res.json();
