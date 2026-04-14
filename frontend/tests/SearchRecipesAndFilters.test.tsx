@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-import SearchContainer from "@/components/ui/Dashboard/SearchModal";
+import SearchContainer from "@/components/features/dashboard/SearchModal";
 
 type MockRecipe = {
   id: string;

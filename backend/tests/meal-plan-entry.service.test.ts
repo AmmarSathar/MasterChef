@@ -542,4 +542,192 @@ describe("MealPlanEntry service", () => {
     });
   });
 
+  it("fails with 409 when recipe A is assigned to Monday breakfast and then assigned again to Wednesday lunch in the same week", async () => {
+    
+    // Create a user
+    const user = await User.create({
+      email: "duplicate-recipe-a@example.com",
+      name: "Duplicate Recipe User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for that user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Create a recipe for that user
+    const recipeA = await createTestRecipe(user._id, {
+      title: "Recipe A",
+    });
+
+    // First assignment should succeed
+    const firstResult = await createMealPlanEntry({
+      mealPlanId: mealPlan._id.toString(),
+      userId: user._id.toString(),
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: recipeA._id.toString(),
+      notes: "First assignment",
+    });
+
+    // Verify the first assignment was successful
+    expect(firstResult).toMatchObject({
+      mealPlanId: mealPlan._id.toString(),
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: recipeA._id.toString(),
+    });
+
+    // Second assignment of the same recipe in a different slot should fail
+    await expect(
+      createMealPlanEntry({
+        mealPlanId: mealPlan._id.toString(),
+        userId: user._id.toString(),
+        dayOfWeek: "Wednesday",
+        mealType: "lunch",
+        recipeId: recipeA._id.toString(),
+        notes: "Duplicate recipe in same week",
+      })
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: "This recipe is already assigned to Monday, breakfast this week.",
+      details: {
+        existingMealType: "breakfast",
+      },
+    });
+
+    const entries = await MealPlanEntry.find({ mealPlanId: mealPlan._id }); // Check that only the first entry was created in database
+    expect(entries).toHaveLength(1); // Only the first entry should exist in database
+  });
+
+  it("succeeds when recipe A is assigned to Monday breakfast and recipe B is assigned to Wednesday lunch", async () => {
+    
+    // Create a user
+    const user = await User.create({
+      email: "different-recipes@example.com",
+      name: "Different Recipes User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for that user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Create two recipes for that user
+    const recipeA = await createTestRecipe(user._id, {
+      title: "Recipe A",
+    });
+
+    const recipeB = await createTestRecipe(user._id, {
+      title: "Recipe B",
+    });
+
+    // Assign recipe A to Monday breakfast and recipe B to Wednesday lunch (both should succeed)
+    const mondayBreakfast = await createMealPlanEntry({
+      mealPlanId: mealPlan._id.toString(),
+      userId: user._id.toString(),
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: recipeA._id.toString(),
+      notes: "Monday breakfast",
+    });
+
+    const wednesdayLunch = await createMealPlanEntry({
+      mealPlanId: mealPlan._id.toString(),
+      userId: user._id.toString(),
+      dayOfWeek: "Wednesday",
+      mealType: "lunch",
+      recipeId: recipeB._id.toString(),
+      notes: "Wednesday lunch",
+    });
+
+    // Verify the assignments were successful
+    expect(mondayBreakfast).toMatchObject({
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: recipeA._id.toString(),
+    });
+
+    expect(wednesdayLunch).toMatchObject({
+      dayOfWeek: "Wednesday",
+      mealType: "lunch",
+      recipeId: recipeB._id.toString(),
+    });
+
+    // Check that both entries were created in database and have different recipe associations
+    const entries = await MealPlanEntry.find({ mealPlanId: mealPlan._id }).sort({
+      dayOfWeek: 1,
+      mealType: 1,
+    });
+    
+    expect(entries).toHaveLength(2); // Both entries should exist in database
+    expect(entries[0]?.recipeId.toString()).not.toBe(entries[1]?.recipeId.toString()); // The two entries should be associated with different recipes
+  });
+
+  it("fails with 409 when updating an entry to use a recipe already assigned elsewhere in the same week", async () => {
+    
+    // Create a user
+    const user = await User.create({
+      email: "update-duplicate@example.com",
+      name: "Update Duplicate User",
+      passwordHash: "hashed-password",
+    });
+
+    // Create a meal plan for that user
+    const mealPlan = await MealPlan.create({
+      userId: user._id,
+      weekStartDate: new Date("2026-03-09T00:00:00.000Z"),
+    });
+
+    // Create two recipes for that user
+    const recipeA = await createTestRecipe(user._id, {
+      title: "Recipe A",
+    });
+
+    const recipeB = await createTestRecipe(user._id, {
+      title: "Recipe B",
+    });
+
+    // Assign recipe A to Monday breakfast and recipe B to Wednesday lunch
+    const mondayBreakfast = await MealPlanEntry.create({
+      mealPlanId: mealPlan._id,
+      dayOfWeek: "Monday",
+      mealType: "breakfast",
+      recipeId: recipeA._id,
+      notes: "Monday breakfast",
+    });
+
+    const wednesdayLunch = await MealPlanEntry.create({
+      mealPlanId: mealPlan._id,
+      dayOfWeek: "Wednesday",
+      mealType: "lunch",
+      recipeId: recipeB._id,
+      notes: "Wednesday lunch",
+    });
+
+    // Attempt to update Wednesday lunch to use recipe A (should fail with 409)
+    await expect(
+      updateMealPlanEntry({
+        entryId: wednesdayLunch._id.toString(),
+        userId: user._id.toString(),
+        recipeId: recipeA._id.toString(),
+        notes: "Attempt duplicate via update",
+      })
+    ).rejects.toMatchObject({
+      statusCode: 409,
+    });
+
+    const unchangedEntry = await MealPlanEntry.findById(wednesdayLunch._id); // Check that the entry was not updated in database
+    expect(unchangedEntry).not.toBeNull(); // Entry should still exist in database
+    expect(unchangedEntry?.recipeId.toString()).toBe(recipeB._id.toString()); // Entry should still be associated with recipe B
+    const originalEntry = await MealPlanEntry.findById(mondayBreakfast._id); // Check that the original entry for recipe A was not affected
+    expect(originalEntry?.recipeId.toString()).toBe(recipeA._id.toString()); // Original entry should still be associated with recipe A
+  });
+
+
+
 });

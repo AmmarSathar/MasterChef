@@ -10,7 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:server": "tsx src/test/test-server.ts"
+    "test:server": "tsx tests/test-server.ts"
   },
   "dependencies": {
     "@masterchef/shared": "file:../shared",

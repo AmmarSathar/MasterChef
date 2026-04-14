@@ -18,7 +18,7 @@ vi.mock("react-hot-toast", () => ({
   },
 }));
 
-vi.mock("@/components/ui/RecipeContainer", () => ({
+vi.mock("@/components/features/recipe/RecipeContainer", () => ({
   RecipeContainer: ({
     recipes,
     onEdit,
@@ -40,7 +40,7 @@ vi.mock("@/components/ui/RecipeContainer", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/RecipeCreator", () => ({
+vi.mock("@/components/features/recipe/RecipeCreator", () => ({
   default: ({
     initialData,
     onFinish,
@@ -97,7 +97,7 @@ vi.mock("@/components/ui/RecipeCreator", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/RecipeView", () => ({
+vi.mock("@/components/features/recipe/RecipeView", () => ({
   default: ({
     recipe,
     onDelete,
@@ -112,7 +112,7 @@ vi.mock("@/components/ui/RecipeView", () => ({
   ),
 }));
 
-import { RecipeContent } from "@/components/ui/Dashboard/contents/RecipeForm";
+import { RecipeContent } from "@/components/features/dashboard/contents/RecipeForm";
 
 describe("Recipe CRUD flow (US.04)", () => {
   beforeEach(() => {

@@ -225,6 +225,174 @@
   --grain-color-3: #0e0e0e; /* background obsidian */
 }
 
+[data-theme="rosemary"] {
+  /* Dark rose — aged wine, dried petals, candlelit warmth */
+  --background-hex: #160a0b;
+  --foreground-hex: #ecdadc;       /* dusty rose off-white, like faded petals in cream */
+  --card-hex: #1f0d0f;
+  --card-foreground-hex: #ecdadc;
+  --popover-hex: #1f0d0f;
+  --popover-foreground-hex: #ecdadc;
+  --primary-hex: #9a3e52;          /* muted wine, not neon pink */
+  --primary-foreground-hex: #ecdadc;
+  --secondary-hex: #2c1216;
+  --secondary-foreground-hex: #ecdadc;
+  --muted-hex: #2c1216;
+  --muted-foreground-hex: #9c7278;
+  --accent-hex: #bf7484;           /* soft dusty rose, like the latte brown of the dark theme */
+  --accent-foreground-hex: #160a0b;
+  --destructive-hex: #8b3030;
+  --destructive-foreground-hex: #ecdadc;
+  --border-hex: #3a161c;
+  --input-hex: #201012;
+  --ring-hex: #9a3e52;
+  --filter-invert-d-l: 100;
+  --radius: 1.25rem;
+  --grain-color-1: #9a3e52;
+  --grain-color-2: #bf7484;
+  --grain-color-3: #160a0b;
+}
+
+[data-theme="saffron"] {
+  /* Warm parchment — old manuscript paper, dried saffron, candlelight */
+  --background-hex: #fdf5d8;       /* warm parchment, like aged paper */
+  --foreground-hex: #2a1c06;       /* deep amber-brown, like dark honey */
+  --card-hex: #f8e8b8;             /* amber-tinted card */
+  --card-foreground-hex: #2a1c06;
+  --popover-hex: #fdf5d8;
+  --popover-foreground-hex: #2a1c06;
+  --primary-hex: #a86010;          /* muted amber, not the vivid orange */
+  --primary-foreground-hex: #fdf5d8;
+  --secondary-hex: #f0d890;        /* soft golden */
+  --secondary-foreground-hex: #2a1c06;
+  --muted-hex: #f4e2a8;
+  --muted-foreground-hex: #7a6028;
+  --accent-hex: #b87010;           /* warm amber accent */
+  --accent-foreground-hex: #2a1c06;
+  --destructive-hex: #9a2c2c;
+  --destructive-foreground-hex: #fdf5d8;
+  --border-hex: #e8c87c;
+  --input-hex: #f2dea0;
+  --ring-hex: #a86010;
+  --filter-invert-d-l: 0;
+  --radius: 1rem;
+  --grain-color-1: #b87010;
+  --grain-color-2: #e4c050;
+  --grain-color-3: #fdf5d8;
+}
+
+[data-theme="sage"] {
+  /* Muted herbal green — dried sage leaves, natural linen, terracotta */
+  --background-hex: #edf6ef;       /* barely-there sage tint, same softness as the light beige */
+  --foreground-hex: #0e2016;       /* deep forest green */
+  --card-hex: #d8eedd;             /* muted sage card */
+  --card-foreground-hex: #0e2016;
+  --popover-hex: #edf6ef;
+  --popover-foreground-hex: #0e2016;
+  --primary-hex: #2e8648;          /* muted forest green, not vivid */
+  --primary-foreground-hex: #edf6ef;
+  --secondary-hex: #aed8b8;        /* soft sage */
+  --secondary-foreground-hex: #0e2016;
+  --muted-hex: #cce4d2;
+  --muted-foreground-hex: #507060;
+  --accent-hex: #3c9a58;           /* soft green, toned down */
+  --accent-foreground-hex: #0e2016;
+  --destructive-hex: #9a2c2c;
+  --destructive-foreground-hex: #edf6ef;
+  --border-hex: #a8d4b4;
+  --input-hex: #cae2d0;
+  --ring-hex: #2e8648;
+  --filter-invert-d-l: 0;
+  --radius: 1rem;
+  --grain-color-1: #3c9a58;
+  --grain-color-2: #80c494;
+  --grain-color-3: #edf6ef;
+}
+
+[data-theme="blue-apron"] {
+  /* Midnight navy — deep ocean at night, cool kitchen at closing time */
+  --background-hex: #090d1c;       /* midnight ink */
+  --foreground-hex: #c8d5e4;       /* pale steel blue off-white, like morning fog */
+  --card-hex: #0d1428;
+  --card-foreground-hex: #c8d5e4;
+  --popover-hex: #0d1428;
+  --popover-foreground-hex: #c8d5e4;
+  --primary-hex: #2e6aaa;          /* muted navy, not the vivid blue */
+  --primary-foreground-hex: #c8d5e4;
+  --secondary-hex: #142240;
+  --secondary-foreground-hex: #c8d5e4;
+  --muted-hex: #142240;
+  --muted-foreground-hex: #5a7e9c;
+  --accent-hex: #4a84be;           /* soft steel blue */
+  --accent-foreground-hex: #090d1c;
+  --destructive-hex: #7a2c2c;
+  --destructive-foreground-hex: #c8d5e4;
+  --border-hex: #182e50;
+  --input-hex: #0f1e3a;
+  --ring-hex: #2e6aaa;
+  --filter-invert-d-l: 100;
+  --radius: 1.25rem;
+  --grain-color-1: #2e6aaa;
+  --grain-color-2: #4a84be;
+  --grain-color-3: #090d1c;
+}
+
+[data-theme="truffle"] {
+  /* Warm charcoal — aged truffle, weathered concrete, warm graphite */
+  --background-hex: #0c0c0e;       /* near-black with the faintest warmth */
+  --foreground-hex: #d0d0d5;       /* warm grey-white, not stark white */
+  --card-hex: #131316;
+  --card-foreground-hex: #d0d0d5;
+  --popover-hex: #131316;
+  --popover-foreground-hex: #d0d0d5;
+  --primary-hex: #828290;          /* muted grey-lavender */
+  --primary-foreground-hex: #0c0c0e;
+  --secondary-hex: #222228;
+  --secondary-foreground-hex: #d0d0d5;
+  --muted-hex: #222228;
+  --muted-foreground-hex: #626270;
+  --accent-hex: #a4a4b2;           /* soft silver, toned down */
+  --accent-foreground-hex: #0c0c0e;
+  --destructive-hex: #7a2c2c;
+  --destructive-foreground-hex: #d0d0d5;
+  --border-hex: #363642;
+  --input-hex: #181820;
+  --ring-hex: #828290;
+  --filter-invert-d-l: 100;
+  --radius: 1.25rem;
+  --grain-color-1: #828290;
+  --grain-color-2: #484856;
+  --grain-color-3: #0c0c0e;
+}
+
+[data-theme="lavender"] {
+  /* Soft botanical — dried lavender bundles, old linen, dusk through gauze */
+  --background-hex: #f3eefb;       /* soft lavender off-white, same gentleness as the beige */
+  --foreground-hex: #1c0e32;       /* deep violet */
+  --card-hex: #e8dff5;             /* muted lavender card */
+  --card-foreground-hex: #1c0e32;
+  --popover-hex: #f3eefb;
+  --popover-foreground-hex: #1c0e32;
+  --primary-hex: #5e28a8;          /* muted deep violet, not vivid */
+  --primary-foreground-hex: #f3eefb;
+  --secondary-hex: #ddd0f0;        /* soft lavender */
+  --secondary-foreground-hex: #1c0e32;
+  --muted-hex: #ebe2f5;
+  --muted-foreground-hex: #5e5070;
+  --accent-hex: #7040c0;           /* softer violet */
+  --accent-foreground-hex: #f3eefb;
+  --destructive-hex: #9a2c2c;
+  --destructive-foreground-hex: #f3eefb;
+  --border-hex: #cebee8;
+  --input-hex: #e2d5f0;
+  --ring-hex: #5e28a8;
+  --filter-invert-d-l: 0;
+  --radius: 1rem;
+  --grain-color-1: #7040c0;
+  --grain-color-2: #b090dc;
+  --grain-color-3: #f3eefb;
+}
+
 /* Tailwind Theme - References base variables (auto-switches with .dark) */
 @theme {
   /* ===== Semantic UI Colors ===== */

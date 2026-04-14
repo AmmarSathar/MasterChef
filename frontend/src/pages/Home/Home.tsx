@@ -1,36 +1,13 @@
 import DotGrid from "@/components/DotGrid";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ChefHat, Calendar, Utensils, Sparkles } from "lucide-react";
 import Footer from "@/components/ui/footer";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function Home() {
-  const cssVar = (name: string, fallback: string) =>
-    typeof window !== "undefined"
-      ? getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
-      : fallback;
-
-  const [colors, setColors] = useState({
-    base: "#271E37",
-    active: "#5227FF",
-  });
-
   useEffect(() => {
     localStorage.setItem("lastPage", "/");
-
-    setColors({
-      base: cssVar("--grain-color-1", "#d7c7e7"),
-      active: cssVar("--grain-color-2", "#ffdab9"),
-    });
-    const obs = new MutationObserver(() => {
-      setColors({
-        base: cssVar("--grain-color-1", "#d7c7e7"),
-        active: cssVar("--grain-color-2", "#ffdab9"),
-      });
-    });
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
   }, []);
 
   return (

@@ -20,3 +20,15 @@
 | 2026-03-26 | Fix of Story 10 contribution for CI test| Indetify and implemented fixes so that the pr passes the CI tests|1 Hour |
 
 **Total Time:** 6h
+
+## Sprint 4
+
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+| 2026-04-12 | Report Contribution| Created and post the UML diagram for the report|1 Hour |
+| 2026-04-14 | Implement Dashboard| Create the Dashboard with a summarized view of all other tabs' content| 4 hours|
+| 2026-04-14 | Fix recipe ownership and delete flow| Fixed 2 bugs in Recipe Tab|2 Hours |
+| 2026-04-15 | Slide preparation (Demo) | Elaborate and edit the demo video for the project slides delivery |1 Hour |
+| 2026-04-15 | Creation of tickets and fix of remaining bugs| Report found bugs in github format and fix them with a commit|2 Hours |
+
+**Total Time:** 10h

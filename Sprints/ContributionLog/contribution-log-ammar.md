@@ -29,5 +29,18 @@
 | 2026-02-06 | Sprint Planning | Served as Scrum Master and created the Sprint 3 plan | 2h |
 | 2026-03-13 | Issue Tracking | Created GitHub issues for Sprint 3 stories and tasks | 2h |
 | 2026-03-13 | UI Development | Built the Meals dashboard UI and navigation updates | 3h |
+| 2026-03-13 | Unique Feature Development | Developed the complete unique feature | 3h |
+
+**Total Time:** 10h
+
+## Sprint 4
+
+| Date       | Task                | Description                                         | Time Spent |
+| ---------- | ------------------- | --------------------------------------------------- | ---------- |
+| 2026-04-10 | Report (Part 8) | Wrote sections 6 and 7 of final report.             | 2h         |
+| 2026-04-13 | Github projects | Updated github projects with issues linked to PRs for the whole project | 3h         |
+| 2026-04-13 | Sprint plan | Modified sprint plan with latest tasks | 1h         |
+| 2026-04-13 | Unique feature unit testing | Added unit tests for unique feature | 1h         |
+
 
 **Total Time:** 7h

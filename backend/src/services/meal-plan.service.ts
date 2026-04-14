@@ -181,11 +181,10 @@ export async function createMealPlanEntry(
     throw error;
   }
 
-  // Prevent the same recipe appearing in any other slot this week
+  // Prevent the same recipe appearing more than once in the same week
   const duplicateRecipe = await MealPlanEntry.findOne({
     mealPlanId,
     recipeId,
-    $or: [{ dayOfWeek: { $ne: dayOfWeek } }, { mealType: { $ne: mealType } }],
   });
   if (duplicateRecipe) {
     const error: ApiError = new Error(
@@ -290,6 +289,24 @@ export async function updateMealPlanEntry(
     throw error;
   }
 
+  const duplicateRecipe = await MealPlanEntry.findOne({
+    _id: { $ne: entryId },
+    mealPlanId: entry.mealPlanId,
+    recipeId,
+  });
+
+  if (duplicateRecipe) {
+    const error: ApiError = new Error(
+      `This recipe is already assigned to ${duplicateRecipe.dayOfWeek}, ${duplicateRecipe.mealType} this week.`
+    );
+    error.statusCode = 409;
+    (error as ApiError & { details?: { existingDay?: string; existingMealType?: string } }).details = {
+      existingDay: duplicateRecipe.dayOfWeek,
+      existingMealType: duplicateRecipe.mealType,
+    };
+    throw error;
+  }
+  
   entry.recipeId = new mongoose.Types.ObjectId(recipeId);
   if (notes !== undefined) {
     entry.notes = notes;
