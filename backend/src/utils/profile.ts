@@ -62,7 +62,12 @@ export function sanitizeAllergies(input: unknown): string[] | undefined {
   for (const raw of values) {
     let value = String(raw).trim();
     if (!value) continue;
-    value = value.replace(/[\u0000-\u001f\u007f]/g, "");
+    value = [...value]
+      .filter((char) => {
+        const code = char.charCodeAt(0);
+        return code >= 32 && code !== 127;
+      })
+      .join("");
     value = value.replace(/[<>]/g, "");
     value = value.replace(/\s+/g, " ");
     value = value.replace(/[^a-zA-Z0-9 \-']/g, "");
@@ -86,7 +91,8 @@ export function sanitizeAllergies(input: unknown): string[] | undefined {
 export function sanitizeProfileUpdate(
   input: Record<string, unknown>
 ): Record<string, unknown> {
-  const { dietary_restric, allergies, userId: _userId, ...rest } = input;
+  const { dietary_restric, allergies, ...rest } = input;
+  delete rest.userId;
   const output: Record<string, unknown> = { ...rest };
 
   const normalizedDietary = normalizeDietaryRestrictions(dietary_restric);
