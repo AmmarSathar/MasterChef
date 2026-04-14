@@ -181,15 +181,14 @@ export async function createMealPlanEntry(
     throw error;
   }
 
-  // Prevent the same recipe appearing more than once on the same day
+  // Prevent the same recipe appearing more than once in the same week
   const duplicateRecipe = await MealPlanEntry.findOne({
     mealPlanId,
     recipeId,
-    dayOfWeek,
   });
   if (duplicateRecipe) {
     const error: ApiError = new Error(
-      `This recipe is already assigned to ${duplicateRecipe.mealType} on ${duplicateRecipe.dayOfWeek}.`
+      `This recipe is already assigned to ${duplicateRecipe.dayOfWeek}, ${duplicateRecipe.mealType} this week.`
     );
     error.statusCode = 409;
     (error as ApiError & { details?: { existingDay?: string; existingMealType?: string } }).details = {
