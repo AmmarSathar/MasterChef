@@ -3,10 +3,10 @@ import { AnimatePresence } from "framer-motion";
 
 import { Toaster } from "react-hot-toast";
 
-import Navbar from "@/components/ui/Navbar/Navbar";
+import Navbar from "@/components/features/navbar/Navbar";
 import Home from "@/pages/Home/Home";
-import Login from "./components/ui/Login/login";
-import Dashboard from "@/components/ui/Dashboard/dashboard";
+import Login from "./components/features/login/login";
+import Dashboard from "@/components/features/dashboard/dashboard";
 
 function AnimatedRoutes() {
   const location = useLocation();
