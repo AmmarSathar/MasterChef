@@ -189,7 +189,7 @@ export function RecipeContent() {
   useEffect(() => {
     const resolvedUserId = getResolvedUserId(user);
     if (resolvedUserId) setCurrentUserId(resolvedUserId);
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     if (getResolvedUserId(user)) return;
