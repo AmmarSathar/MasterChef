@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useUser } from "@/context/UserContext";
 import {
+  emptyCalendarDay,
+  fetchCalendarWeek,
+  toSundayIso,
+  type CalendarDayData,
+} from "@/lib/api/calendar";
+import {
   fetchMealPlanWeek,
   toMondayIso,
   type DayName,
@@ -36,9 +42,14 @@ type MealPreview = {
   meal: MealEntry | null;
 };
 
+type CalendarPreviewMeal = {
+  slot: SlotName;
+  meal: CalendarDayData[SlotName] | null;
+};
+
 type WeekDayPreview = {
   day: DayName;
-  meals: MealPreview[];
+  meals: CalendarPreviewMeal[];
 };
 
 const DAY_ORDER: DayName[] = [
@@ -140,6 +151,23 @@ function buildMealPreview(dayMeals: Record<SlotName, MealEntry[]> | undefined) {
   }));
 }
 
+function buildCalendarPreview(dayMeals: CalendarDayData | undefined) {
+  const slots: SlotName[] = ["breakfast", "lunch", "dinner"];
+  const resolvedMeals = dayMeals ?? emptyCalendarDay();
+
+  return slots.map((slot) => ({
+    slot,
+    meal: resolvedMeals[slot] ?? null,
+  }));
+}
+
+function toDateKey(date: Date) {
+  const yyyy = date.getFullYear();
+  const mm = `${date.getMonth() + 1}`.padStart(2, "0");
+  const dd = `${date.getDate()}`.padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function formatMealSlot(slot: SlotName) {
   return slot.charAt(0).toUpperCase() + slot.slice(1);
 }
@@ -237,26 +265,57 @@ export function MainDashboardContent() {
         const week = await fetchMealPlanWeek(mondayIso);
         const today = getCurrentDayName(new Date());
         const preview = buildMealPreview(week.days[today]);
-        const weeklyPreview = DAY_ORDER.map((day) => ({
-          day,
-          meals: buildMealPreview(week.days[day]),
-        }));
 
         if (!cancelled) {
           setMealPreview(preview);
-          setWeekPreview(weeklyPreview);
-          setCurrentWeekLabel(formatWeekLabel(mondayIso));
         }
       } catch {
         if (!cancelled) {
           setMealPreview([]);
+        }
+      }
+    }
+
+    void loadMealPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadWeekPreview() {
+      try {
+        const today = new Date();
+        const sundayIso = toSundayIso(today);
+        const week = await fetchCalendarWeek(sundayIso);
+        const weekStart = new Date(`${sundayIso}T00:00:00`);
+        const weeklyPreview = DAY_ORDER.map((day, index) => {
+          const date = new Date(weekStart);
+          date.setDate(weekStart.getDate() + index + 1);
+          const dateKey = toDateKey(date);
+
+          return {
+            day,
+            meals: buildCalendarPreview(week.days[dateKey]),
+          };
+        });
+
+        if (!cancelled) {
+          setWeekPreview(weeklyPreview);
+          setCurrentWeekLabel(formatWeekLabel(toMondayIso(today)));
+        }
+      } catch {
+        if (!cancelled) {
           setWeekPreview([]);
           setCurrentWeekLabel("");
         }
       }
     }
 
-    void loadMealPreview();
+    void loadWeekPreview();
 
     return () => {
       cancelled = true;

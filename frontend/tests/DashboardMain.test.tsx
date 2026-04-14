@@ -2,9 +2,16 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockUseUser = vi.hoisted(() => vi.fn());
-const { mockFetchMealPlanWeek, mockToMondayIso } = vi.hoisted(() => ({
+const {
+  mockFetchCalendarWeek,
+  mockFetchMealPlanWeek,
+  mockToMondayIso,
+  mockToSundayIso,
+} = vi.hoisted(() => ({
+  mockFetchCalendarWeek: vi.fn(),
   mockFetchMealPlanWeek: vi.fn(),
   mockToMondayIso: vi.fn(() => "2026-04-13"),
+  mockToSundayIso: vi.fn(() => "2026-04-12"),
 }));
 
 vi.mock("@/context/UserContext", () => ({
@@ -14,6 +21,12 @@ vi.mock("@/context/UserContext", () => ({
 vi.mock("@/lib/api/meal-plan", () => ({
   fetchMealPlanWeek: mockFetchMealPlanWeek,
   toMondayIso: mockToMondayIso,
+}));
+
+vi.mock("@/lib/api/calendar", () => ({
+  emptyCalendarDay: () => ({ breakfast: null, lunch: null, dinner: null }),
+  fetchCalendarWeek: mockFetchCalendarWeek,
+  toSundayIso: mockToSundayIso,
 }));
 
 import { MainDashboardContent } from "@/components/ui/Dashboard/contents/DashboardMain";
@@ -115,6 +128,43 @@ describe("MainDashboardContent", () => {
         Sunday: sameDayMeals,
       },
     });
+
+    mockFetchCalendarWeek.mockResolvedValue({
+      weekStartDate: "2026-04-12",
+      days: {
+        "2026-04-13": {
+          breakfast: {
+            entryId: "c1",
+            recipeId: "cr1",
+            title: "Calendar Breakfast",
+            description: "",
+            imageUrl: "/calendar-breakfast.jpg",
+            cookingTime: 10,
+            notes: "",
+          },
+          lunch: null,
+          dinner: null,
+        },
+        "2026-04-14": {
+          breakfast: null,
+          lunch: {
+            entryId: "c2",
+            recipeId: "cr2",
+            title: "Calendar Lunch",
+            description: "",
+            imageUrl: "/calendar-lunch.jpg",
+            cookingTime: 15,
+            notes: "",
+          },
+          dinner: null,
+        },
+        "2026-04-15": { breakfast: null, lunch: null, dinner: null },
+        "2026-04-16": { breakfast: null, lunch: null, dinner: null },
+        "2026-04-17": { breakfast: null, lunch: null, dinner: null },
+        "2026-04-18": { breakfast: null, lunch: null, dinner: null },
+        "2026-04-19": { breakfast: null, lunch: null, dinner: null },
+      },
+    });
   });
 
   afterEach(() => {
@@ -140,7 +190,7 @@ describe("MainDashboardContent", () => {
       expect(screen.getByAltText("Salmon Plate")).toBeInTheDocument();
       expect(screen.getByText("Week of Apr 13")).toBeInTheDocument();
       expect(
-        screen.getByAltText("Monday Breakfast Breakfast Burrito"),
+        screen.getByAltText("Monday Breakfast Calendar Breakfast"),
       ).toBeInTheDocument();
       expect(screen.getByText(/Today:/)).toBeInTheDocument();
     });
