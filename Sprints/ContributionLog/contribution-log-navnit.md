@@ -23,7 +23,7 @@
 ## Sprint 3
 
 | Date | Task | Description | Time Spent |
-
+|------|------|-------------|------------|
 |2026-03-24| Display toast message in modal when Assign API returns 409 | Implemented toast message feature when Assign Recipe API returns 409 | 1.5 hr |
 |2026-03-25| Add a dropdown to grid cells in the weekly view to add new recipe |Added a '+' button on weekly meal plan page which when user clicks, a dropdown appears to add a new recipe|3 hr|
 |2026-03-25 | Integration testing of weekly meal plan grid | Tested if user can view, add recipe on weekly grid | 2 hr |
@@ -31,3 +31,14 @@
 
 **Total Time:** 9.5 h
 
+
+## Sprint 4
+
+| Date | Task | Description | Time Spent |
+|------|------|-------------|------------|
+| 2026-04-13 |Presentation | Process Overview, Solution Overview| 4 hr |
+| 2026-04-13 | Report Writing|Designing block diagram | 2 hr |
+| 2026-04-10 | Weekly meal plan duplication |Implementing toast message display when user duplicates meal plan for the week | 3 hr |
+| 2026-04-10 | Weekly meal plan duplication |Implementing icon when meal has already been assigned for the week | 2 hr |
+
+**Total Time:** 11 h
