@@ -44,7 +44,7 @@ vi.mock("@/lib/api/meal-plan", () => ({
   toMondayIso: vi.fn((d: Date) => d.toISOString().split("T")[0]),
 }));
 
-vi.mock("@/components/ui/RecipeCreator", () => ({
+vi.mock("@/components/features/recipe/RecipeCreator", () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="recipe-creator">
       <button onClick={onClose}>Close Creator</button>
@@ -52,7 +52,7 @@ vi.mock("@/components/ui/RecipeCreator", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarPicker", () => ({
+vi.mock("@/components/features/dashboard/contents/calendar/CalendarPicker", () => ({
   CalendarPicker: ({ onDaySelect }: { onDaySelect: (d: Date) => void }) => (
     <div data-testid="calendar-picker">
       <button onClick={() => onDaySelect(new Date("2026-05-04"))}>Pick May 4</button>
@@ -61,7 +61,7 @@ vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarPicker", () => ({
 }));
 
 vi.mock(
-  "@/components/ui/Dashboard/contents/calendar/CalendarDayView",
+  "@/components/features/dashboard/contents/calendar/CalendarDayView",
   async (importOriginal) => {
     return {
       CalendarDayView: ({ onBack }: { onBack: () => void }) => (
@@ -75,7 +75,7 @@ vi.mock(
 );
 
 // Stub CalendarSlotPicker so CalendarWeekView tests don't need useUser context
-vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarSlotPicker", () => ({
+vi.mock("@/components/features/dashboard/contents/calendar/CalendarSlotPicker", () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="calendar-slot-picker">
       <button onClick={onClose}>Close Picker</button>
@@ -83,7 +83,7 @@ vi.mock("@/components/ui/Dashboard/contents/calendar/CalendarSlotPicker", () => 
   ),
 }));
 
-import { CalendarContent } from "@/components/ui/Dashboard/contents/Calendar";
+import { CalendarContent } from "@/components/features/dashboard/contents/Calendar";
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -213,7 +213,7 @@ describe("CalendarWeekView", () => {
 
   beforeAll(async () => {
     const mod = await vi.importActual<{ default: ComponentType<WeekViewProps> }>(
-      "@/components/ui/Dashboard/contents/calendar/CalendarWeekView"
+      "@/components/features/dashboard/contents/calendar/CalendarWeekView"
     );
     CalendarWeekView = mod.default;
   });

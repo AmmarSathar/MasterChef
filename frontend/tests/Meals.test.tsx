@@ -52,7 +52,7 @@ vi.mock("@/lib/api/meal-plan", () => ({
 }));
 
 // Stub MealPickerPanel
-vi.mock("@/components/ui/Dashboard/contents/MealPickerPanel", () => ({
+vi.mock("@/components/features/dashboard/contents/MealPickerPanel", () => ({
   default: (props: {
     slot: string;
     dayName: string;
@@ -82,7 +82,7 @@ vi.mock("@/components/ui/Dashboard/contents/MealPickerPanel", () => ({
   ),
 }));
 
-import { MealsContent } from "@/components/ui/Dashboard/contents/Meals";
+import { MealsContent } from "@/components/features/dashboard/contents/Meals";
 import type { WeekDays } from "@/lib/api/meal-plan";
 
 // ── Helpers ────────────────────────────────────────────────────

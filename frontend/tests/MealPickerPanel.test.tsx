@@ -43,7 +43,7 @@ vi.mock("axios", () => ({
 }));
 
 import axios from "axios";
-import MealPickerPanel from "@/components/ui/Dashboard/contents/MealPickerPanel";
+import MealPickerPanel from "@/components/features/dashboard/contents/MealPickerPanel";
 import type { MealEntry } from "@/lib/api/meal-plan";
 
 // ── Helpers ────────────────────────────────────────────────────

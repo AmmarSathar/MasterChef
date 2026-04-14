@@ -27,7 +27,7 @@ vi.mock("react-hot-toast", () => ({
 }));
 
 import axios from "axios";
-import AccountPreferences from "@/components/ui/Dashboard/contents/settings/AccountPreferences";
+import AccountPreferences from "@/components/features/dashboard/contents/settings/AccountPreferences";
 
 describe("AccountPreferences", () => {
   beforeEach(() => {
