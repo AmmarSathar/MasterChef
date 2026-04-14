@@ -63,7 +63,7 @@ test("user can edit dietary preferences and allergies and see them after reload"
     await page.locator(".header-account").click();
     await page.locator(".user-card").waitFor({ state: "visible", timeout: 10000 });
     await page.getByTitle("Options").click({ force: true });
-    await page.waitForURL(/\/dashboard#settings/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/dashboard#settings/, { timeout: 10000 });
 
     const preferencesButton = page.getByRole("button", { name: "Preferences" });
     await expect(preferencesButton).toBeVisible({ timeout: 10000 });
