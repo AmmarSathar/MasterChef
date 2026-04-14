@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import Navbar from "@/components/ui/Navbar/Navbar";
+import Navbar from "@/components/features/navbar/Navbar";
 import { MemoryRouter } from "react-router-dom";
 import { UserProvider } from "@context/UserContext";
 

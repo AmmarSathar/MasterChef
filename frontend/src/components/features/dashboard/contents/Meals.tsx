@@ -3,7 +3,7 @@ import { motion, AnimatePresence, sync } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import RecipeView from "@components/ui/RecipeView";
+import RecipeView from "@/components/features/recipe/RecipeView";
 import MealPickerPanel from "./MealPickerPanel";
 import toast from "react-hot-toast";
 import { useUser } from "@/context/UserContext";
