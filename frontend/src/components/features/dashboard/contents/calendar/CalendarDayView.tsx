@@ -204,14 +204,14 @@ export function CalendarDayView({
                                     />
                                   </div>
                                 )}
-                                <div className="option-overlay absolute inset-0 bg-linear-to-bl from-card-foreground/80 to-transparent p-3 flex flex-col justify-end">
-                                  <p className="text-xs scale-95 -ml-2 uppercase tracking-[0.2em] text-accent brightness-100 pointer-events-none">
+                                <div className="option-overlay absolute inset-0 bg-linear-to-t from-background/88 via-background/48 to-background/8 p-3 flex flex-col justify-end">
+                                  <p className="text-xs scale-95 -ml-2 uppercase tracking-[0.2em] text-foreground/72 pointer-events-none">
                                     {entry.cookingTime ?? 0} mins
                                   </p>
-                                  <p className="font-semibold leading-tight text-foreground truncate ">
+                                  <p className="font-semibold leading-tight text-foreground/95 drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)] truncate">
                                     {entry.title}
                                   </p>
-                                  <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-accent brightness-125 text-grain2 rounded px-2 py-1 w-fit">
+                                  <span className="mt-2 text-xs scale-95 -ml-1 uppercase tracking-[0.2em] bg-background/88 text-foreground/80 ring-1 ring-border/70 rounded px-2 py-1 w-fit">
                                     {!isActive ? "Select Choice" : "Selected"}
                                   </span>
                                 </div>

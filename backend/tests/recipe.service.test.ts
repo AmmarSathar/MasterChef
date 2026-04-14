@@ -65,6 +65,7 @@ describe("Recipe service (US.04)", () => {
         "Mix eggs and cheese",
         "Combine all",
       ],
+      prepingTime: 10,
       cookingTime: 15,
       servings: 2,
       skillLevel: "intermediate",
@@ -79,6 +80,7 @@ describe("Recipe service (US.04)", () => {
     expect(created.title).toBe("Spaghetti Carbonara");
     expect(created.createdBy).toBe(owner._id.toString());
     expect(created.createdByName).toBe("Owner");
+    expect(created.prepingTime).toBe(10);
 
     const ownerList = await getRecipes({ createdBy: owner._id.toString() });
     expect(ownerList.recipes.some((r) => r.id === created.id)).toBe(true);
@@ -87,15 +89,18 @@ describe("Recipe service (US.04)", () => {
       recipeId: created.id,
       userId: owner._id.toString(),
       title: "Authentic Spaghetti Carbonara",
+      prepingTime: 12,
       servings: 3,
     });
 
     expect(updated.title).toBe("Authentic Spaghetti Carbonara");
     expect(updated.servings).toBe(3);
+    expect(updated.prepingTime).toBe(12);
 
     const fromDb = await getRecipeById(created.id);
     expect(fromDb.title).toBe("Authentic Spaghetti Carbonara");
     expect(fromDb.servings).toBe(3);
+    expect(fromDb.prepingTime).toBe(12);
 
     await deleteRecipe(created.id, owner._id.toString());
 

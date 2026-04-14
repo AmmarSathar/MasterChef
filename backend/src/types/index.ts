@@ -70,6 +70,7 @@ export interface CreateRecipeInput {
   description: string;
   ingredients: IngredientInput[];
   steps: string[];
+  prepingTime: number;
   cookingTime: number;
   servings: number;
   skillLevel: string;
@@ -86,6 +87,7 @@ export interface UpdateRecipeInput {
   description?: string;
   ingredients?: IngredientInput[];
   steps?: string[];
+  prepingTime?: number;
   cookingTime?: number;
   servings?: number;
   skillLevel?: string;
@@ -102,6 +104,7 @@ export interface RecipeResponse {
   description: string;
   ingredients: IngredientInput[];
   steps: string[];
+  prepingTime: number;
   cookingTime: number;
   servings: number;
   skillLevel: string;

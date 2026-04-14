@@ -2,6 +2,14 @@ import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 
+const { mockUseUser, mockToastLoading, mockToastSuccess, mockToastError } =
+  vi.hoisted(() => ({
+    mockUseUser: vi.fn(),
+    mockToastLoading: vi.fn(),
+    mockToastSuccess: vi.fn(),
+    mockToastError: vi.fn(),
+  }));
+
 // ── Mocks ──────────────────────────────────────────────────────
 
 // Framer-motion stub
@@ -44,10 +52,42 @@ vi.mock("@/lib/api/meal-plan", () => ({
   toMondayIso: vi.fn((d: Date) => d.toISOString().split("T")[0]),
 }));
 
+vi.mock("@/context/UserContext", () => ({
+  useUser: mockUseUser,
+}));
+
+vi.mock("react-hot-toast", () => ({
+  default: {
+    loading: mockToastLoading,
+    success: mockToastSuccess,
+    error: mockToastError,
+  },
+}));
+
 vi.mock("@/components/features/recipe/RecipeCreator", () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="recipe-creator">
       <button onClick={onClose}>Close Creator</button>
+    </div>
+  ),
+}));
+
+vi.mock("@/components/features/recipe/RecipeView", () => ({
+  default: ({
+    recipe,
+    onClose,
+    onRemoveFromSlot,
+  }: {
+    recipe: { title: string };
+    onClose: () => void;
+    onRemoveFromSlot?: () => void;
+  }) => (
+    <div data-testid="recipe-view">
+      <span>{recipe.title}</span>
+      <button onClick={onClose}>Close Recipe View</button>
+      {onRemoveFromSlot ? (
+        <button onClick={onRemoveFromSlot}>Remove from slot</button>
+      ) : null}
     </div>
   ),
 }));
@@ -99,6 +139,11 @@ describe("CalendarContent", () => {
     vi.clearAllMocks();
     mockFetchCalendarWeek.mockResolvedValue(emptyWeekData());
     mockFetchMealPlanWeek.mockResolvedValue({ days: {} });
+    mockClearCalendarEntry.mockResolvedValue(undefined);
+    mockUseUser.mockReturnValue({
+      user: { id: "u1" },
+      loading: false,
+    });
   });
 
   it("renders the three time-filter tabs", () => {
@@ -183,6 +228,89 @@ it("Back button in day view returns to calendar view", async () => {
 
     fireEvent.click(screen.getByRole("button", { name: /close creator/i }));
     expect(screen.queryByTestId("recipe-creator")).not.toBeInTheDocument();
+  });
+
+  it("shows Remove from slot only in the calendar recipe popup and clears the selected slot", async () => {
+    const weekStart = new Date(2026, 3, 12);
+    const weekDates = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + index);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    });
+    const dateKey = weekDates[0];
+    const weekDays = Object.fromEntries(
+      weekDates.map((key, index) => [
+        key,
+        {
+          breakfast:
+            index === 0
+              ? {
+                  entryId: "entry-1",
+                  recipeId: "recipe-1",
+                  title: "Egg Toast",
+                  description: "Breakfast toast",
+                  imageUrl: "https://example.com/egg-toast.jpg",
+                  cookingTime: 10,
+                  notes: "",
+                }
+              : null,
+          lunch: null,
+          dinner: null,
+        },
+      ]),
+    );
+
+    mockFetchCalendarWeek.mockResolvedValue({
+      weekStartDate: dateKey,
+      days: weekDays,
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        ({
+          ok: true,
+          json: async () => ({
+            data: {
+              id: "recipe-1",
+              createdBy: "u1",
+              title: "Egg Toast",
+              description: "Breakfast toast",
+              prepingTime: 5,
+              cookingTime: 10,
+              servings: 1,
+              skillLevel: "beginner",
+              dietaryTags: [],
+              containsAllergens: [],
+              ingredients: [],
+              steps: [],
+            },
+          }),
+        }) as Response,
+      ),
+    );
+
+    render(<CalendarContent />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Egg Toast")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("Egg Toast"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("recipe-view")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /remove from slot/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /remove from slot/i }));
+
+    await waitFor(() => {
+      expect(mockClearCalendarEntry).toHaveBeenCalledWith(dateKey, "breakfast");
+      expect(screen.queryByText("Egg Toast")).not.toBeInTheDocument();
+    });
   });
 });
 

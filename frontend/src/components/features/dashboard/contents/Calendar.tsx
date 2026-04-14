@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 import { CalendarDayView } from "./calendar/CalendarDayView";
 import CalendarWeekView, { CalendarWeekViewSkeleton } from "./calendar/CalendarWeekView";
@@ -9,7 +10,12 @@ import RecipeView from "@/components/features/recipe/RecipeView";
 import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { DAYS_OF_WEEK, MONTH_NAMES } from "@masterchef/shared/constants";
-import { emptyCalendarDay, fetchCalendarWeek, toSundayIso } from "@/lib/api/calendar";
+import {
+  clearCalendarEntry,
+  emptyCalendarDay,
+  fetchCalendarWeek,
+  toSundayIso,
+} from "@/lib/api/calendar";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -76,10 +82,16 @@ export function CalendarTitle() {
 
 function CalendarRecipeViewer({
   recipe,
+  dateStr,
+  mealType,
   onClose,
+  onRemoveFromSlot,
 }: {
   recipe: Recipe;
+  dateStr: string;
+  mealType: CalendarMealType;
   onClose: () => void;
+  onRemoveFromSlot: (dateStr: string, mealType: CalendarMealType) => void;
 }) {
   const { user } = useUser();
 
@@ -96,9 +108,16 @@ function CalendarRecipeViewer({
         onClose();
         window.location.hash = `recipe?view=${recipe.id}`;
       }}
+      onRemoveFromSlot={() => onRemoveFromSlot(dateStr, mealType)}
     />
   );
 }
+
+type ViewedCalendarRecipe = {
+  recipe: Recipe;
+  dateStr: string;
+  mealType: CalendarMealType;
+};
 
 export function CalendarContent() {
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -111,10 +130,14 @@ export function CalendarContent() {
   >({});
   const [loading, setLoading] = useState(false);
   const [yearDir, setYearDir] = useState(0);
-  const [viewedRecipe, setViewedRecipe] = useState<Recipe | null>(null);
+  const [viewedRecipe, setViewedRecipe] = useState<ViewedCalendarRecipe | null>(null);
   const [loadingMealId, setLoadingMealId] = useState<string | null>(null);
 
-  const handleMealClick = async (meal: CalendarSlotEntry) => {
+  const handleMealClick = async (
+    meal: CalendarSlotEntry,
+    dateStr: string,
+    mealType: CalendarMealType,
+  ) => {
     setLoadingMealId(meal.recipeId);
     try {
       const res = await fetch(
@@ -125,11 +148,39 @@ export function CalendarContent() {
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message ?? "Failed to load recipe");
-      setViewedRecipe(json.data as Recipe);
+      setViewedRecipe({
+        recipe: json.data as Recipe,
+        dateStr,
+        mealType,
+      });
     } catch (err) {
       console.error("[Calendar] Failed to fetch recipe:", err);
     } finally {
       setLoadingMealId(null);
+    }
+  };
+
+  const handleRemoveFromSlot = async (
+    dateStr: string,
+    mealType: CalendarMealType,
+  ) => {
+    toast.loading("Removing recipe from slot...", { id: "calendar-remove-slot" });
+    try {
+      await clearCalendarEntry(dateStr, mealType);
+      setCalendarDays((prev) => ({
+        ...prev,
+        [dateStr]: {
+          ...(prev[dateStr] ?? emptyCalendarDay()),
+          [mealType]: null,
+        },
+      }));
+      setViewedRecipe(null);
+      toast.success("Removed from slot.", { id: "calendar-remove-slot" });
+    } catch (err) {
+      console.error("[Calendar] Failed to clear calendar entry:", err);
+      toast.error("Could not remove recipe from slot.", {
+        id: "calendar-remove-slot",
+      });
     }
   };
 
@@ -477,9 +528,12 @@ export function CalendarContent() {
       <AnimatePresence>
         {viewedRecipe && (
           <CalendarRecipeViewer
-            key={viewedRecipe.id}
-            recipe={viewedRecipe}
+            key={`${viewedRecipe.recipe.id}-${viewedRecipe.dateStr}-${viewedRecipe.mealType}`}
+            recipe={viewedRecipe.recipe}
+            dateStr={viewedRecipe.dateStr}
+            mealType={viewedRecipe.mealType}
             onClose={() => setViewedRecipe(null)}
+            onRemoveFromSlot={handleRemoveFromSlot}
           />
         )}
       </AnimatePresence>

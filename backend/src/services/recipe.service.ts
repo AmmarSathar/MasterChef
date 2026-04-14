@@ -73,6 +73,7 @@ function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
     description: recipe.description,
     ingredients: recipe.ingredients,
     steps: recipe.steps,
+    prepingTime: recipe.prepingTime,
     cookingTime: recipe.cookingTime,
     servings: recipe.servings,
     skillLevel: recipe.skillLevel,
@@ -93,13 +94,13 @@ function toRecipeResponse(recipe: InstanceType<typeof Recipe>): RecipeResponse {
 export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResponse> {
   const {
     title, description, ingredients, steps,
-    cookingTime, servings, skillLevel, cuisine, imageUrl, isShared, userId,
+    prepingTime, cookingTime, servings, skillLevel, cuisine, imageUrl, isShared, userId,
   } = input;
 
   if (!title || !description || !ingredients?.length || !steps?.length
-      || !cookingTime || !servings || !skillLevel) {
+      || !prepingTime || !cookingTime || !servings || !skillLevel) {
     const error: ApiError = new Error(
-      "Title, description, ingredients, steps, cookingTime, servings, and skillLevel are required"
+      "Title, description, ingredients, steps, prepingTime, cookingTime, servings, and skillLevel are required"
     );
     error.statusCode = 400;
     throw error;
@@ -124,6 +125,7 @@ export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResp
     description,
     ingredients,
     steps,
+    prepingTime,
     cookingTime,
     servings,
     skillLevel,

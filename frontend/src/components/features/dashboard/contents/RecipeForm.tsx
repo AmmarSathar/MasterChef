@@ -77,6 +77,13 @@ function normalizeSkillLevel(value: unknown): Recipe["skillLevel"] {
 
 function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
   const now = new Date();
+  const prepTime =
+    typeof recipe.prepingTime === "number"
+      ? recipe.prepingTime
+      : typeof (recipe as Partial<Recipe> & { preping_time?: number }).preping_time ===
+          "number"
+        ? (recipe as Partial<Recipe> & { preping_time: number }).preping_time
+        : 0;
 
   return {
     id: recipe.id ?? "",
@@ -87,7 +94,7 @@ function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
     title: recipe.title ?? "",
     description: recipe.description ?? "",
     imageUrl: recipe.imageUrl ?? "",
-    prepingTime: recipe.prepingTime ?? 0,
+    prepingTime: prepTime,
     cookingTime: recipe.cookingTime ?? 0,
     servings: recipe.servings ?? 1,
     skillLevel: normalizeSkillLevel(recipe.skillLevel),
@@ -249,8 +256,6 @@ export function RecipeContent() {
   };
 
   const handleStartEdit = (recipe: Recipe) => {
-    if (!currentUserId || recipe.createdBy !== currentUserId) return;
-    console.log(recipe);
     if (
       !currentUserId ||
       getRecipeOwnerId(recipe.createdBy) !== currentUserId
@@ -285,8 +290,6 @@ export function RecipeContent() {
       imageUrl: data.imageUrl || "",
     };
 
-    console.log(recipePayload);
-
     if (editingRecipe) {
       (async () => {
         try {
@@ -303,8 +306,6 @@ export function RecipeContent() {
 
           const updated = json?.data;
           const updatedAt = updated?.updatedAt ?? new Date();
-
-          console.log(updated);
 
           setRecipes((prev) =>
             prev.map((r) =>
@@ -509,6 +510,7 @@ export function RecipeContent() {
         description: recipe.description,
         ingredients: recipe.ingredients ?? [],
         steps: recipe.steps ?? [],
+        prepingTime: recipe.prepingTime ?? 0,
         cookingTime: recipe.cookingTime ?? 0,
         servings: recipe.servings ?? 1,
         skillLevel: recipe.skillLevel,
@@ -749,12 +751,12 @@ export function RecipeContent() {
         <div
           className={`grid transition-all duration-300 ease-out ${
             filterOpen
-              ? "grid-rows-[1fr] opacity-100 pointer-events-auto"
-              : "grid-rows-[0fr] opacity-0 pointer-events-none"
+              ? "mb-0.5 grid-rows-[1fr] opacity-100 pointer-events-auto"
+              : "-mb-10 grid-rows-[0fr] opacity-0 pointer-events-none"
           }`}
         >
           <div className="overflow-hidden min-h-0">
-            <div className="filter-menu flex flex-col gap-3 pb-2">
+            <div className="filter-menu flex flex-col gap-2 pb-1">
               <div className="filter-header flex items-center gap-2 px-1">
                 <SlidersHorizontal size={14} className="text-foreground/50" />
                 <span className="text-sm font-semibold text-foreground/60">
@@ -770,10 +772,7 @@ export function RecipeContent() {
                 )}
               </div>
 
-              <div
-                className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
-                style={{ scrollbarWidth: "none" }}
-              >
+              <div className="filter-groups showScrollbar recipeFilterScrollbar flex items-start gap-4 overflow-x-auto overflow-y-hidden rounded-xl border border-border/20 bg-card/20 px-2 pt-1 pb-0.5 pr-2">
                 <div className="shrink-0 flex flex-col gap-2 ">
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
                     Meal Type
