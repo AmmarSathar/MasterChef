@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { useUser } from "@/context/UserContext";
-import { useEffect } from "react";
 
 interface RecipeViewProps {
   recipe: Recipe;
@@ -37,14 +36,7 @@ export default function RecipeView({
   onAddToCollection,
   isAddingToCollection = false,
 }: RecipeViewProps) {
-  const { user, loading } = useUser();
-
-  const totalTime =
-    (recipe.prepingTime ?? 0) + (recipe.cookingTime ?? recipe.cookingTime ?? 0);
-
-  useEffect(() => {
-    if (loading) return;
-  });
+  const { user } = useUser();
 
   return (
     <motion.div
