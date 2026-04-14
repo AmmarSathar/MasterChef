@@ -298,10 +298,7 @@ export default function SearchContainer({ onClose }: SearchContainerProps) {
         <div
           className={`filter-row w-full transition-all duration-500 ease-out-cubic overflow-hidden ${filterOpen ? "max-h-48 opacity-100" : "max-h-0 opacity-0 pointer-events-none"}`}
         >
-          <div
-            className="flex items-start gap-3 pb-1 py-2 px-1 overflow-x-auto"
-            style={{ scrollbarWidth: "none" }}
-          >
+          <div className="showScrollbar flex items-start gap-3 overflow-x-auto px-1 py-2 pb-1">
             <div className="shrink-0 flex flex-col gap-2 min-w-max">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
                 Meal Type

@@ -43,7 +43,11 @@ interface CalendarWeekViewProps {
   dates: Date[];
   selectionsByDay: Record<string, CalendarDayData>;
   onDayClick: (date: Date) => void;
-  onMealClick?: (meal: NonNullable<CalendarDayData[CalendarMealType]>) => void;
+  onMealClick?: (
+    meal: NonNullable<CalendarDayData[CalendarMealType]>,
+    dateStr: string,
+    mealType: CalendarMealType,
+  ) => void;
   loadingMealId?: string | null;
 }
 
@@ -77,7 +81,10 @@ export default function CalendarWeekView({
                 return meal ? (
                   <div
                     key={slot}
-                    onClick={(e) => { e.stopPropagation(); onMealClick?.(meal); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMealClick?.(meal, key, slot as CalendarMealType);
+                    }}
                     className="meal-card h-28 rounded-xl overflow-hidden relative p-0 cursor-pointer pointer-events-auto hover:shadow-md hover:scale-[1.05] transition-all duration-500 ease-out-cubic"
                   >
                     {meal.imageUrl ? (

@@ -13,6 +13,7 @@ export interface IRecipe extends Document {
   description: string;
   ingredients: IIngredient[];
   steps: string[];
+  prepingTime: number;
   cookingTime: number;
   servings: number;
   skillLevel: string;
@@ -75,6 +76,12 @@ const recipeSchema = new Schema<IRecipe>(
         validator: (v: string[]) => v.length > 0,
         message: "At least one step is required",
       },
+    },
+    prepingTime: {
+      type: Number,
+      required: [true, "Preparation time is required"],
+      default: 1,
+      min: [1, "Preparation time must be at least 1 minute"],
     },
     cookingTime: {
       type: Number,

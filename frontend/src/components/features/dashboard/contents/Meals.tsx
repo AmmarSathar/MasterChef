@@ -386,8 +386,8 @@ export function MealsContent() {
   const originalDaysRef = useRef<WeekDays | null>(null);
   const isDirtyRef = useRef(false);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  let syncToastWarn: string | undefined;
+  const syncWarningToastIdRef = useRef<string | undefined>(undefined);
+  const syncSavingToastIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     daysRef.current = days;
@@ -443,6 +443,12 @@ export function MealsContent() {
   useEffect(
     () => () => {
       if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+      if (syncWarningToastIdRef.current) {
+        toast.dismiss(syncWarningToastIdRef.current);
+      }
+      if (syncSavingToastIdRef.current) {
+        toast.dismiss(syncSavingToastIdRef.current);
+      }
     },
     [],
   );
@@ -458,17 +464,14 @@ export function MealsContent() {
 
     isDirtyRef.current = false;
     setSyncing(true);
-    
-    toast.dismiss(syncToastWarn as string);
-    syncToastWarn = toast.loading("Saving changes...", {
+
+    if (syncWarningToastIdRef.current) {
+      toast.dismiss(syncWarningToastIdRef.current);
+      syncWarningToastIdRef.current = undefined;
+    }
+
+    syncSavingToastIdRef.current = toast.loading("Saving changes...", {
       position: "bottom-right",
-    });
-
-
-    window.addEventListener("beforeunload", (e) => {
-      if (isDirtyRef.current) {
-        e.preventDefault();
-      }
     });
 
     const mealPlanId = mealPlanIdRef.current;
@@ -567,7 +570,10 @@ export function MealsContent() {
       }
     } finally {
       setSyncing(false);
-      toast.dismiss(syncToastWarn as string);
+      if (syncSavingToastIdRef.current) {
+        toast.dismiss(syncSavingToastIdRef.current);
+        syncSavingToastIdRef.current = undefined;
+      }
 
       toast.success("Changes saved!", {
         position: "bottom-right",
@@ -576,13 +582,21 @@ export function MealsContent() {
   };
 
   const scheduleSyncTimer = () => {
-    syncToastWarn = toast.error(
-      "Please wait, the selection has unsaved changes...",
-      {
-        position: "bottom-right",
-        duration: Infinity,
-      },
-    );
+    if (!syncWarningToastIdRef.current) {
+      const toastId = toast.error(
+        "Please wait, the selection has unsaved changes...",
+        {
+          position: "bottom-right",
+          duration: 4000,
+        },
+      );
+      syncWarningToastIdRef.current = toastId;
+      window.setTimeout(() => {
+        if (syncWarningToastIdRef.current === toastId) {
+          syncWarningToastIdRef.current = undefined;
+        }
+      }, 4000);
+    }
 
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(syncPendingChanges, 1500);

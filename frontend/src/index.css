@@ -580,7 +580,35 @@
 }
 
 .showScrollbar::-webkit-scrollbar {
-  width: 8px;
+  width: 144px;
+  height: 144px;
+}
+
+.showScrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.showScrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-muted-foreground) 45%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.showScrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-accent) 70%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.showScrollbar {
+  scrollbar-width: auto;
+  scrollbar-color: color-mix(in srgb, var(--color-muted-foreground) 45%, transparent) transparent;
+}
+
+.recipeFilterScrollbar::-webkit-scrollbar {
+  height: 288px;
 }
 
 @layer base {

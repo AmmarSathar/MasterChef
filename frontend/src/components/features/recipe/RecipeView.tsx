@@ -13,6 +13,7 @@ import {
   Users,
   Trash2,
   BookmarkPlus,
+  CalendarMinus,
 } from "lucide-react";
 
 import { useUser } from "@/context/UserContext";
@@ -24,6 +25,7 @@ interface RecipeViewProps {
   onClose: () => void;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipeId: string) => void;
+  onRemoveFromSlot?: () => void;
   onAddToCollection?: (recipe: Recipe) => void;
   isAddingToCollection?: boolean;
 }
@@ -34,6 +36,7 @@ export default function RecipeView({
   onClose,
   onEdit,
   onDelete,
+  onRemoveFromSlot,
   onAddToCollection,
   isAddingToCollection = false,
 }: RecipeViewProps) {
@@ -87,6 +90,15 @@ export default function RecipeView({
               className="text-foreground/70 w-10 h-10 rounded-full flex items-center justify-center bg-card/50 hover:bg-destructive/70 hover:text-foreground ring-2 ring-border/40 transition-all duration-200"
             >
               <Trash2 size={16} className="pointer-events-none" />
+            </button>
+          )}
+          {onRemoveFromSlot && (
+            <button
+              onClick={onRemoveFromSlot}
+              className="h-10 px-3 rounded-full flex items-center justify-center gap-2 bg-card/70 hover:bg-card/90 ring-2 ring-border/40 transition-all duration-200 text-sm font-semibold text-foreground/85"
+            >
+              <CalendarMinus size={15} className="pointer-events-none" />
+              <span className="pointer-events-none">Remove from slot</span>
             </button>
           )}
           {!isOwner && onAddToCollection && (
