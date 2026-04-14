@@ -4,8 +4,6 @@ import {
   LayoutGrid,
   Calendar,
   FileText,
-  Tv,
-  BarChart3,
   Settings,
   LogOut,
   MoreHorizontal,

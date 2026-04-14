@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Label } from "@components/ui/label";
 import { Badge } from "@components/ui/badge";
 import {
-  EggFriedIcon,
   CitrusIcon,
   ChevronDown,
   Check,

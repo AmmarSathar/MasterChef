@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-import { AlertTriangle, ChevronDown, Check, Search, X } from "lucide-react";
+import { ChevronDown, Check, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { allergenOptions } from "@masterchef/shared/constants";

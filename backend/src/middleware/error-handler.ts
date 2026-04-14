@@ -8,7 +8,10 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  const statusCode = err.statusCode || (err as any).status || 500;
+  // Keep Express error middleware arity while avoiding unused-arg lint noise.
+  void _next;
+  const statusCode =
+    err.statusCode || (err as { status?: number }).status || 500;
   const message = err.message || "Internal Server Error";
 
   console.error("Error:", statusCode, message, err.stack);
