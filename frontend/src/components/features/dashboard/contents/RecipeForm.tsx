@@ -9,12 +9,6 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import { SKILL_LEVELS, SAD_KAOMOJIS, Recipe } from "@masterchef/shared";
 import toast from "react-hot-toast";
-const BeefTacos = "/assets/images/beef-tacos.webp";
-const CaesarSalad = "/assets/images/caesar-salad.webp";
-const Carbonara = "/assets/images/carbonara.webp";
-const chickenStirFry = "/assets/images/chicken-stir-fry.webp";
-const ChocolateCookie = "/assets/images/chocolate-cookie.webp";
-const Margherita = "/assets/images/margherita.webp";
 
 import {
   Plus,
