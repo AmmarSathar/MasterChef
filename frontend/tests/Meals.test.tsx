@@ -237,7 +237,7 @@ describe("MealsContent", () => {
     render(<MealsContent />);
 
     await waitFor(() => {
-      expect(screen.getAllByText("Add item").length).toBeGreaterThanOrEqual(3);
+      expect(screen.getAllByRole('button', { name: /add item/i }).length).toBeGreaterThanOrEqual(3);
     });
   });
 
@@ -248,10 +248,10 @@ describe("MealsContent", () => {
 
     // Wait for the "Add item" buttons to appear instead of just checking for loading
     await waitFor(() => {
-      expect(screen.getAllByText("Add item").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByRole('button', { name: /add item/i }).length).toBeGreaterThanOrEqual(1);
     });
 
-    const addButtons = screen.getAllByText("Add item");
+    const addButtons = screen.getAllByRole('button', { name: /add item/i });
     fireEvent.click(addButtons[0]);
 
     expect(screen.getByTestId("meal-picker-panel")).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe("MealsContent", () => {
 
     await waitFor(() => screen.queryByText("Loading…") === null);
 
-    const addButtons = screen.getAllByText("Add item");
+    const addButtons = screen.getAllByRole('button', { name: /add item/i });
     fireEvent.click(addButtons[0]); // breakfast AddMealCard
 
     expect(screen.getByTestId("picker-slot").textContent).toBe("breakfast");
@@ -273,7 +273,7 @@ describe("MealsContent", () => {
 
     await waitFor(() => screen.queryByText("Loading…") === null);
 
-    fireEvent.click(screen.getAllByText("Add item")[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /add item/i })[0]);
     expect(screen.getByTestId("meal-picker-panel")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Pick Recipe"));
@@ -289,7 +289,7 @@ describe("MealsContent", () => {
 
     await waitFor(() => screen.queryByText("Loading…") === null);
 
-    fireEvent.click(screen.getAllByText("Add item")[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /add item/i })[0]);
     expect(screen.getByTestId("meal-picker-panel")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Close Panel"));
