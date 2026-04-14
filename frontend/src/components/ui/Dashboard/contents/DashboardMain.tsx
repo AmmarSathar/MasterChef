@@ -110,6 +110,14 @@ function shuffleRecipes(recipes: RecipePreview[]) {
   return shuffled;
 }
 
+function buildRecipePreviewSlots(recipes: RecipePreview[]) {
+  const slots: Array<RecipePreview | null> = [...recipes.slice(0, 3)];
+  while (slots.length < 3) {
+    slots.push(null);
+  }
+  return slots;
+}
+
 function getCurrentDayName(date: Date): DayName {
   const daysByIndex: DayName[] = [
     "Sunday",
@@ -174,6 +182,10 @@ export function MainDashboardContent() {
   const cuisinesLabel = formatList(user?.cuisines_pref);
   const allergiesLabel = formatList(user?.allergies);
   const dietaryLabel = formatList(user?.dietary_restric);
+  const recipePreviewSlots = useMemo(
+    () => buildRecipePreviewSlots(recipePreview),
+    [recipePreview],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -292,29 +304,27 @@ export function MainDashboardContent() {
                     {shortcut.eyebrow}
                   </span>
                 </div>
-                {shortcut.hash === "recipe" && recipePreview.length > 0 && (
+                {shortcut.hash === "recipe" && (
                   <div className="mt-4 grid grid-cols-3 gap-2">
-                    {recipePreview.map((recipe) => (
+                    {recipePreviewSlots.map((recipe, index) => (
                       <div
-                        key={recipe.id}
+                        key={recipe?.id ?? `recipe-placeholder-${index}`}
                         className="overflow-hidden rounded-2xl border border-border/50 bg-background/55"
                       >
                         <div className="aspect-square bg-secondary/50">
-                          {recipe.imageUrl ? (
+                          {recipe?.imageUrl ? (
                             <img
                               src={recipe.imageUrl}
                               alt={recipe.title}
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-secondary/60 px-2 text-center text-[0.65rem] font-semibold uppercase tracking-wide text-foreground/40">
-                              No image
-                            </div>
+                            <div className="h-full w-full bg-secondary/60" />
                           )}
                         </div>
                         <div className="px-2 py-2">
                           <p className="line-clamp-2 text-[0.72rem] font-semibold leading-4 text-foreground/80">
-                            {recipe.title}
+                            {recipe?.title ?? ""}
                           </p>
                         </div>
                       </div>
