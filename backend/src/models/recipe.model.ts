@@ -80,6 +80,7 @@ const recipeSchema = new Schema<IRecipe>(
     prepingTime: {
       type: Number,
       required: [true, "Preparation time is required"],
+      default: 1,
       min: [1, "Preparation time must be at least 1 minute"],
     },
     cookingTime: {
