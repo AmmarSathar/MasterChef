@@ -113,10 +113,6 @@ export default function RecipeCreator({
   const [coverImage, setCoverImage] = useState<string>(
     initialData?.imageUrl ?? "",
   );
-  const [diataryTags, setDietaryTags] = useState<DietaryOption[]>(
-    initialData?.dietaryTags ?? [],
-  );
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ingredientContainerRef = useRef<HTMLDivElement>(null);
   const modalContentRef = useRef<HTMLDivElement>(null);
