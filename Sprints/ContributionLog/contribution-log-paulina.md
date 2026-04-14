@@ -41,6 +41,8 @@
 | Date       | Task                | Description                                         | Time Spent |
 | ---------- | ------------------- | --------------------------------------------------- | ---------- |
 | 2026-04-10 | Report (Part 6 & 7) | Wrote sections 6 and 7 of final report.             | 2h         |
-| 2026-04-13 | Presentation Slides | Created and assembled slides for final presentation | 1h         |
+| 2026-04-13 | Presentation Slides       | Created and assembled slides for final presentation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 1h         |
+| 2026-04-14 | README Coding Standards   | Added Coding Standards section covering infrastructure rationale, naming conventions, key source files with GitHub links, and testing/CI documentation. | 1h         |
+| 2026-04-14 | Repository Reorganization | Deleted dead code, moved test-server.ts, archived examples to docs/. Moved static assets to frontend/public/assets/ and updated all references. Restructured frontend components into features/ folder and updated all imports. | 2h         |
 
-**Total Time:** 3h
+**Total Time:** 6h
