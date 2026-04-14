@@ -167,11 +167,10 @@ export function RecipeContent() {
     string | null
   >(null);
   const [recipeCreateOpen, setRecipeCreateOpen] = useState(false);
-
   const [debouncedSearch] = useState<string>("");
-  // const [searchInput] = useState<string>("");
 
   const [filterOpen, setFilterOpen] = useState(false);
+
   const [openedRecipe, setOpenedRecipe] = useState<Recipe | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
   const [pendingEditRecipe, setPendingEditRecipe] = useState<Recipe | null>(
@@ -257,7 +256,7 @@ export function RecipeContent() {
 
   const handleStartEdit = (recipe: Recipe) => {
     if (!currentUserId || recipe.createdBy !== currentUserId) return;
-    console.log(recipe)
+    console.log(recipe);
     if (
       !currentUserId ||
       getRecipeOwnerId(recipe.createdBy) !== currentUserId
@@ -412,7 +411,11 @@ export function RecipeContent() {
   };
 
   const clearFilters = () =>
-    setActiveFilters({ mealType: [], skillLevel: [], cookingTime: [] });
+    setActiveFilters({
+      mealType: [],
+      skillLevel: [],
+      cookingTime: [],
+    });
 
   const activeFilterCount = Object.values(activeFilters).flat().length;
 
@@ -474,210 +477,6 @@ export function RecipeContent() {
     })();
   };
 
-  const setExampleRecipes = () => {
-    setRecipes([
-      {
-        id: "example-1",
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        title: "Spaghetti Carbonara",
-        description:
-          "A classic Italian pasta dish made with eggs, cheese, pancetta, and pepper. Quick and delicious!",
-        imageUrl: Carbonara,
-        prepingTime: 15,
-        cookingTime: 20,
-        servings: 2,
-        skillLevel: "intermediate",
-        dietaryTags: ["Gluten-Free"],
-        containsAllergens: [],
-        isShared: true,
-        ingredients: [
-          { foodItem: "Spaghetti", amount: 200, unit: "g" },
-          { foodItem: "Pancetta", amount: 100, unit: "g" },
-          { foodItem: "Eggs", amount: 2, unit: "large" },
-          { foodItem: "Parmesan Cheese", amount: 50, unit: "g" },
-          { foodItem: "Black Pepper", amount: 1, unit: "tsp" },
-        ],
-        steps: [
-          "Cook spaghetti in salted boiling water until al dente.",
-          "In a pan, cook pancetta until crispy.",
-          "In a bowl, whisk eggs and Parmesan together.",
-          "Drain pasta and combine with pancetta. Remove from heat.",
-          "Quickly stir in egg mixture to create a creamy sauce.",
-          "Season with black pepper and serve immediately.",
-        ],
-      },
-      {
-        id: "example-2",
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        title: "Chicken Stir Fry",
-        description:
-          "A quick and colorful Asian-inspired dish with tender chicken and fresh vegetables in a savory sauce.",
-        imageUrl: chickenStirFry,
-        prepingTime: 20,
-        cookingTime: 15,
-        servings: 2,
-        skillLevel: "beginner",
-        dietaryTags: ["Gluten-Free"],
-        containsAllergens: [],
-        isShared: true,
-        ingredients: [
-          { foodItem: "Chicken Breast", amount: 400, unit: "g" },
-          { foodItem: "Bell Peppers", amount: 2, unit: "pcs" },
-          { foodItem: "Broccoli", amount: 200, unit: "g" },
-          { foodItem: "Soy Sauce", amount: 3, unit: "tbsp" },
-          { foodItem: "Garlic", amount: 3, unit: "cloves" },
-          { foodItem: "Ginger", amount: 1, unit: "tbsp" },
-        ],
-        steps: [
-          "Cut chicken into bite-sized pieces and vegetables into chunks.",
-          "Heat oil in a wok or large skillet over high heat.",
-          "Cook chicken until browned, then set aside.",
-          "Stir fry vegetables until tender-crisp.",
-          "Return chicken to the wok, add soy sauce, garlic, and ginger.",
-          "Toss everything together and serve over rice.",
-        ],
-      },
-      {
-        id: "example-3",
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        title: "Margherita Pizza",
-        description:
-          "Fresh and simple homemade pizza with tomato, mozzarella, basil, and olive oil.",
-        imageUrl: Margherita,
-        prepingTime: 30,
-        cookingTime: 12,
-        servings: 4,
-        skillLevel: "intermediate",
-        dietaryTags: ["Vegetarian"],
-        containsAllergens: [],
-        isShared: true,
-        ingredients: [
-          { foodItem: "Pizza Dough", amount: 500, unit: "g" },
-          { foodItem: "Tomato Sauce", amount: 200, unit: "ml" },
-          { foodItem: "Mozzarella", amount: 250, unit: "g" },
-          { foodItem: "Fresh Basil", amount: 20, unit: "g" },
-          { foodItem: "Olive Oil", amount: 2, unit: "tbsp" },
-        ],
-        steps: [
-          "Preheat oven to 220°C (425°F).",
-          "Roll out pizza dough onto a baking sheet.",
-          "Spread tomato sauce evenly on the dough.",
-          "Tear mozzarella and distribute over the sauce.",
-          "Drizzle with olive oil and bake for 12 minutes until crust is golden.",
-          "Top with fresh basil and serve hot.",
-        ],
-      },
-      {
-        id: "example-4",
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        title: "Caesar Salad",
-        description:
-          "Classic crisp salad with romaine lettuce, parmesan, croutons, and creamy Caesar dressing.",
-        imageUrl: CaesarSalad,
-        prepingTime: 15,
-        cookingTime: 0,
-        servings: 2,
-        skillLevel: "beginner",
-        dietaryTags: ["Vegetarian"],
-        containsAllergens: [],
-        isShared: true,
-        ingredients: [
-          { foodItem: "Romaine Lettuce", amount: 1, unit: "head" },
-          { foodItem: "Parmesan Cheese", amount: 75, unit: "g" },
-          { foodItem: "Croutons", amount: 100, unit: "g" },
-          { foodItem: "Caesar Dressing", amount: 150, unit: "ml" },
-          { foodItem: "Lemon", amount: 0.5, unit: "pcs" },
-        ],
-        steps: [
-          "Wash and chop romaine lettuce into bite-sized pieces.",
-          "Place lettuce in a large salad bowl.",
-          "Add croutons and half the parmesan cheese.",
-          "Pour Caesar dressing and toss gently.",
-          "Top with remaining parmesan and a squeeze of fresh lemon.",
-          "Serve immediately.",
-        ],
-      },
-      {
-        id: "example-5",
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        title: "Chocolate Chip Cookies",
-        description:
-          "Soft and chewy cookies loaded with chocolate chips. Perfect for dessert or a sweet snack.",
-        imageUrl: ChocolateCookie,
-        prepingTime: 15,
-        cookingTime: 12,
-        servings: 12,
-        skillLevel: "beginner",
-        dietaryTags: ["Vegetarian"],
-        containsAllergens: [],
-        isShared: true,
-        ingredients: [
-          { foodItem: "Butter", amount: 115, unit: "g" },
-          { foodItem: "Brown Sugar", amount: 200, unit: "g" },
-          { foodItem: "Egg", amount: 1, unit: "pcs" },
-          { foodItem: "Vanilla Extract", amount: 1, unit: "tsp" },
-          { foodItem: "All-Purpose Flour", amount: 280, unit: "g" },
-          { foodItem: "Chocolate Chips", amount: 200, unit: "g" },
-        ],
-        steps: [
-          "Preheat oven to 190°C (375°F).",
-          "Cream butter and brown sugar together.",
-          "Beat in egg and vanilla extract.",
-          "Mix flour, baking soda, and salt in a separate bowl.",
-          "Combine wet and dry ingredients, then fold in chocolate chips.",
-          "Drop spoonfuls onto a baking sheet and bake for 12 minutes until golden.",
-        ],
-      },
-      {
-        id: "example-6",
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        title: "Beef Tacos",
-        description:
-          "Flavorful seasoned ground beef tacos with fresh toppings and warm tortillas.",
-        imageUrl: BeefTacos,
-        prepingTime: 10,
-        cookingTime: 10,
-        servings: 4,
-        skillLevel: "beginner",
-        dietaryTags: [],
-        containsAllergens: [],
-        isShared: true,
-        ingredients: [
-          { foodItem: "Ground Beef", amount: 500, unit: "g" },
-          { foodItem: "Taco Seasoning", amount: 2, unit: "tbsp" },
-          { foodItem: "Taco Shells", amount: 8, unit: "pcs" },
-          { foodItem: "Lettuce", amount: 100, unit: "g" },
-          { foodItem: "Tomato", amount: 2, unit: "pcs" },
-          { foodItem: "Cheddar Cheese", amount: 100, unit: "g" },
-        ],
-        steps: [
-          "Brown ground beef in a skillet over medium-high heat.",
-          "Add taco seasoning and a splash of water, simmer for 5 minutes.",
-          "Warm taco shells in the oven.",
-          "Chop lettuce and tomato into small pieces.",
-          "Fill warm taco shells with beef and your favorite toppings.",
-          "Serve with sour cream on the side.",
-        ],
-      },
-    ]);
-  };
-
-  // useEffect(() => {
-  //   if (recipes.length === 0 && !loading) setExampleRecipes();
-  // }, [recipes.length, loading]);
-
   const parseRecipeHash = (): {
     mode: "view" | "edit" | "new" | null;
     id: string | null;
@@ -689,20 +488,16 @@ export function RecipeContent() {
     // console.log(raw);
 
     if (!raw.startsWith("recipe")) return { mode: "view", id: null };
-    
+
     const query = raw.split("?")[1] ?? "";
-    // console.log(query)
     const params = new URLSearchParams(query);
-    console.log(params)
 
     if (params.get("new")) return { mode: "new", id: null }; // sHould show new no matter the value. Just show new..
-    
+
     const editId = params.get("edit");
-    console.log("edit id: ", editId)
     if (editId) return { mode: "edit", id: editId };
-    
+
     const id = params.get("id") || params.get("view");
-    console.log("view id: ", id)
     return { mode: "view", id: id || null };
   };
 
@@ -749,14 +544,14 @@ export function RecipeContent() {
   };
 
   useEffect(() => {
-    if(loading) return
+    if (loading) return;
 
     const openFromHashAsync = async () => {
       const { mode, id } = parseRecipeHash();
 
       if (mode === null) return;
 
-      console.log(mode)
+      console.log(mode);
 
       if (mode === "new") {
         openCreateModal();
@@ -768,7 +563,7 @@ export function RecipeContent() {
       // ?edit=...id should show creator with target recipe
       if (mode === "edit") {
         const found = recipes.find((r) => r.id === id);
-        console.log(found)
+        console.log(found);
         if (found) {
           handleStartEdit(found);
           return;
@@ -906,8 +701,8 @@ export function RecipeContent() {
 
   return (
     <div className="w-full h-full flex relative flex-col gap-10 overflow-hidden">
-      <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4 overflow-hidden min-h-0">
-        <div className="flex items-center justify-between">
+      <div className="bg-card/50 w-full flex-1 flex flex-col rounded-2xl p-6 gap-4 overflow-hidden min-h-0 relative">
+        <div className="flex items-center justify-between relative">
           <div className="flex flex-col items-start justify-baseline">
             <div className="flex items-center justify-baseline gap-5">
               <span className="text-3xl font-bold text-card-foreground/90">
@@ -958,109 +753,118 @@ export function RecipeContent() {
           </div>
         </div>
         <div
-          className={`filter-menu w-full flex flex-col gap-3 -mb-10 transition-all duration-300 ease-out ${
+          className={`grid transition-all duration-300 ease-out ${
             filterOpen
-              ? "opacity-100 mt-0 pointer-events-auto"
-              : "opacity-0 -mt-20 pointer-events-none"
+              ? "grid-rows-[1fr] opacity-100 pointer-events-auto"
+              : "grid-rows-[0fr] opacity-0 pointer-events-none"
           }`}
         >
-          <div className="filter-header flex items-center gap-2 px-1">
-            <SlidersHorizontal size={14} className="text-foreground/50" />
-            <span className="text-sm font-semibold text-foreground/60">
-              Quick Filters
-            </span>
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearFilters}
-                className="ml-auto text-xs font-medium text-accent/70 hover:text-accent transition-colors cursor-pointer"
+          <div className="overflow-hidden min-h-0">
+            <div className="filter-menu flex flex-col gap-3 pb-2">
+              <div className="filter-header flex items-center gap-2 px-1">
+                <SlidersHorizontal size={14} className="text-foreground/50" />
+                <span className="text-sm font-semibold text-foreground/60">
+                  Quick Filters
+                </span>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="ml-auto text-xs font-medium text-accent/70 hover:text-accent transition-colors cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              <div
+                className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
+                style={{ scrollbarWidth: "none" }}
               >
-                Clear all
-              </button>
-            )}
-          </div>
+                <div className="shrink-0 flex flex-col gap-2 ">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                    Meal Type
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {MEAL_TYPES.map(({ label, icon: Icon }) => {
+                      const isActive = activeFilters.mealType.includes(label);
+                      return (
+                        <button
+                          key={label}
+                          onClick={() => toggleFilter("mealType", label)}
+                          className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                              : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                          }`}
+                        >
+                          <Icon size={15} className="pointer-events-none" />
+                          <span className="pointer-events-none">{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          <div
-            className="filter-groups overflow-x-auto flex items-start gap-4 pb-1"
-            style={{ scrollbarWidth: "none" }}
-          >
-            <div className="shrink-0 flex flex-col gap-2 ">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
-                Meal Type
-              </span>
-              <div className="flex items-center gap-2">
-                {MEAL_TYPES.map(({ label, icon: Icon }) => {
-                  const isActive = activeFilters.mealType.includes(label);
-                  return (
-                    <button
-                      key={label}
-                      onClick={() => toggleFilter("mealType", label)}
-                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                      }`}
-                    >
-                      <Icon size={15} className="pointer-events-none" />
-                      <span className="pointer-events-none">{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
+                <div className="shrink-0 flex flex-col gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                    Skill Level
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {SKILL_LEVELS.map((level, index) => {
+                      const isActive = activeFilters.skillLevel.includes(
+                        level.value,
+                      );
+                      return (
+                        <button
+                          key={level.value}
+                          onClick={() =>
+                            toggleFilter("skillLevel", level.value)
+                          }
+                          className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                              : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                          }`}
+                        >
+                          <SkillBars count={index + 1} />
+                          <span className="pointer-events-none">
+                            {level.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            <div className="shrink-0 flex flex-col gap-2 ">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
-                Skill Level
-              </span>
-              <div className="flex items-center gap-2">
-                {SKILL_LEVELS.map((level, index) => {
-                  const isActive = activeFilters.skillLevel.includes(
-                    level.value,
-                  );
-                  return (
-                    <button
-                      key={level.value}
-                      onClick={() => toggleFilter("skillLevel", level.value)}
-                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                      }`}
-                    >
-                      <SkillBars count={index + 1} />
-                      <span className="pointer-events-none">{level.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
 
-            <div className="w-px h-16 bg-border/35 shrink-0 mt-4" />
-
-            <div className="shrink-0 flex flex-col gap-2 ">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
-                Cooking Time
-              </span>
-              <div className="flex items-center gap-2">
-                {TIME_RANGES.map(({ label, value, icon: Icon }) => {
-                  const isActive = activeFilters.cookingTime.includes(value);
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => toggleFilter("cookingTime", value)}
-                      className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                          : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
-                      }`}
-                    >
-                      <Icon size={15} className="pointer-events-none" />
-                      <span className="pointer-events-none">{label}</span>
-                    </button>
-                  );
-                })}
+                <div className="shrink-0 flex flex-col gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground/45 px-1">
+                    Cooking Time
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {TIME_RANGES.map(({ label, value, icon: Icon }) => {
+                      const isActive =
+                        activeFilters.cookingTime.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => toggleFilter("cookingTime", value)}
+                          className={`filter-chip shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer select-none ${
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+                              : "bg-secondary/50 text-foreground/70 ring-2 ring-border/30 hover:bg-secondary/80 hover:text-foreground/90"
+                          }`}
+                        >
+                          <Icon size={15} className="pointer-events-none" />
+                          <span className="pointer-events-none">{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1152,6 +956,7 @@ export function RecipeContent() {
             }
             onFinish={handleCreatorFinish}
             onClose={closeModal}
+            closeOnOutsideClick={false}
           />
         )}
       </AnimatePresence>

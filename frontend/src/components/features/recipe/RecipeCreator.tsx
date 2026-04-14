@@ -70,12 +70,14 @@ const UNITS = ["u", "g", "kg", "ml", "L", "tsp"];
 interface RecipeCreatorProps {
   onFinish: (data: Recipe) => void;
   onClose: () => void;
+  closeOnOutsideClick?: boolean;
   initialData?: Recipe | null;
 }
 
 export default function RecipeCreator({
   onFinish,
   onClose,
+  closeOnOutsideClick = false,
   initialData,
 }: RecipeCreatorProps) {
   const { user, loading } = useUser();
@@ -388,6 +390,8 @@ export default function RecipeCreator({
 
   useEffect(() => {
     const handleOutsideModalClick = (event: MouseEvent) => {
+      if(!closeOnOutsideClick) return;
+      
       const target = event.target as Node;
       if (!modalContentRef.current) return;
       if (modalContentRef.current.contains(target)) return;
@@ -398,7 +402,7 @@ export default function RecipeCreator({
     return () => {
       document.removeEventListener("mousedown", handleOutsideModalClick);
     };
-  }, [onClose]);
+  }, [onClose, closeOnOutsideClick]);
 
   useEffect(() => {
     autoResizeTextarea(titleRef.current);
@@ -416,7 +420,6 @@ export default function RecipeCreator({
       animate={{ opacity: 1, backdropFilter: "blur(3px)" }}
       exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
       className="recipeCreator-container w-full h-full fixed top-0 left-0 flex items-center justify-center z-50 bg-background/50"
-      onClick={onClose}
     >
       <AnimatePresence mode="wait">
         {busy && (
