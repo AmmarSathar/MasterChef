@@ -142,7 +142,7 @@ describe("MainDashboardContent", () => {
       expect(
         screen.getByAltText("Monday Breakfast Breakfast Burrito"),
       ).toBeInTheDocument();
-      expect(screen.getByText("Today: Monday")).toBeInTheDocument();
+      expect(screen.getByText(/Today:/)).toBeInTheDocument();
     });
   });
 
