@@ -22,7 +22,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../src/components/ui/Login/Customize", () => ({
+vi.mock("../src/components/features/login/Customize", () => ({
   default: ({ ready }: { ready: boolean }) => (
     <div data-testid="customize" data-ready={String(ready)} />
   ),
@@ -58,7 +58,7 @@ vi.mock("react-hot-toast", () => ({
 vi.mock("@/lib/icons/google.svg", () => ({ default: "google.svg" }));
 vi.mock("@/lib/icons/github.svg", () => ({ default: "github.svg" }));
 
-import Login from "@/components/ui/Login/login";
+import Login from "@/components/features/login/login";
 import { toast } from "react-hot-toast";
 
 function setUrl(url: string) {

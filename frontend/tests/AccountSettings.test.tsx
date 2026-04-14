@@ -45,7 +45,7 @@ vi.mock("react-hot-toast", () => ({
 
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import AccountSettings from "@/components/ui/Dashboard/contents/settings/AccountSettings";
+import AccountSettings from "@/components/features/dashboard/contents/settings/AccountSettings";
 
 describe("AccountSettings password flows", () => {
   beforeEach(() => {
